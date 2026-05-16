@@ -1,59 +1,138 @@
-# Rhythm Pulse
+<p align="center">
+  <h1 align="center">🎵 Rhythm Pulse</h1>
+  <p align="center">
+    <em>A rhythm game inspired by FNF & osu!mania — built as a single-file web app.</em>
+  </p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
+    <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
+    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+    <img src="https://img.shields.io/badge/No_Install_Required-2ea44f?style=for-the-badge" alt="No Install">
+  </p>
+</p>
 
-A rhythm game inspired by FNF and osu!mania, built as a single-file web app.
+---
 
-## Features
+## ✨ Features
 
-- **Downscroll gameplay** with adjustable hit line position
-- **Local music loading** — drag & drop or browse for audio files
-- **Auto-chart generation** using beat detection aligned to exact beat times
-- **4 difficulty modes**: Easy, Normal, Hard, Insane
-- **Hold notes** with sustained key press and single judgment on completion
-- **Smooth beat-reactive zoom** effects (FNF-style pulse & combo milestones)
-- **Full-circle radial visualizer** with 4-way mirroring and side dimming
-- **Menu media player** with prev/next, loop/shuffle, auto-advance, and seek
-- **Visualizer persists during pause** (cached frame)
-- **Purple universe radial gradient** background
-- **Results screen** with grades, stats, timing graph, and copy-to-clipboard
-- **Pause menu**, countdown timer, settings panel
-- **Practice mode** with loop, speed control, and minimap
-- **Modifier system** (Mirror, Random, No Fail, etc.)
-- **Achievements system** with 19 unlockable achievements
-- **IndexedDB persistence** for offline song storage
-- **Service worker** for offline support
-- **Rolling average FPS** counter (60-frame window)
+<table>
+  <tr>
+    <td valign="top" width="50%">
+      <h3>🎮 Gameplay</h3>
+      <ul>
+        <li><strong>Downscroll</strong> with adjustable hit line</li>
+        <li><strong>4K / 5K / 6K / 7K</strong> lane support</li>
+        <li><strong>Hold notes</strong> with sustained press</li>
+        <li><strong>4 difficulties</strong>: Easy → Insane</li>
+        <li><strong>Modifiers</strong>: Mirror, Random, No Fail & more</li>
+        <li><strong>Practice mode</strong> with loop, speed & minimap</li>
+      </ul>
+    </td>
+    <td valign="top" width="50%">
+      <h3>🎨 Visuals</h3>
+      <ul>
+        <li><strong>Beat-reactive zoom</strong> (FNF-style pulse)</li>
+        <li><strong>Radial visualizer</strong> with 4-way mirroring</li>
+        <li><strong>Purple universe</strong> gradient background</li>
+        <li><strong>Combo milestone</strong> zoom effects</li>
+        <li><strong>Hit effects</strong>, lane glow & particle trails</li>
+        <li><strong>Cached visualizer</strong> during pause</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top" width="50%">
+      <h3>🎵 Music</h3>
+      <ul>
+        <li><strong>Drag & drop</strong> or browse for local files</li>
+        <li><strong>Auto-chart generation</strong> from beat detection</li>
+        <li><strong>Media player</strong> with prev/next, loop, shuffle</li>
+        <li><strong>Auto-advance</strong> to next song on end</li>
+        <li><strong>Offline support</strong> via IndexedDB + Service Worker</li>
+      </ul>
+    </td>
+    <td valign="top" width="50%">
+      <h3>🏆 Progression</h3>
+      <ul>
+        <li><strong>19 achievements</strong> to unlock</li>
+        <li><strong>Grades</strong> with timing graph</li>
+        <li><strong>Score sharing</strong> via clipboard</li>
+        <li><strong>Favorites</strong> & song sorting</li>
+        <li><strong>Rolling FPS</strong> counter (60-frame avg)</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-## How to Play
+## 🎯 How to Play
 
-1. Open `index.html` in a modern browser
+```
+1. Open index.html in a modern browser
 2. Load music files via drag & drop or file browser
 3. Select a song and choose difficulty
-4. Hit notes as they reach the receptors using the assigned keys:
-   - **4K**: D, F, J, K
-   - **5K**: D, F, Space, J, K
-   - **6K**: S, D, F, J, K, L
-   - **7K**: S, D, F, Space, J, K, L
-5. Tap hold notes require sustained key press; judgment awarded on release
+4. Hit notes as they reach the receptors!
+```
 
-## Scoring
+### Key Bindings
 
-| Judgment | Timing Window |
-|----------|--------------|
-| Marvelous | ±22ms |
-| Perfect | ±45ms |
-| Great | ±90ms |
-| Good | ±135ms |
-| Miss | ±180ms |
+| Mode | Keys |
+|------|------|
+| **4K** | `D` `F` `J` `K` |
+| **5K** | `D` `F` `Space` `J` `K` |
+| **6K** | `S` `D` `F` `J` `K` `L` |
+| **7K** | `S` `D` `F` `Space` `J` `K` `L` |
 
-## Deployment
+> Hold notes require sustained key press — judgment awarded on release.
 
-The game is a static single-page app. Deploy to any static host:
-- GitHub Pages
-- Netlify
-- Vercel
-- Any web server
+## 📊 Scoring
 
-## Files
+| Judgment | Window | Points |
+|----------|--------|--------|
+| ✨ **Marvelous** | ±22ms | 350 |
+| 💎 **Perfect** | ±45ms | 300 |
+| 🟢 **Great** | ±90ms | 200 |
+| 🔵 **Good** | ±135ms | 100 |
+| 🔴 **Miss** | ±180ms | 0 |
 
-- `index.html` — Complete game (HTML, CSS, JS)
-- `sw.js` — Service worker for offline caching
+### Combo Multiplier
+
+| Combo Range | Multiplier |
+|-------------|------------|
+| 0–9 | ×1 |
+| 10–19 | ×2 |
+| 20–49 | ×3 |
+| 50+ | ×4 |
+
+## 🚀 Deployment
+
+The game is a static single-page app — deploy anywhere:
+
+- **GitHub Pages** — push to `main` branch
+- **Netlify** — drag `index.html` to deploy
+- **Vercel** — connect repo
+- **Any web server** — just serve the files
+
+## 📁 Files
+
+| File | Description |
+|------|-------------|
+| `index.html` | Complete game (HTML + CSS + JS) |
+| `sw.js` | Service worker for offline caching |
+
+## 🛠️ Tech Stack
+
+- **Vanilla JavaScript** — no frameworks, no build step
+- **Web Audio API** — beat detection & audio decoding
+- **Canvas API** — rendering & visualizer
+- **IndexedDB** — persistent song storage
+- **Service Worker** — offline support
+
+## 📜 License
+
+MIT — do whatever you want with it.
+
+---
+
+<p align="center">
+  <em>Built with ❤️ and rhythm</em>
+</p>
