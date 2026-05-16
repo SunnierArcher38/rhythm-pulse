@@ -117,7 +117,7 @@ Grab some tracks to play with! All of these are copyright-free or have permissiv
 | Source | License | Notes |
 |--------|---------|-------|
 | [**NCS (NoCopyrightSounds)**](https://ncs.io) | Free to use | Electronic/dance — huge library, just credit the artist |
-| [**Incompetech**](https://incompetech.com/music/royalty-free/) | CC BY | Kevin MacLeod's massive library, attribution required |
+| [**Incompetech**](https://incompetech.com/music/royalty-free/music.html) | CC BY | Kevin MacLeod's massive library, attribution required |
 | [**Pixabay Music**](https://pixabay.com/music/) | Royalty-free | No attribution needed, broad genres |
 | [**OpenGameArt**](https://opengameart.org) | Mixed (CC/CC0) | Game-focused tracks, check individual licenses |
 | [**Free Music Archive**](https://freemusicarchive.org) | Mixed | Curated free music, filter by license type |
