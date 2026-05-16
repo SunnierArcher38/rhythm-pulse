@@ -4,7 +4,7 @@
     <em>A rhythm game inspired by FNF & osu!mania — built as a single-file web app.</em>
   </p>
   <p align="center">
-    <img src="https://img.shields.io/badge/No_Install_Required-2ea44f?style=for-the-badge" alt="No Install">
+    <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/🎮_Play_Now-Open_Web_App-5865F2?style=for-the-badge" alt="Play Now"></a>
     <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/Discord-Join_Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
 </p>
