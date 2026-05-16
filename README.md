@@ -144,6 +144,10 @@ Got ideas? Here's what's on the radar — feel free to suggest more on [Discord]
 - **IndexedDB** — persistent song storage
 - **Service Worker** — offline support
 
+## 🤖 Note
+
+This project was built with the help of AI (opencode). The concept, design decisions, and creative direction are all human-made — the AI handled the implementation.
+
 ## 📜 License
 
 MIT — do whatever you want with it.
@@ -157,5 +161,5 @@ Join the Discord server for updates, feedback, and support:
 ---
 
 <p align="center">
-  <em>Built with ❤️ and rhythm</em>
+  <em>Built with ❤️, rhythm, and AI assistance</em>
 </p>
