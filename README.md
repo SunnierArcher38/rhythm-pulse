@@ -4,10 +4,8 @@
     <em>A rhythm game inspired by FNF & osu!mania — built as a single-file web app.</em>
   </p>
   <p align="center">
-    <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
-    <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
-    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
     <img src="https://img.shields.io/badge/No_Install_Required-2ea44f?style=for-the-badge" alt="No Install">
+    <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/Discord-Join_Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
 </p>
 
@@ -130,6 +128,12 @@ The game is a static single-page app — deploy anywhere:
 ## 📜 License
 
 MIT — do whatever you want with it.
+
+## 💬 Community
+
+Join the Discord server for updates, feedback, and support:
+
+[![Join Discord](https://img.shields.io/badge/Discord-Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
 
 ---
 
