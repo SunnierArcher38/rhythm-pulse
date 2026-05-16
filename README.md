@@ -121,7 +121,7 @@ Grab some tracks to play with! All of these are copyright-free or have permissiv
 | [**Pixabay Music**](https://pixabay.com/music/) | Royalty-free | No attribution needed, broad genres |
 | [**OpenGameArt**](https://opengameart.org) | Mixed (CC/CC0) | Game-focused tracks, check individual licenses |
 | [**Free Music Archive**](https://freemusicarchive.org) | Mixed | Curated free music, filter by license type |
-| [**YouTube Audio Library**](https://studio.youtube.com/library) | Free | Accessible via YouTube Studio, filter "No attribution required" |
+| [**YouTube Audio Library**](https://www.youtube.com/audiolibrary) | Free | Filter "No attribution required" |
 
 > 💡 **Tip:** NCS tracks are great for rhythm games — strong beats, consistent BPM, and built for content creators.
 
