@@ -130,6 +130,31 @@ canvas { display: block; }
 .keybind-btn.save:hover { transform: scale(1.05); }
 .keybind-btn.cancel { background: rgba(255,255,255,0.1); color: #fff; }
 .keybind-btn.reset { background: rgba(255,77,77,0.2); color: #ff4d4d; }
+#musicBrowserModal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 300; }
+#musicBrowserModal.active { display: flex; }
+.music-browser-panel { background: rgba(20, 20, 35, 0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
+.music-browser-panel h3 { text-align: center; margin-bottom: 0.5rem; color: #c44dff; }
+.music-search-bar { display: flex; gap: 0.5rem; margin: 0.75rem 0; }
+.music-genres { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.genre-btn { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #ccc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.genre-btn:hover, .genre-btn.active { background: rgba(196, 77, 255, 0.3); border-color: #c44dff; color: #fff; }
+.music-results { flex: 1; overflow-y: auto; margin: 0.5rem 0; }
+.music-track { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.5rem; transition: background 0.2s; }
+.music-track:hover { background: rgba(255,255,255,0.08); }
+.music-track .track-info { flex: 1; min-width: 0; }
+.music-track .track-name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.music-track .track-artist { font-size: 0.8rem; color: #888; }
+.music-track .track-meta { font-size: 0.75rem; color: #666; }
+.music-track .track-actions { display: flex; gap: 0.4rem; }
+.track-btn { padding: 0.3rem 0.7rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.track-btn.preview { background: rgba(196, 77, 255, 0.3); color: #c44dff; }
+.track-btn.preview:hover { background: rgba(196, 77, 255, 0.5); }
+.track-btn.download { background: rgba(107, 157, 255, 0.3); color: #6b9dff; }
+.track-btn.download:hover { background: rgba(107, 157, 255, 0.5); }
+.track-btn.downloading { background: rgba(255,255,255,0.1); color: #888; cursor: default; }
+.music-browser-actions { display: flex; justify-content: center; margin-top: 0.75rem; }
+.music-loading { text-align: center; color: #888; padding: 2rem; }
+.music-error { text-align: center; color: #ff4d4d; padding: 1rem; }
 .practice-panel { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 1rem 1.5rem; display: none; z-index: 120; align-items: center; gap: 1rem; }
 .practice-panel.active { display: flex; }
 .practice-panel label { color: #aaa; font-size: 0.85rem; }
@@ -237,6 +262,7 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
         <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
+        <div class="setting-row"><button class="pause-btn" id="browseMusicBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:#6c3483;">🎵 Browse Free Music</button></div>
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Cloud Saves</span></div>
         <div class="setting-row"><span class="setting-label">GitHub Token</span><input type="password" class="style-select" id="githubToken" placeholder="ghp_xxxx..." style="width:140px;font-size:0.8rem;"></div>
         <div class="setting-row"><button class="pause-btn" id="cloudSaveBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">☁️ Save to Cloud</button><button class="pause-btn" id="cloudLoadBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">☁️ Load from Cloud</button></div>
@@ -350,6 +376,30 @@ canvas { display: block; }
       <button class="keybind-btn reset" id="keybindReset">Reset</button>
       <button class="keybind-btn cancel" id="keybindCancel">Cancel</button>
       <button class="keybind-btn save" id="keybindSave">Save</button>
+    </div>
+  </div>
+</div>
+<div id="musicBrowserModal">
+  <div class="music-browser-panel">
+    <h3>🎵 Browse Free Music</h3>
+    <p style="font-size:0.75rem;color:#888;margin:0.5rem 0;">Powered by Jamendo — free & legal music</p>
+    <div class="music-search-bar">
+      <input type="text" id="musicSearchInput" placeholder="Search genre, artist, or mood..." style="flex:1;padding:0.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:0.9rem;">
+      <button id="musicSearchBtn" style="padding:0.5rem 1rem;background:#6c3483;border:none;border-radius:6px;color:#fff;cursor:pointer;">Search</button>
+    </div>
+    <div class="music-genres" id="musicGenres">
+      <button class="genre-btn" data-genre="electronic">Electronic</button>
+      <button class="genre-btn" data-genre="rock">Rock</button>
+      <button class="genre-btn" data-genre="hiphop">Hip Hop</button>
+      <button class="genre-btn" data-genre="pop">Pop</button>
+      <button class="genre-btn" data-genre="ambient">Ambient</button>
+      <button class="genre-btn" data-genre="drum-and-bass">DnB</button>
+      <button class="genre-btn" data-genre="dubstep">Dubstep</button>
+      <button class="genre-btn" data-genre="cinematic">Cinematic</button>
+    </div>
+    <div class="music-results" id="musicResults"></div>
+    <div class="music-browser-actions">
+      <button class="keybind-btn cancel" id="musicBrowserClose">Close</button>
     </div>
   </div>
 </div>
@@ -2730,6 +2780,129 @@ const savedToken = localStorage.getItem('rhythmPulseGithubToken');
 if (savedToken) document.getElementById('githubToken').value = savedToken;
 document.getElementById('keybindCancel').addEventListener('click', () => { document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
 document.getElementById('keybindSave').addEventListener('click', () => { saveKeys(); document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
+
+// Music Browser
+let musicPreviewSource = null, musicPreviewPlaying = null;
+const JAMENDO_CLIENT_ID = '8f0c5c6a';
+
+document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('musicBrowserModal').classList.add('active');
+  searchMusic('electronic');
+});
+
+document.getElementById('musicBrowserClose').addEventListener('click', () => {
+  document.getElementById('musicBrowserModal').classList.remove('active');
+  stopMusicPreview();
+});
+
+document.getElementById('musicSearchBtn').addEventListener('click', () => {
+  const query = document.getElementById('musicSearchInput').value.trim();
+  if (query) searchMusic(query);
+});
+
+document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const query = e.target.value.trim();
+    if (query) searchMusic(query);
+  }
+});
+
+document.querySelectorAll('.genre-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchMusic(btn.dataset.genre);
+  });
+});
+
+async function searchMusic(query) {
+  const results = document.getElementById('musicResults');
+  results.innerHTML = '<div class="music-loading">Searching...</div>';
+  try {
+    const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&order=popularity_total&search=${encodeURIComponent(query)}&audioformat=mp32`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) {
+      results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
+      return;
+    }
+    results.innerHTML = '';
+    for (const track of data.results) {
+      const div = document.createElement('div');
+      div.className = 'music-track';
+      div.innerHTML = `
+        <div class="track-info">
+          <div class="track-name">${escapeHtml(track.name)}</div>
+          <div class="track-artist">${escapeHtml(track.artist_name)}</div>
+          <div class="track-meta">${formatTime(track.duration)} • ${track.bpm ? Math.round(track.bpm) + ' BPM' : 'Unknown BPM'}</div>
+        </div>
+        <div class="track-actions">
+          <button class="track-btn preview" onclick="previewTrack('${track.audiodownload}', '${escapeHtml(track.name)}')">▶ Preview</button>
+          <button class="track-btn download" onclick="downloadTrack('${track.audiodownload}', '${escapeHtml(track.name)}', '${escapeHtml(track.artist_name)}')">⬇ Add</button>
+        </div>
+      `;
+      results.appendChild(div);
+    }
+  } catch (err) {
+    results.innerHTML = '<div class="music-error">Search failed. Check your connection.</div>';
+  }
+}
+
+function previewTrack(url, name) {
+  stopMusicPreview();
+  initAudio();
+  fetch(url).then(r => r.arrayBuffer()).then(buf => {
+    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
+      musicPreviewSource = audioCtx.createBufferSource();
+      musicPreviewSource.buffer = buffer;
+      musicPreviewSource.connect(audioCtx.destination);
+      musicPreviewSource.start();
+      musicPreviewPlaying = name;
+    });
+  });
+}
+
+function stopMusicPreview() {
+  if (musicPreviewSource) {
+    try { musicPreviewSource.stop(); } catch(e) {}
+    musicPreviewSource = null;
+  }
+  musicPreviewPlaying = null;
+}
+
+async function downloadTrack(url, name, artist) {
+  const btn = event.target;
+  btn.textContent = '⏳ Downloading...';
+  btn.classList.add('downloading');
+  btn.disabled = true;
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const file = new File([blob], `${artist} - ${name}.mp3`, { type: 'audio/mpeg' });
+    await addSong(file);
+    btn.textContent = '✅ Added!';
+    setTimeout(() => {
+      btn.textContent = '⬇ Add';
+      btn.classList.remove('downloading');
+      btn.disabled = false;
+    }, 2000);
+  } catch (err) {
+    btn.textContent = '❌ Failed';
+    setTimeout(() => {
+      btn.textContent = '⬇ Add';
+      btn.classList.remove('downloading');
+      btn.disabled = false;
+    }, 2000);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.textContent.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
 
 function renderKeybinds() {
