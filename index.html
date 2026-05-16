@@ -236,6 +236,7 @@ canvas { display: block; }
     </div>
     <div class="settings-panel">
       <button class="settings-btn" id="uiToggle" title="Toggle UI">👁</button>
+      <button class="settings-btn" id="browseMusicBtn" title="Browse Free Music" style="background:rgba(108,52,131,0.5);">🎵</button>
       <button class="settings-btn" id="achievementsToggle" title="Achievements">🏆</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
@@ -262,7 +263,6 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
         <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
-        <div class="setting-row"><button class="pause-btn" id="browseMusicBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:#6c3483;">🎵 Browse Free Music</button></div>
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Cloud Saves</span></div>
         <div class="setting-row"><span class="setting-label">GitHub Token</span><input type="password" class="style-select" id="githubToken" placeholder="ghp_xxxx..." style="width:140px;font-size:0.8rem;"></div>
         <div class="setting-row"><button class="pause-btn" id="cloudSaveBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">☁️ Save to Cloud</button><button class="pause-btn" id="cloudLoadBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">☁️ Load from Cloud</button></div>
@@ -2785,8 +2785,7 @@ document.getElementById('keybindSave').addEventListener('click', () => { saveKey
 let musicPreviewSource = null, musicPreviewPlaying = null;
 const JAMENDO_CLIENT_ID = '8f0c5c6a';
 
-document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
+document.getElementById('browseMusicBtn').addEventListener('click', () => {
   document.getElementById('musicBrowserModal').classList.add('active');
   searchMusic('electronic');
 });
