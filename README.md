@@ -117,6 +117,25 @@ The game is a static single-page app — deploy anywhere:
 | `index.html` | Complete game (HTML + CSS + JS) |
 | `sw.js` | Service worker for offline caching |
 
+## 💡 Suggestions
+
+Got ideas? Here's what's on the radar — feel free to suggest more on [Discord](https://discord.gg/aa83vhpC4v)!
+
+- [ ] Chart editor for manual note placement
+- [ ] Replay system (save, load, watch past gameplay)
+- [ ] Online leaderboards
+- [ ] Custom skin/theme support
+- [ ] Multiplayer / co-op mode
+- [ ] Story mode with progression
+
+## 🐛 Known Issues & Fixes
+
+| Issue | Status | Notes |
+|-------|--------|-------|
+| — | ✅ All clear | Report issues on Discord! |
+
+---
+
 ## 🛠️ Tech Stack
 
 - **Vanilla JavaScript** — no frameworks, no build step
