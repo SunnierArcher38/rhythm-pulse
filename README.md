@@ -110,6 +110,21 @@ The game is a static single-page app — deploy anywhere:
 - **Vercel** — connect repo
 - **Any web server** — just serve the files
 
+## 🎵 Free Music Sources
+
+Grab some tracks to play with! All of these are copyright-free or have permissive licenses:
+
+| Source | License | Notes |
+|--------|---------|-------|
+| [**NCS (NoCopyrightSounds)**](https://ncs.io) | Free to use | Electronic/dance — huge library, just credit the artist |
+| [**Incompetech**](https://incompetech.com/music/) | CC BY | Kevin MacLeod's massive library, attribution required |
+| [**Pixabay Music**](https://pixabay.com/music/) | Royalty-free | No attribution needed, broad genres |
+| [**OpenGameArt**](https://opengameart.org) | Mixed (CC/CC0) | Game-focused tracks, check individual licenses |
+| [**Free Music Archive**](https://freemusicarchive.org) | Mixed | Curated free music, filter by license type |
+| [**YouTube Audio Library**](https://studio.youtube.com/library) | Free | Accessible via YouTube Studio, filter "No attribution required" |
+
+> 💡 **Tip:** NCS tracks are great for rhythm games — strong beats, consistent BPM, and built for content creators.
+
 ## 📁 Files
 
 | File | Description |
