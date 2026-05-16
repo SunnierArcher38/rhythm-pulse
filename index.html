@@ -2803,18 +2803,24 @@ document.querySelectorAll('.source-tab').forEach(tab => {
   });
 });
 
-document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
-  console.log('[Music] Button clicked');
-  e.preventDefault();
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  console.log('[Music] Modal element:', modal);
-  document.getElementById('settingsDropdown').classList.remove('active');
-  modal.style.display = 'flex';
-  modal.classList.add('active');
-  console.log('[Music] Modal display:', modal.style.display, 'Modal classList:', modal.className);
-  searchMusic('electronic');
-});
+const musicBtn = document.getElementById('browseMusicBtn');
+console.log('[Music] Button found:', musicBtn);
+if (musicBtn) {
+  musicBtn.addEventListener('click', (e) => {
+    console.log('[Music] Button clicked');
+    e.preventDefault();
+    e.stopPropagation();
+    const modal = document.getElementById('musicBrowserModal');
+    console.log('[Music] Modal element:', modal);
+    document.getElementById('settingsDropdown').classList.remove('active');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    console.log('[Music] Modal display:', modal.style.display, 'Modal classList:', modal.className);
+    searchMusic('electronic');
+  });
+} else {
+  console.error('[Music] Button NOT found!');
+}
 
 document.getElementById('musicBrowserClose').addEventListener('click', () => {
   document.getElementById('musicBrowserModal').classList.remove('active');
