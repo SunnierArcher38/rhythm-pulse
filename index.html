@@ -2823,9 +2823,20 @@ if (musicBtn) {
   console.error('[Music] Button NOT found!');
 }
 
-document.getElementById('musicBrowserClose').addEventListener('click', () => {
-  document.getElementById('musicBrowserModal').classList.remove('active');
+document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const modal = document.getElementById('musicBrowserModal');
+  modal.style.display = 'none';
+  modal.classList.remove('active');
   stopMusicPreview();
+});
+
+document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
+  if (e.target.id === 'musicBrowserModal') {
+    e.target.style.display = 'none';
+    e.target.classList.remove('active');
+    stopMusicPreview();
+  }
 });
 
 document.getElementById('musicSearchBtn').addEventListener('click', () => {
