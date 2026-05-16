@@ -2804,12 +2804,15 @@ document.querySelectorAll('.source-tab').forEach(tab => {
 });
 
 document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
+  console.log('[Music] Button clicked');
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('settingsDropdown').classList.remove('active');
   const modal = document.getElementById('musicBrowserModal');
+  console.log('[Music] Modal element:', modal);
+  document.getElementById('settingsDropdown').classList.remove('active');
   modal.style.display = 'flex';
   modal.classList.add('active');
+  console.log('[Music] Modal display:', modal.style.display, 'Modal classList:', modal.className);
   searchMusic('electronic');
 });
 
