@@ -135,6 +135,9 @@ canvas { display: block; }
 .music-browser-panel { background: rgba(20, 20, 35, 0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
 .music-browser-panel h3 { text-align: center; margin-bottom: 0.5rem; color: #c44dff; }
 .music-search-bar { display: flex; gap: 0.5rem; margin: 0.75rem 0; }
+.music-source-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+.source-tab { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #ccc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.source-tab:hover, .source-tab.active { background: rgba(196, 77, 255, 0.3); border-color: #c44dff; color: #fff; }
 .music-genres { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .genre-btn { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #ccc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
 .genre-btn:hover, .genre-btn.active { background: rgba(196, 77, 255, 0.3); border-color: #c44dff; color: #fff; }
@@ -380,9 +383,14 @@ canvas { display: block; }
   </div>
 </div>
 <div id="musicBrowserModal">
-  <div class="music-browser-panel">
+    <div class="music-browser-panel">
     <h3>🎵 Browse Free Music</h3>
-    <p style="font-size:0.75rem;color:#888;margin:0.5rem 0;">Powered by Jamendo — free & legal music</p>
+    <p style="font-size:0.75rem;color:#888;margin:0.5rem 0;">Powered by Jamendo, Audius & Deezer</p>
+    <div class="music-source-tabs">
+      <button class="source-tab active" data-source="jamendo">Jamendo</button>
+      <button class="source-tab" data-source="audius">Audius</button>
+      <button class="source-tab" data-source="deezer">Deezer</button>
+    </div>
     <div class="music-search-bar">
       <input type="text" id="musicSearchInput" placeholder="Search genre, artist, or mood..." style="flex:1;padding:0.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:0.9rem;">
       <button id="musicSearchBtn" style="padding:0.5rem 1rem;background:#6c3483;border:none;border-radius:6px;color:#fff;cursor:pointer;">Search</button>
@@ -2782,8 +2790,18 @@ document.getElementById('keybindCancel').addEventListener('click', () => { docum
 document.getElementById('keybindSave').addEventListener('click', () => { saveKeys(); document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
 
 // Music Browser
-let musicPreviewSource = null, musicPreviewPlaying = null;
+let musicPreviewSource = null, musicPreviewPlaying = null, currentMusicSource = 'jamendo';
 const JAMENDO_CLIENT_ID = '8f0c5c6a';
+
+document.querySelectorAll('.source-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentMusicSource = tab.dataset.source;
+    const query = document.getElementById('musicSearchInput').value.trim() || 'electronic';
+    searchMusic(query);
+  });
+});
 
 document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
   e.stopPropagation();
@@ -2821,37 +2839,133 @@ async function searchMusic(query) {
   const results = document.getElementById('musicResults');
   results.innerHTML = '<div class="music-loading">Searching...</div>';
   try {
-    const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&order=popularity_total&search=${encodeURIComponent(query)}&audioformat=mp32`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('API error');
-    const data = await res.json();
-    if (!data.results || data.results.length === 0) {
-      results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
-      return;
-    }
-    results.innerHTML = '';
-    for (const track of data.results) {
-      const div = document.createElement('div');
-      div.className = 'music-track';
-      div.innerHTML = `
-        <div class="track-info">
-          <div class="track-name">${escapeHtml(track.name)}</div>
-          <div class="track-artist">${escapeHtml(track.artist_name)}</div>
-          <div class="track-meta">${formatTime(track.duration)} • ${track.bpm ? Math.round(track.bpm) + ' BPM' : 'Unknown BPM'}</div>
-        </div>
-        <div class="track-actions">
-          <button class="track-btn preview" onclick="previewTrack('${track.audiodownload}', '${escapeHtml(track.name)}')">▶ Preview</button>
-          <button class="track-btn download" onclick="downloadTrack('${track.audiodownload}', '${escapeHtml(track.name)}', '${escapeHtml(track.artist_name)}')">⬇ Add</button>
-        </div>
-      `;
-      results.appendChild(div);
+    if (currentMusicSource === 'jamendo') {
+      await searchJamendo(query, results);
+    } else if (currentMusicSource === 'audius') {
+      await searchAudius(query, results);
+    } else if (currentMusicSource === 'deezer') {
+      await searchDeezer(query, results);
     }
   } catch (err) {
     results.innerHTML = '<div class="music-error">Search failed. Check your connection.</div>';
   }
 }
 
-function previewTrack(url, name) {
+async function searchJamendo(query, results) {
+  const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&order=popularity_total&search=${encodeURIComponent(query)}&audioformat=mp32`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  const data = await res.json();
+  if (!data.results || data.results.length === 0) {
+    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
+    return;
+  }
+  results.innerHTML = '';
+  for (const track of data.results) {
+    const div = document.createElement('div');
+    div.className = 'music-track';
+    div.innerHTML = `
+      <div class="track-info">
+        <div class="track-name">${escapeHtml(track.name)}</div>
+        <div class="track-artist">${escapeHtml(track.artist_name)}</div>
+        <div class="track-meta">${formatTime(track.duration)} • ${track.bpm ? Math.round(track.bpm) + ' BPM' : 'Unknown BPM'}</div>
+      </div>
+      <div class="track-actions">
+        <button class="track-btn preview" onclick="previewJamendo('${track.audiodownload}', '${escapeHtml(track.name)}')">▶ Preview</button>
+        <button class="track-btn download" onclick="downloadTrack('${track.audiodownload}', '${escapeHtml(track.name)}', '${escapeHtml(track.artist_name)}')">⬇ Add</button>
+      </div>
+    `;
+    results.appendChild(div);
+  }
+}
+
+async function searchAudius(query, results) {
+  const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  const data = await res.json();
+  const tracks = data.data || [];
+  if (tracks.length === 0) {
+    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
+    return;
+  }
+  results.innerHTML = '';
+  for (const track of tracks) {
+    const streamUrl = `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=RhythmPulse`;
+    const div = document.createElement('div');
+    div.className = 'music-track';
+    div.innerHTML = `
+      <div class="track-info">
+        <div class="track-name">${escapeHtml(track.title)}</div>
+        <div class="track-artist">${escapeHtml(track.user?.name || 'Unknown')}</div>
+        <div class="track-meta">${track.duration ? formatTime(track.duration / 1000) : ''} • ${track.genre || ''}</div>
+      </div>
+      <div class="track-actions">
+        <button class="track-btn preview" onclick="previewAudius('${streamUrl}', '${escapeHtml(track.title)}')">▶ Preview</button>
+      </div>
+    `;
+    results.appendChild(div);
+  }
+}
+
+async function searchDeezer(query, results) {
+  const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=20`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  const data = await res.json();
+  const tracks = data.data || [];
+  if (tracks.length === 0) {
+    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
+    return;
+  }
+  results.innerHTML = '';
+  for (const track of tracks) {
+    const previewUrl = track.preview;
+    const div = document.createElement('div');
+    div.className = 'music-track';
+    div.innerHTML = `
+      <div class="track-info">
+        <div class="track-name">${escapeHtml(track.title)}</div>
+        <div class="track-artist">${escapeHtml(track.artist?.name || 'Unknown')}</div>
+        <div class="track-meta">${formatTime(track.duration)} • 30s preview</div>
+      </div>
+      <div class="track-actions">
+        <button class="track-btn preview" onclick="previewDeezer('${previewUrl}', '${escapeHtml(track.title)}')">▶ Preview</button>
+      </div>
+    `;
+    results.appendChild(div);
+  }
+}
+
+function previewJamendo(url, name) {
+  stopMusicPreview();
+  initAudio();
+  fetch(url).then(r => r.arrayBuffer()).then(buf => {
+    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
+      musicPreviewSource = audioCtx.createBufferSource();
+      musicPreviewSource.buffer = buffer;
+      musicPreviewSource.connect(audioCtx.destination);
+      musicPreviewSource.start();
+      musicPreviewPlaying = name;
+    });
+  });
+}
+
+function previewAudius(url, name) {
+  stopMusicPreview();
+  initAudio();
+  fetch(url).then(r => r.arrayBuffer()).then(buf => {
+    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
+      musicPreviewSource = audioCtx.createBufferSource();
+      musicPreviewSource.buffer = buffer;
+      musicPreviewSource.connect(audioCtx.destination);
+      musicPreviewSource.start();
+      musicPreviewPlaying = name;
+    });
+  });
+}
+
+function previewDeezer(url, name) {
   stopMusicPreview();
   initAudio();
   fetch(url).then(r => r.arrayBuffer()).then(buf => {
