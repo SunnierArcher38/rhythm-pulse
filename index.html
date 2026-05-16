@@ -237,8 +237,11 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
         <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
+        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Cloud Saves</span></div>
+        <div class="setting-row"><button class="pause-btn" id="exportSaveBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Export Save</button><button class="pause-btn" id="importSaveBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📂 Import Save</button></div>
        </div>
-     </div>
+      </div>
+      <input type="file" id="importSaveInput" accept=".json" style="display:none;">
      <div class="achievements-dropdown" id="achievementsDropdown">
        <div class="ach-header">🏆 Achievements</div>
        <div class="ach-list" id="achievementsList"></div>
@@ -2511,6 +2514,82 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
 
 let listeningForLane = null;
 document.getElementById('keybindBtn').addEventListener('click', () => { document.getElementById('keybindModal').classList.add('active'); renderKeybinds(); });
+
+document.getElementById('exportSaveBtn').addEventListener('click', () => {
+  const saveData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
+    favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
+    settings: {
+      audioOffset: localStorage.getItem('rhythmPulseAudioOffset') || '0',
+      scrollSpeed: localStorage.getItem('rhythmPulseScrollSpeed') || '15',
+      noteSize: localStorage.getItem('rhythmPulseNoteSize') || '50',
+      volume: localStorage.getItem('rhythmPulseVolume') || '80',
+      laneCount: localStorage.getItem('rhythmPulseLaneCount') || '4',
+      hitSound: localStorage.getItem('rhythmPulseHitSound') || 'false',
+      showFPS: localStorage.getItem('rhythmPulseShowFPS') || 'true',
+      visualizer: localStorage.getItem('rhythmPulseVisualizer') || 'true',
+      noteStyle: localStorage.getItem('rhythmPulseNoteStyle') || 'circles',
+      colorScheme: localStorage.getItem('rhythmPulseColorScheme') || 'neon',
+      timingWindow: localStorage.getItem('rhythmPulseTimingWindow') || 'normal',
+      scrollDirection: localStorage.getItem('rhythmPulseScrollDirection') || 'downscroll',
+      healthMode: localStorage.getItem('rhythmPulseHealthMode') || 'normal',
+      speedPreset: localStorage.getItem('rhythmPulseSpeedPreset') || 'custom',
+      discordWebhook: localStorage.getItem('rhythmPulseWebhook') || '',
+      customKeys: localStorage.getItem('rhythmPulseCustomKeys') || '{}'
+    }
+  };
+  const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rhythm-pulse-save-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importSaveBtn').addEventListener('click', () => {
+  document.getElementById('importSaveInput').click();
+});
+
+document.getElementById('importSaveInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.achievements));
+      if (data.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.favorites));
+      if (data.settings) {
+        for (const [key, value] of Object.entries(data.settings)) {
+          if (key === 'audioOffset') localStorage.setItem('rhythmPulseAudioOffset', value);
+          else if (key === 'scrollSpeed') localStorage.setItem('rhythmPulseScrollSpeed', value);
+          else if (key === 'noteSize') localStorage.setItem('rhythmPulseNoteSize', value);
+          else if (key === 'volume') localStorage.setItem('rhythmPulseVolume', value);
+          else if (key === 'laneCount') localStorage.setItem('rhythmPulseLaneCount', value);
+          else if (key === 'hitSound') localStorage.setItem('rhythmPulseHitSound', value);
+          else if (key === 'showFPS') localStorage.setItem('rhythmPulseShowFPS', value);
+          else if (key === 'visualizer') localStorage.setItem('rhythmPulseVisualizer', value);
+          else if (key === 'noteStyle') localStorage.setItem('rhythmPulseNoteStyle', value);
+          else if (key === 'colorScheme') localStorage.setItem('rhythmPulseColorScheme', value);
+          else if (key === 'timingWindow') localStorage.setItem('rhythmPulseTimingWindow', value);
+          else if (key === 'scrollDirection') localStorage.setItem('rhythmPulseScrollDirection', value);
+          else if (key === 'healthMode') localStorage.setItem('rhythmPulseHealthMode', value);
+          else if (key === 'speedPreset') localStorage.setItem('rhythmPulseSpeedPreset', value);
+          else if (key === 'discordWebhook') localStorage.setItem('rhythmPulseWebhook', value);
+          else if (key === 'customKeys') localStorage.setItem('rhythmPulseCustomKeys', value);
+        }
+      }
+      location.reload();
+    } catch (err) {
+      alert('Invalid save file!');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
 document.getElementById('keybindCancel').addEventListener('click', () => { document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
 document.getElementById('keybindSave').addEventListener('click', () => { saveKeys(); document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
