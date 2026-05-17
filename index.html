@@ -36,6 +36,8 @@ canvas { display: block; }
 .song-item .song-diffs { margin-top: 0.3rem; display: flex; flex-wrap: wrap; gap: 2px; }
 .song-delete-btn { background: rgba(255,77,77,0.15); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
 .song-delete-btn:hover { background: rgba(255,77,77,0.4); transform: scale(1.1); }
+.song-export-btn { background: rgba(74,222,128,0.15); border: none; color: #4ade80; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; }
+.song-export-btn:hover { background: rgba(74,222,128,0.4); transform: scale(1.1); }
 .difficulty-select { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 8px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .diff-btn.easy { border-color: #4dff88; color: #4dff88; }
@@ -275,7 +277,7 @@ canvas { display: block; }
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Save Codes</span></div>
         <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:0.8rem;resize:none;padding:0.5rem;"></textarea></div>
-        <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button></div>
+        <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">🎵 Import Song</button></div>
        </div>
       </div>
 <script>
@@ -2090,7 +2092,7 @@ function updateSongList() {
       const ready = charts[d];
       return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
     }).join('');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-export-btn" data-idx="${originalIndex}" title="Export song code">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.fav-toggle').forEach(el => {
@@ -2143,6 +2145,13 @@ function updateSongList() {
       }
     });
   });
+  document.querySelectorAll('.song-export-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      exportSongCode(idx, btn);
+    });
+  });
 }
 
 async function deleteSong(idx) {
@@ -2160,6 +2169,108 @@ async function deleteSong(idx) {
     document.getElementById('songOrganizer').style.display = 'flex';
   }
   updateSongList();
+}
+
+const SONG_CHUNK_SIZE = 50000;
+
+async function compressData(data) {
+  const json = JSON.stringify(data);
+  const blob = new Blob([json]);
+  const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
+  return new Response(stream).arrayBuffer();
+}
+
+async function decompressData(buffer) {
+  const blob = new Blob([buffer]);
+  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
+  const json = await new Response(stream).text();
+  return JSON.parse(json);
+}
+
+async function exportSongCode(idx, btn) {
+  const song = songs[idx];
+  const originalText = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  try {
+    let rawData = song.rawData;
+    if (!rawData) {
+      const songsFromDB = await loadSongsFromDB();
+      const dbSong = songsFromDB.find(s => s.id === song.id);
+      if (dbSong) rawData = dbSong.rawData;
+    }
+    if (!rawData) { alert('Song data not found!'); btn.textContent = originalText; btn.disabled = false; return; }
+    const data = {
+      type: 'rpsong',
+      v: 1,
+      name: song.name,
+      bpm: song.bpm,
+      duration: song.duration,
+      beats: song.beats,
+      charts: song.charts,
+      audio: Array.from(new Uint8Array(rawData))
+    };
+    const compressed = await compressData(data);
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(compressed)));
+    const chunks = [];
+    for (let i = 0; i < base64.length; i += SONG_CHUNK_SIZE) {
+      chunks.push(base64.slice(i, i + SONG_CHUNK_SIZE));
+    }
+    const area = document.getElementById('saveCodeArea');
+    if (chunks.length === 1) {
+      area.value = '🎵' + base64;
+      area.select();
+      document.execCommand('copy');
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+    } else {
+      let allCode = '🎵' + base64;
+      area.value = allCode;
+      area.select();
+      document.execCommand('copy');
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+      alert(`Song exported! Code copied to clipboard.\n\n⚠️ The code is split into ${chunks.length} parts.\nPaste ALL parts below in order, then click "Import Song".\n\nPart 1 of ${chunks.length} has been copied.`);
+    }
+  } catch (err) {
+    console.error('Export failed:', err);
+    alert('Export failed: ' + err.message);
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+async function importSongCode() {
+  const code = document.getElementById('saveCodeArea').value.trim();
+  if (!code) { alert('Paste a song code first!'); return; }
+  try {
+    let base64 = code.startsWith('🎵') ? code.slice(1) : code;
+    const compressed = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const data = await decompressData(compressed.buffer);
+    if (data.type !== 'rpsong') { alert('Not a valid song code!'); return; }
+    const audioBuffer = new Uint8Array(data.audio).buffer;
+    const file = new File([audioBuffer], data.name + '.mp3', { type: 'audio/mpeg' });
+    await addSong(file);
+    if (data.beats && songs.length > 0) {
+      const newSong = songs[songs.length - 1];
+      newSong.beats = data.beats;
+      newSong.charts = data.charts || {};
+      newSong.bpm = data.bpm;
+      newSong.duration = data.duration;
+      const dbData = {
+        id: newSong.id, name: newSong.name, size: newSong.size,
+        duration: newSong.duration, bpm: newSong.bpm,
+        beats: newSong.beats, charts: newSong.charts,
+        rawData: audioBuffer, isFavorite: newSong.isFavorite,
+        fileName: file.name
+      };
+      saveSongToDB(dbData);
+    }
+    document.getElementById('saveCodeArea').value = '';
+  } catch (err) {
+    console.error('Import failed:', err);
+    alert('Import failed: ' + err.message);
+  }
 }
 
 const dropZone = document.getElementById('fileDropZone');
@@ -2848,10 +2959,23 @@ function escapeHtml(text) {
   return div.textContent.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+const SAVE_VERSION = 1;
+
+function migrateSaveData(data) {
+  const v = data.v || 0;
+  if (v >= SAVE_VERSION) return data;
+  const d = JSON.parse(JSON.stringify(data));
+  if (!d.s) d.s = {};
+  if (!d.a) d.a = {};
+  if (!d.f) d.f = [];
+  d.v = SAVE_VERSION;
+  return d;
+}
+
 // Save Codes
 document.getElementById('generateCodeBtn').addEventListener('click', () => {
   const data = {
-    v: 1,
+    v: SAVE_VERSION,
     a: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
     f: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
     s: {
@@ -2893,10 +3017,11 @@ document.getElementById('loadCodeBtn').addEventListener('click', () => {
   try {
     const json = decodeURIComponent(escape(atob(code)));
     const data = JSON.parse(json);
-    if (data.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.a));
-    if (data.f) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.f));
-    if (data.s) {
-      const s = data.s;
+    const migrated = migrateSaveData(data);
+    if (migrated.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a));
+    if (migrated.f) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(migrated.f));
+    if (migrated.s) {
+      const s = migrated.s;
       if (s.ao !== undefined) localStorage.setItem('rhythmPulseAudioOffset', s.ao);
       if (s.ss !== undefined) localStorage.setItem('rhythmPulseScrollSpeed', s.ss);
       if (s.ns !== undefined) localStorage.setItem('rhythmPulseNoteSize', s.ns);
@@ -2919,6 +3044,8 @@ document.getElementById('loadCodeBtn').addEventListener('click', () => {
     alert('Invalid save code!');
   }
 });
+
+document.getElementById('importSongBtn').addEventListener('click', () => { importSongCode(); });
 
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
 
