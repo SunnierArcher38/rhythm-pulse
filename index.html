@@ -195,7 +195,10 @@ canvas { display: block; }
 .mini-player { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 0.75rem 1.5rem; display: none; z-index: 110; align-items: center; gap: 1rem; min-width: 400px; max-width: 600px; }
 .mini-player.active { display: flex; }
 .mini-player .player-info { flex: 1; min-width: 0; }
-.mini-player .player-title { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-player .player-title { font-size: 0.9rem; font-weight: 600; overflow: hidden; max-width: 250px; }
+.mini-player .player-title-inner { display: inline-block; white-space: nowrap; }
+.mini-player .player-title.scrolling .player-title-inner { animation: marquee 10s linear infinite; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .mini-player .player-meta { font-size: 0.75rem; color: #888; display: flex; gap: 1rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.5rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.4rem; }
@@ -352,7 +355,7 @@ canvas { display: block; }
       <button class="player-btn" id="playerShuffleBtn">🔀</button>
     </div>
     <div class="player-info">
-      <div class="player-title" id="playerTitle">No song selected</div>
+      <div class="player-title" id="playerTitle"><span class="player-title-inner">No song selected</span></div>
       <div class="player-meta">
         <span id="playerTime">0:00 / 0:00</span>
         <span id="playerBPM"></span>
@@ -3227,7 +3230,17 @@ async function previewPlay(song) {
   previewStartTime = audioCtx.currentTime - previewPausedAt;
   previewPlaying = true;
   document.getElementById('playerPlayBtn').textContent = '⏸';
-  document.getElementById('playerTitle').textContent = song.name;
+  const titleEl = document.getElementById('playerTitle');
+  const inner = titleEl.querySelector('.player-title-inner');
+  inner.textContent = song.name;
+  requestAnimationFrame(() => {
+    if (inner.scrollWidth > titleEl.clientWidth) {
+      inner.textContent = song.name + '        ' + song.name;
+      titleEl.classList.add('scrolling');
+    } else {
+      titleEl.classList.remove('scrolling');
+    }
+  });
   document.getElementById('playerBPM').textContent = song.bpm ? `${Math.round(song.bpm)} BPM` : '';
   document.getElementById('miniPlayer').classList.add('active');
   updatePreviewProgress();
@@ -3338,6 +3351,9 @@ function previewStop() {
   menuCachedVisualizerData = null;
   document.getElementById('playerPlayBtn').textContent = '▶';
   document.getElementById('miniPlayer').classList.remove('active');
+  const titleEl = document.getElementById('playerTitle');
+  titleEl.querySelector('.player-title-inner').textContent = 'No song selected';
+  titleEl.classList.remove('scrolling');
   document.getElementById('playerProgressBar').style.width = '0%';
   document.getElementById('playerTime').textContent = '0:00 / 0:00';
 }
