@@ -2406,6 +2406,70 @@ async function decompressData(buffer) {
   return JSON.parse(json);
 }
 
+async function compressWithSongs(metadata, songs) {
+  const metaJson = JSON.stringify(metadata);
+  const metaBytes = new TextEncoder().encode(metaJson);
+  const metaLen = metaBytes.length;
+  
+  // Build binary layout: [4 bytes metaLen][metaBytes][for each song: 8 bytes audioLen + audioBytes]
+  let totalSize = 4 + metaLen;
+  for (const s of songs) totalSize += 8 + s.audio.length;
+  
+  const result = new Uint8Array(totalSize);
+  let offset = 0;
+  
+  // Write metadata length (4 bytes, big-endian)
+  result[offset++] = (metaLen >>> 24) & 0xFF;
+  result[offset++] = (metaLen >>> 16) & 0xFF;
+  result[offset++] = (metaLen >>> 8) & 0xFF;
+  result[offset++] = metaLen & 0xFF;
+  
+  // Write metadata
+  result.set(metaBytes, offset);
+  offset += metaLen;
+  
+  // Write each song
+  for (const s of songs) {
+    const audioLen = s.audio.length;
+    for (let i = 7; i >= 0; i--) {
+      result[offset++] = (audioLen >>> (i * 8)) & 0xFF;
+    }
+    result.set(s.audio, offset);
+    offset += audioLen;
+  }
+  
+  const blob = new Blob([result]);
+  const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
+  return new Response(stream).arrayBuffer();
+}
+
+async function decompressWithSongs(buffer) {
+  const blob = new Blob([buffer]);
+  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
+  const raw = new Uint8Array(await new Response(stream).arrayBuffer());
+  
+  let offset = 0;
+  const metaLen = (raw[offset] << 24) | (raw[offset + 1] << 16) | (raw[offset + 2] << 8) | raw[offset + 3];
+  offset += 4;
+  
+  const metaBytes = raw.slice(offset, offset + metaLen);
+  const metadata = JSON.parse(new TextDecoder().decode(metaBytes));
+  offset += metaLen;
+  
+  const songs = [];
+  while (offset < raw.length - 8) {
+    let audioLen = 0;
+    for (let i = 0; i < 8; i++) {
+      audioLen = (audioLen << 8) | raw[offset++];
+    }
+    const audio = raw.slice(offset, offset + audioLen);
+    offset += audioLen;
+    songs.push({ audio });
+  }
+  
+  return { metadata, songs };
+}
+
 async function exportSongCode(idx, btn) {
   const song = songs[idx];
   const originalText = btn.textContent;
@@ -2419,17 +2483,9 @@ async function exportSongCode(idx, btn) {
       if (dbSong) rawData = dbSong.rawData;
     }
     if (!rawData) { alert('Song data not found!'); btn.textContent = originalText; btn.disabled = false; return; }
-    const data = {
-      type: 'rpsong',
-      v: 1,
-      name: song.name,
-      bpm: song.bpm,
-      duration: song.duration,
-      beats: song.beats,
-      charts: song.charts,
-      audio: Array.from(new Uint8Array(rawData))
-    };
-    const compressed = await compressData(data);
+    const meta = { type: 'rpsong', v: 1, name: song.name, bpm: song.bpm, duration: song.duration, beats: song.beats, charts: song.charts };
+    const audioData = { audio: new Uint8Array(rawData), meta };
+    const compressed = await compressWithSongs(meta, [audioData]);
     const blob = new Blob([compressed], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2450,17 +2506,18 @@ async function exportSongCode(idx, btn) {
 async function importSongFile(file) {
   try {
     const buffer = await file.arrayBuffer();
-    const data = await decompressData(buffer);
-    if (data.type !== 'rpsong') { alert('Not a valid song file!'); return; }
-    const audioBuffer = new Uint8Array(data.audio).buffer;
-    const audioFile = new File([audioBuffer], data.name + '.mp3', { type: 'audio/mpeg' });
+    const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
+    if (metadata.type !== 'rpsong') { alert('Not a valid song file!'); return; }
+    const sf = songFiles[0];
+    const audioBuffer = sf.audio.buffer;
+    const audioFile = new File([audioBuffer], (metadata.name || 'song') + '.mp3', { type: 'audio/mpeg' });
     await addSong(audioFile);
-    if (data.beats && songs.length > 0) {
+    if (songs.length > 0) {
       const newSong = songs[songs.length - 1];
-      newSong.beats = data.beats;
-      newSong.charts = data.charts || {};
-      newSong.bpm = data.bpm;
-      newSong.duration = data.duration;
+      newSong.beats = metadata.beats || [];
+      newSong.charts = metadata.charts || {};
+      newSong.bpm = metadata.bpm || 0;
+      newSong.duration = metadata.duration || 0;
       const dbData = {
         id: newSong.id, name: newSong.name, size: newSong.size,
         duration: newSong.duration, bpm: newSong.bpm,
@@ -3049,8 +3106,8 @@ document.getElementById('saveAllSongsBtn').addEventListener('click', async () =>
   btn.textContent = '⏳ Saving...';
   btn.disabled = true;
   try {
-    const allSongs = [];
     const dbSongs = await loadSongsFromDB();
+    const songData = [];
     for (const s of songs) {
       let rawData = s.rawData;
       if (!rawData) {
@@ -3058,14 +3115,12 @@ document.getElementById('saveAllSongsBtn').addEventListener('click', async () =>
         if (dbSong) rawData = dbSong.rawData;
       }
       if (!rawData) continue;
-      allSongs.push({
-        id: s.id, name: s.name, bpm: s.bpm, duration: s.duration,
-        beats: s.beats, charts: s.charts, isFavorite: s.isFavorite,
-        audio: Array.from(new Uint8Array(rawData))
+      songData.push({
+        audio: new Uint8Array(rawData),
+        meta: { id: s.id, name: s.name, bpm: s.bpm, duration: s.duration, beats: s.beats, charts: s.charts, isFavorite: s.isFavorite }
       });
     }
-    const data = { type: 'rpsongs', v: 1, songs: allSongs };
-    const compressed = await compressData(data);
+    const compressed = await compressWithSongs({ type: 'rpsongs', v: 1 }, songData);
     const blob = new Blob([compressed], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3092,20 +3147,22 @@ document.getElementById('loadAllSongsInput').addEventListener('change', async (e
   btn.disabled = true;
   try {
     const buffer = await file.arrayBuffer();
-    const data = await decompressData(buffer);
-    if (data.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load All Songs'; btn.disabled = false; return; }
+    const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
+    if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load All Songs'; btn.disabled = false; return; }
     let loaded = 0;
-    for (const s of data.songs) {
-      if (songs.find(existing => existing.id === s.id)) continue;
-      const audioBuffer = new Uint8Array(s.audio).buffer;
-      const audioFile = new File([audioBuffer], s.name + '.mp3', { type: 'audio/mpeg' });
+    for (let i = 0; i < songFiles.length; i++) {
+      const sf = songFiles[i];
+      const meta = metadata.songs?.[i] || {};
+      if (songs.find(existing => existing.id === meta.id)) { loaded++; continue; }
+      const audioBuffer = sf.audio.buffer;
+      const audioFile = new File([audioBuffer], (meta.name || 'song') + '.mp3', { type: 'audio/mpeg' });
       await addSong(audioFile);
       const newSong = songs[songs.length - 1];
-      newSong.beats = s.beats;
-      newSong.charts = s.charts || {};
-      newSong.bpm = s.bpm;
-      newSong.duration = s.duration;
-      newSong.isFavorite = s.isFavorite || false;
+      newSong.beats = meta.beats || [];
+      newSong.charts = meta.charts || {};
+      newSong.bpm = meta.bpm || 0;
+      newSong.duration = meta.duration || 0;
+      newSong.isFavorite = meta.isFavorite || false;
       const dbData = {
         id: newSong.id, name: newSong.name, size: newSong.size,
         duration: newSong.duration, bpm: newSong.bpm,
@@ -3143,12 +3200,11 @@ document.getElementById('saveEverythingBtn').addEventListener('click', async () 
       }
       if (!rawData) continue;
       songData.push({
-        id: s.id, name: s.name, bpm: s.bpm, duration: s.duration,
-        beats: s.beats, charts: s.charts, isFavorite: s.isFavorite,
-        audio: Array.from(new Uint8Array(rawData))
+        audio: new Uint8Array(rawData),
+        meta: { id: s.id, name: s.name, bpm: s.bpm, duration: s.duration, beats: s.beats, charts: s.charts, isFavorite: s.isFavorite }
       });
     }
-    const data = {
+    const metadata = {
       type: 'rpbackup',
       v: 1,
       achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
@@ -3171,9 +3227,9 @@ document.getElementById('saveEverythingBtn').addEventListener('click', async () 
         sp: localStorage.getItem('rhythmPulseSpeedPreset'),
         ck: localStorage.getItem('rhythmPulseCustomKeys')
       },
-      songs: songData
+      songs: songData.map(s => s.meta)
     };
-    const compressed = await compressData(data);
+    const compressed = await compressWithSongs(metadata, songData);
     const blob = new Blob([compressed], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3200,12 +3256,12 @@ document.getElementById('loadEverythingInput').addEventListener('change', async 
   btn.disabled = true;
   try {
     const buffer = await file.arrayBuffer();
-    const data = await decompressData(buffer);
-    if (data.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
-    if (data.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.achievements));
-    if (data.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.favorites));
-    if (data.settings) {
-      const s = data.settings;
+    const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
+    if (metadata.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
+    if (metadata.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(metadata.achievements));
+    if (metadata.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(metadata.favorites));
+    if (metadata.settings) {
+      const s = metadata.settings;
       if (s.ao !== undefined) localStorage.setItem('rhythmPulseAudioOffset', s.ao);
       if (s.ss !== undefined) localStorage.setItem('rhythmPulseScrollSpeed', s.ss);
       if (s.ns !== undefined) localStorage.setItem('rhythmPulseNoteSize', s.ns);
@@ -3224,28 +3280,28 @@ document.getElementById('loadEverythingInput').addEventListener('change', async 
       if (s.ck !== undefined) localStorage.setItem('rhythmPulseCustomKeys', s.ck);
     }
     let loadedSongs = 0;
-    if (data.songs) {
-      for (const s of data.songs) {
-        if (songs.find(existing => existing.id === s.id)) continue;
-        const audioBuffer = new Uint8Array(s.audio).buffer;
-        const audioFile = new File([audioBuffer], s.name + '.mp3', { type: 'audio/mpeg' });
-        await addSong(audioFile);
-        const newSong = songs[songs.length - 1];
-        newSong.beats = s.beats;
-        newSong.charts = s.charts || {};
-        newSong.bpm = s.bpm;
-        newSong.duration = s.duration;
-        newSong.isFavorite = s.isFavorite || false;
-        const dbData = {
-          id: newSong.id, name: newSong.name, size: newSong.size,
-          duration: newSong.duration, bpm: newSong.bpm,
-          beats: newSong.beats, charts: newSong.charts,
-          rawData: audioBuffer, isFavorite: newSong.isFavorite,
-          fileName: audioFile.name
-        };
-        saveSongToDB(dbData);
-        loadedSongs++;
-      }
+    for (let i = 0; i < songFiles.length; i++) {
+      const sf = songFiles[i];
+      const meta = metadata.songs?.[i] || {};
+      if (songs.find(existing => existing.id === meta.id)) { loadedSongs++; continue; }
+      const audioBuffer = sf.audio.buffer;
+      const audioFile = new File([audioBuffer], (meta.name || 'song') + '.mp3', { type: 'audio/mpeg' });
+      await addSong(audioFile);
+      const newSong = songs[songs.length - 1];
+      newSong.beats = meta.beats || [];
+      newSong.charts = meta.charts || {};
+      newSong.bpm = meta.bpm || 0;
+      newSong.duration = meta.duration || 0;
+      newSong.isFavorite = meta.isFavorite || false;
+      const dbData = {
+        id: newSong.id, name: newSong.name, size: newSong.size,
+        duration: newSong.duration, bpm: newSong.bpm,
+        beats: newSong.beats, charts: newSong.charts,
+        rawData: audioBuffer, isFavorite: newSong.isFavorite,
+        fileName: audioFile.name
+      };
+      saveSongToDB(dbData);
+      loadedSongs++;
     }
     btn.textContent = `✅ Loaded! ${loadedSongs} songs restored`;
     setTimeout(() => { location.reload(); }, 2000);
