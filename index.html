@@ -283,6 +283,9 @@ canvas { display: block; }
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#4ade80;">Song Library</span></div>
         <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save All Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load All Songs</button></div>
         <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
+        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#ffd700;">Full Backup</span></div>
+        <div class="setting-row"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📦 Save Everything</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📂 Load Everything</button></div>
+        <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
        </div>
       </div>
      <div class="achievements-dropdown" id="achievementsDropdown">
@@ -3116,6 +3119,136 @@ document.getElementById('loadAllSongsInput').addEventListener('change', async (e
     console.error('Load all songs failed:', err);
     alert('Load failed: ' + err.message);
     btn.textContent = '📂 Load All Songs';
+    btn.disabled = false;
+  }
+  e.target.value = '';
+});
+
+document.getElementById('saveEverythingBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveEverythingBtn');
+  btn.textContent = '⏳ Saving...';
+  btn.disabled = true;
+  try {
+    const dbSongs = await loadSongsFromDB();
+    const songData = [];
+    for (const s of songs) {
+      let rawData = s.rawData;
+      if (!rawData) {
+        const dbSong = dbSongs.find(d => d.id === s.id);
+        if (dbSong) rawData = dbSong.rawData;
+      }
+      if (!rawData) continue;
+      songData.push({
+        id: s.id, name: s.name, bpm: s.bpm, duration: s.duration,
+        beats: s.beats, charts: s.charts, isFavorite: s.isFavorite,
+        audio: Array.from(new Uint8Array(rawData))
+      });
+    }
+    const data = {
+      type: 'rpbackup',
+      v: 1,
+      achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
+      favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
+      settings: {
+        ao: localStorage.getItem('rhythmPulseAudioOffset'),
+        ss: localStorage.getItem('rhythmPulseScrollSpeed'),
+        ns: localStorage.getItem('rhythmPulseNoteSize'),
+        vol: localStorage.getItem('rhythmPulseVolume'),
+        lc: localStorage.getItem('rhythmPulseLaneCount'),
+        hs: localStorage.getItem('rhythmPulseHitSound'),
+        fps: localStorage.getItem('rhythmPulseShowFPS'),
+        vis: localStorage.getItem('rhythmPulseVisualizer'),
+        bz: localStorage.getItem('rhythmPulseBeatZoom'),
+        nst: localStorage.getItem('rhythmPulseNoteStyle'),
+        cs: localStorage.getItem('rhythmPulseColorScheme'),
+        tw: localStorage.getItem('rhythmPulseTimingWindow'),
+        sd: localStorage.getItem('rhythmPulseScrollDirection'),
+        hm: localStorage.getItem('rhythmPulseHealthMode'),
+        sp: localStorage.getItem('rhythmPulseSpeedPreset'),
+        ck: localStorage.getItem('rhythmPulseCustomKeys')
+      },
+      songs: songData
+    };
+    const compressed = await compressData(data);
+    const blob = new Blob([compressed], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rhythm-pulse-backup-${Date.now()}.rpbackup`;
+    a.click();
+    URL.revokeObjectURL(url);
+    btn.textContent = '✅ Saved!';
+    setTimeout(() => { btn.textContent = '📦 Save Everything'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    console.error('Save everything failed:', err);
+    alert('Save failed: ' + err.message);
+    btn.textContent = '📦 Save Everything';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('loadEverythingBtn').addEventListener('click', () => { document.getElementById('loadEverythingInput').click(); });
+document.getElementById('loadEverythingInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('loadEverythingBtn');
+  btn.textContent = '⏳ Loading...';
+  btn.disabled = true;
+  try {
+    const buffer = await file.arrayBuffer();
+    const data = await decompressData(buffer);
+    if (data.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
+    if (data.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.achievements));
+    if (data.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.favorites));
+    if (data.settings) {
+      const s = data.settings;
+      if (s.ao !== undefined) localStorage.setItem('rhythmPulseAudioOffset', s.ao);
+      if (s.ss !== undefined) localStorage.setItem('rhythmPulseScrollSpeed', s.ss);
+      if (s.ns !== undefined) localStorage.setItem('rhythmPulseNoteSize', s.ns);
+      if (s.vol !== undefined) localStorage.setItem('rhythmPulseVolume', s.vol);
+      if (s.lc !== undefined) localStorage.setItem('rhythmPulseLaneCount', s.lc);
+      if (s.hs !== undefined) localStorage.setItem('rhythmPulseHitSound', s.hs);
+      if (s.fps !== undefined) localStorage.setItem('rhythmPulseShowFPS', s.fps);
+      if (s.vis !== undefined) localStorage.setItem('rhythmPulseVisualizer', s.vis);
+      if (s.bz !== undefined) localStorage.setItem('rhythmPulseBeatZoom', s.bz);
+      if (s.nst !== undefined) localStorage.setItem('rhythmPulseNoteStyle', s.nst);
+      if (s.cs !== undefined) localStorage.setItem('rhythmPulseColorScheme', s.cs);
+      if (s.tw !== undefined) localStorage.setItem('rhythmPulseTimingWindow', s.tw);
+      if (s.sd !== undefined) localStorage.setItem('rhythmPulseScrollDirection', s.sd);
+      if (s.hm !== undefined) localStorage.setItem('rhythmPulseHealthMode', s.hm);
+      if (s.sp !== undefined) localStorage.setItem('rhythmPulseSpeedPreset', s.sp);
+      if (s.ck !== undefined) localStorage.setItem('rhythmPulseCustomKeys', s.ck);
+    }
+    let loadedSongs = 0;
+    if (data.songs) {
+      for (const s of data.songs) {
+        if (songs.find(existing => existing.id === s.id)) continue;
+        const audioBuffer = new Uint8Array(s.audio).buffer;
+        const audioFile = new File([audioBuffer], s.name + '.mp3', { type: 'audio/mpeg' });
+        await addSong(audioFile);
+        const newSong = songs[songs.length - 1];
+        newSong.beats = s.beats;
+        newSong.charts = s.charts || {};
+        newSong.bpm = s.bpm;
+        newSong.duration = s.duration;
+        newSong.isFavorite = s.isFavorite || false;
+        const dbData = {
+          id: newSong.id, name: newSong.name, size: newSong.size,
+          duration: newSong.duration, bpm: newSong.bpm,
+          beats: newSong.beats, charts: newSong.charts,
+          rawData: audioBuffer, isFavorite: newSong.isFavorite,
+          fileName: audioFile.name
+        };
+        saveSongToDB(dbData);
+        loadedSongs++;
+      }
+    }
+    btn.textContent = `✅ Loaded! ${loadedSongs} songs restored`;
+    setTimeout(() => { location.reload(); }, 2000);
+  } catch (err) {
+    console.error('Load everything failed:', err);
+    alert('Load failed: ' + err.message);
+    btn.textContent = '📂 Load Everything';
     btn.disabled = false;
   }
   e.target.value = '';
