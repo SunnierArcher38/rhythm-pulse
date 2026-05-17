@@ -2866,7 +2866,7 @@ async function searchMusic(query) {
     });
   } catch (err) {
     console.error('[Music] Search failed:', err);
-    results.innerHTML = `<div class="music-error">Search failed: ${err.message}. Check your connection.</div>`;
+    results.innerHTML = `<div class="music-error">Search failed: ${err.message}</div>`;
   }
 }
 
