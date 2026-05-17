@@ -2985,22 +2985,6 @@ document.querySelectorAll('.genre-btn').forEach(btn => {
   });
 });
 
-document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  modal.style.display = 'none';
-  modal.classList.remove('active');
-  stopMusicPreview();
-});
-
-document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
-  if (e.target.id === 'musicBrowserModal') {
-    e.target.style.display = 'none';
-    e.target.classList.remove('active');
-    stopMusicPreview();
-  }
-});
-
 document.getElementById('musicSearchBtn').addEventListener('click', () => {
   const query = document.getElementById('musicSearchInput').value.trim();
   if (query) searchMusic(query);
