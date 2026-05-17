@@ -283,6 +283,9 @@ canvas { display: block; }
         <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:0.8rem;resize:none;padding:0.5rem;"></textarea></div>
         <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">🎵 Import Song</button></div>
         <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
+        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#4ade80;">Song Library</span></div>
+        <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save All Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load All Songs</button></div>
+        <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
        </div>
       </div>
      <div class="achievements-dropdown" id="achievementsDropdown">
@@ -3113,6 +3116,90 @@ document.getElementById('importSongBtn').addEventListener('click', () => { docum
 document.getElementById('importSongInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) importSongFile(file);
+  e.target.value = '';
+});
+
+document.getElementById('saveAllSongsBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveAllSongsBtn');
+  btn.textContent = '⏳ Saving...';
+  btn.disabled = true;
+  try {
+    const allSongs = [];
+    const dbSongs = await loadSongsFromDB();
+    for (const s of songs) {
+      let rawData = s.rawData;
+      if (!rawData) {
+        const dbSong = dbSongs.find(d => d.id === s.id);
+        if (dbSong) rawData = dbSong.rawData;
+      }
+      if (!rawData) continue;
+      allSongs.push({
+        id: s.id, name: s.name, bpm: s.bpm, duration: s.duration,
+        beats: s.beats, charts: s.charts, isFavorite: s.isFavorite,
+        audio: Array.from(new Uint8Array(rawData))
+      });
+    }
+    const data = { type: 'rpsongs', v: 1, songs: allSongs };
+    const compressed = await compressData(data);
+    const blob = new Blob([compressed], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rhythm-pulse-songs-${Date.now()}.rpsongs`;
+    a.click();
+    URL.revokeObjectURL(url);
+    btn.textContent = '✅ Saved!';
+    setTimeout(() => { btn.textContent = '💾 Save All Songs'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    console.error('Save all songs failed:', err);
+    alert('Save failed: ' + err.message);
+    btn.textContent = '💾 Save All Songs';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('loadAllSongsBtn').addEventListener('click', () => { document.getElementById('loadAllSongsInput').click(); });
+document.getElementById('loadAllSongsInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('loadAllSongsBtn');
+  btn.textContent = '⏳ Loading...';
+  btn.disabled = true;
+  try {
+    const buffer = await file.arrayBuffer();
+    const data = await decompressData(buffer);
+    if (data.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load All Songs'; btn.disabled = false; return; }
+    let loaded = 0;
+    for (const s of data.songs) {
+      if (songs.find(existing => existing.id === s.id)) continue;
+      const audioBuffer = new Uint8Array(s.audio).buffer;
+      const audioFile = new File([audioBuffer], s.name + '.mp3', { type: 'audio/mpeg' });
+      await addSong(audioFile);
+      const newSong = songs[songs.length - 1];
+      newSong.beats = s.beats;
+      newSong.charts = s.charts || {};
+      newSong.bpm = s.bpm;
+      newSong.duration = s.duration;
+      newSong.isFavorite = s.isFavorite || false;
+      const dbData = {
+        id: newSong.id, name: newSong.name, size: newSong.size,
+        duration: newSong.duration, bpm: newSong.bpm,
+        beats: newSong.beats, charts: newSong.charts,
+        rawData: audioBuffer, isFavorite: newSong.isFavorite,
+        fileName: audioFile.name
+      };
+      saveSongToDB(dbData);
+      loaded++;
+    }
+    updateSongList();
+    btn.textContent = `✅ Loaded ${loaded} songs!`;
+    setTimeout(() => { btn.textContent = '📂 Load All Songs'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    console.error('Load all songs failed:', err);
+    alert('Load failed: ' + err.message);
+    btn.textContent = '📂 Load All Songs';
+    btn.disabled = false;
+  }
   e.target.value = '';
 });
 
