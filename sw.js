@@ -1,26 +1,15 @@
-const CACHE_NAME = 'rhythm-pulse-v4';
-const ASSETS = [
-  'index.html'
-];
+const CACHE_NAME = 'rhythm-pulse-v5';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch(err => {
-        console.warn('SW install cache failed:', err);
-      });
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+      Promise.all(keys.map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
@@ -32,11 +21,7 @@ self.addEventListener('fetch', (e) => {
   
   if (isMainPage) {
     e.respondWith(
-      fetch(e.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return response;
-      }).catch(() => caches.match(e.request))
+      fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
     );
   } else {
     e.respondWith(
