@@ -228,6 +228,14 @@ canvas { display: block; }
 #loadingOverlay .loading-bar-container { width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
 #loadingOverlay .loading-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 4px; width: 0%; transition: width 0.3s; }
 #loadingOverlay .loading-text { font-size: 0.9rem; color: #888; margin-top: 0.5rem; }
+.discord-widget { position: absolute; bottom: 1rem; left: 1rem; background: rgba(20,20,35,0.9); border: 1px solid rgba(88,101,242,0.3); border-radius: 12px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; z-index: 110; }
+.discord-widget .discord-icon { width: 40px; height: 40px; border-radius: 50%; background: #5865f2; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; overflow: hidden; flex-shrink: 0; }
+.discord-widget .discord-icon img { width: 100%; height: 100%; border-radius: 50%; }
+.discord-widget .discord-info { min-width: 0; }
+.discord-widget .discord-name { font-size: 0.85rem; font-weight: 700; color: #fff; }
+.discord-widget .discord-members { font-size: 0.7rem; color: #888; }
+.discord-widget .discord-join-btn { padding: 0.35rem 0.8rem; background: #5865f2; border: none; border-radius: 6px; color: #fff; font-weight: 700; font-size: 0.75rem; text-decoration: none; white-space: nowrap; transition: all 0.2s; }
+.discord-widget .discord-join-btn:hover { background: #4752c4; transform: scale(1.05); }
 </style>
 </head>
 <body>
@@ -252,6 +260,7 @@ canvas { display: block; }
       <button class="settings-btn" id="uiToggle" title="Toggle UI">👁</button>
       <button class="settings-btn" id="browseMusicBtn" title="Browse Free Music" style="background:rgba(108,52,131,0.5);">🎵</button>
       <button class="settings-btn" id="achievementsToggle" title="Achievements">🏆</button>
+      <button class="settings-btn" id="discordBtn" title="Join Discord" style="background:rgba(88,101,242,0.3);">💬</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
         <div class="setting-row"><span class="setting-label">Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"></div>
@@ -288,7 +297,15 @@ canvas { display: block; }
         <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
        </div>
       </div>
-     <div class="achievements-dropdown" id="achievementsDropdown">
+     <div class="discord-widget" id="discordWidget">
+       <div class="discord-icon" id="discordIcon"></div>
+       <div class="discord-info">
+         <div class="discord-name">Rhythm Pulse</div>
+         <div class="discord-members" id="discordMembers">Loading...</div>
+       </div>
+       <a href="https://discord.gg/aa83vhpC4v" target="_blank" class="discord-join-btn">Join</a>
+     </div>
+      <div class="achievements-dropdown" id="achievementsDropdown">
        <div class="ach-header">🏆 Achievements</div>
        <div class="ach-list" id="achievementsList"></div>
      </div>
@@ -2611,6 +2628,7 @@ document.getElementById('backBtn').addEventListener('click', () => { hideResults
 document.getElementById('uiToggle').addEventListener('click', () => { document.getElementById('song-select').classList.toggle('ui-hidden'); });
 document.getElementById('achievementsToggle').addEventListener('click', () => { document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); });
 document.getElementById('settingsToggle').addEventListener('click', () => { document.getElementById('settingsDropdown').classList.toggle('active'); });
+document.getElementById('discordBtn').addEventListener('click', () => { window.open('https://discord.gg/aa83vhpC4v', '_blank'); });
 document.getElementById('audioOffset').addEventListener('input', (e) => { gameState.audioOffset = parseInt(e.target.value); localStorage.setItem('rhythmPulseAudioOffset', e.target.value); });
 document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); });
 document.getElementById('noteSize').addEventListener('input', (e) => { gameState.noteSize = parseInt(e.target.value); localStorage.setItem('rhythmPulseNoteSize', e.target.value); });
@@ -3617,6 +3635,25 @@ if ('serviceWorker' in navigator) {
 }
 
 cleanupIndexedDB();
+
+async function updateDiscordWidget() {
+  try {
+    const res = await fetch('https://discord.com/api/guilds/1368277299436265552/widget.json');
+    if (!res.ok) throw new Error('Widget not enabled');
+    const data = await res.json();
+    const iconEl = document.getElementById('discordIcon');
+    const membersEl = document.getElementById('discordMembers');
+    if (data.icon) {
+      iconEl.innerHTML = `<img src="https://cdn.discordapp.com/icons/${data.id}/${data.icon}.png?size=64" alt="Server Icon">`;
+    }
+    membersEl.textContent = `${data.presence_count || 0} online`;
+  } catch (e) {
+    const membersEl = document.getElementById('discordMembers');
+    membersEl.textContent = 'Join our community!';
+  }
+}
+updateDiscordWidget();
+setInterval(updateDiscordWidget, 60000);
 
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {

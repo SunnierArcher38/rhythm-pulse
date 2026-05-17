@@ -4,8 +4,8 @@
     <em>A rhythm game inspired by FNF & osu!mania — built as a single-file web app.</em>
   </p>
   <p align="center">
-    <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/%F0%9F%8E%AE%20Play%20Now-7c3aed?style=for-the-badge" alt="Play Now"></a>
-    <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/Discord-Join_Us-9b59b6?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+    <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/%F0%9F%8E%AE%20Play%20Now-7c3aed?style=for-the-badge&logoColor=white" alt="Play Now"></a>
+    <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
 </p>
 
@@ -18,19 +18,20 @@
     <td valign="top" width="50%">
       <h3>🎮 Gameplay</h3>
       <ul>
-        <li><strong>Downscroll</strong> with adjustable hit line</li>
-        <li><strong>4K / 5K / 6K / 7K</strong> lane support</li>
-        <li><strong>Hold notes</strong> with sustained press</li>
+        <li><strong>Downscroll & Upscroll</strong> with adjustable hit line</li>
+        <li><strong>4K–8K</strong> lane support</li>
+        <li><strong>Hold notes</strong> with sustained press & single judgment</li>
         <li><strong>4 difficulties</strong>: Easy → Insane</li>
-        <li><strong>Modifiers</strong>: Mirror, Random, No Fail & more</li>
+        <li><strong>Modifiers</strong>: Mirror, Random, Hidden, Sudden</li>
         <li><strong>Practice mode</strong> with loop, speed & minimap</li>
+        <li><strong>Autoplay & Metronome</strong></li>
       </ul>
     </td>
     <td valign="top" width="50%">
       <h3>🎨 Visuals</h3>
       <ul>
         <li><strong>Beat-reactive zoom</strong> (FNF-style pulse)</li>
-        <li><strong>Radial visualizer</strong> with 4-way mirroring</li>
+        <li><strong>Radial visualizer</strong> with 4-way mirroring & side dimming</li>
         <li><strong>Purple universe</strong> gradient background</li>
         <li><strong>Combo milestone</strong> zoom effects</li>
         <li><strong>Hit effects</strong>, lane glow & particle trails</li>
@@ -43,19 +44,25 @@
       <h3>🎵 Music</h3>
       <ul>
         <li><strong>Drag & drop</strong> or browse for local files</li>
+        <li><strong>Built-in music browser</strong> powered by Audius API</li>
+        <li><strong>Improved BPM detection</strong> with autocorrelation</li>
         <li><strong>Auto-chart generation</strong> from beat detection</li>
-        <li><strong>Media player</strong> with prev/next, loop, shuffle</li>
+        <li><strong>Media player</strong> with prev/next, loop, shuffle, seek & volume</li>
         <li><strong>Auto-advance</strong> to next song on end</li>
         <li><strong>Offline support</strong> via IndexedDB + Service Worker</li>
       </ul>
     </td>
     <td valign="top" width="50%">
-      <h3>🏆 Progression</h3>
+      <h3>🏆 Progression & Transfer</h3>
       <ul>
         <li><strong>19 achievements</strong> to unlock</li>
         <li><strong>Grades</strong> with timing graph</li>
         <li><strong>Score sharing</strong> via clipboard</li>
-        <li><strong>Favorites</strong> & song sorting</li>
+        <li><strong>Favorites</strong> & song sorting (name, BPM, length)</li>
+        <li><strong>Save Codes</strong> — transfer settings anywhere</li>
+        <li><strong>Full Backup</strong> — save/load everything including songs</li>
+        <li><strong>Song Library</strong> — export/import individual or all songs</li>
+        <li><strong>Regenerate Charts</strong> — re-detect BPM and rebuild charts</li>
         <li><strong>Rolling FPS</strong> counter (60-frame avg)</li>
       </ul>
     </td>
@@ -66,7 +73,7 @@
 
 ```
 1. Open index.html in a modern browser
-2. Load music files via drag & drop or file browser
+2. Load music files via drag & drop, file browser, or the built-in Audius music browser
 3. Select a song and choose difficulty
 4. Hit notes as they reach the receptors!
 ```
@@ -79,6 +86,7 @@
 | **5K** | `D` `F` `Space` `J` `K` |
 | **6K** | `S` `D` `F` `J` `K` `L` |
 | **7K** | `S` `D` `F` `Space` `J` `K` `L` |
+| **8K** | `S` `D` `F` `Space` `Space` `J` `K` `L` |
 
 > Hold notes require sustained key press — judgment awarded on release.
 
@@ -158,6 +166,8 @@ Got ideas? Here's what's on the radar — feel free to suggest more on [Discord]
 - **Canvas API** — rendering & visualizer
 - **IndexedDB** — persistent song storage
 - **Service Worker** — offline support
+- **CompressionStream API** — compressed song backups
+- **Audius API** — free music browser
 
 ## 🤖 Note
 
@@ -171,7 +181,7 @@ MIT — do whatever you want with it.
 
 Join the Discord server for updates, feedback, and support:
 
-[![Join Discord](https://img.shields.io/badge/Discord-Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
 
 ---
 
