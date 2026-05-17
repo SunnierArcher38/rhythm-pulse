@@ -1864,7 +1864,6 @@ function updateAccuracyDisplay() {
 function checkAchievements() {
   if (gameState.judgments.marvelous > 0) checkAchievement('first_marvelous');
   if (gameState.judgments.marvelous >= 100) checkAchievement('perfect_100');
-  if (gameState.judgments.miss === 0 && gameState.mode === 'results') checkAchievement('no_miss');
 }
 
 function drawTimingGraph() {
@@ -1922,6 +1921,7 @@ function showResults() {
   if (grade === 'S') checkAchievement('grade_s');
   if (grade === 'A' || grade === 'S') checkAchievement('grade_a');
   if (gameState.judgments.miss === 0 && totalNotes > 0) checkAchievement('full_combo');
+  if (gameState.judgments.miss === 0 && totalNotes > 0) checkAchievement('no_miss');
   if (accuracy == 100) checkAchievement('perfect_song');
   if (activeModifiers.length >= 3) checkAchievement('all_mods');
   const songsPlayed = parseInt(localStorage.getItem('rhythmPulseSongsPlayed') || '0') + 1;
