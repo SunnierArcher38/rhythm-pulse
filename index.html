@@ -1349,7 +1349,8 @@ function drawNotes() {
     if (note.type === 'hold' && note.missed) continue;
     if (note.type === 'hold') {
       const headY = (note.activated && note.holding) ? getHitY() : timeToY(note.time);
-      if (headY > getHitY() + size * 3) continue;
+      if (scrollDirection === 'upscroll' && headY < getHitY() - size * 3) continue;
+      if (scrollDirection === 'downscroll' && headY > getHitY() + size * 3) continue;
     }
     if (note.time < currentTime - 2) continue;
     if (note.time > currentTime + visibleRange) break;
@@ -1394,7 +1395,7 @@ function drawNotes() {
       if (holdHeight < 4) continue;
       if (bodyBottom < -size || bodyTop > canvas.height + size) continue;
       if (isCompleted || isBroken) {
-        const headPastHit = headY - getHitY();
+        const headPastHit = scrollDirection === 'upscroll' ? getHitY() - headY : headY - getHitY();
         alpha = Math.max(0, 1 - headPastHit / (size * 2));
         if (alpha <= 0) { ctx.globalAlpha = 1; continue; }
       }
@@ -1430,7 +1431,7 @@ function drawHitEffects() {
     ctx.save(); ctx.globalAlpha = 1 - progress;
     ctx.font = `bold ${20 + progress * 10}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = effect.color;
-    ctx.fillText(effect.label, x, y - gameState.noteSize - 15 - progress * 25);
+    ctx.fillText(effect.label, x, y + (scrollDirection === 'upscroll' ? 1 : -1) * (gameState.noteSize + 15 + progress * 25));
     ctx.restore();
     for (const particle of effect.particles) {
       const px = x + particle.vx * progress * 15, py = y + particle.vy * progress * 15;
@@ -1453,7 +1454,8 @@ let comboTrailParticles = [];
 let lastTrailSpawn = 0;
 function drawCombo() {
   if (gameState.combo < 2) return;
-  const x = canvas.width / 2, y = getHitY() - gameState.noteSize - 60;
+  const x = canvas.width / 2;
+  const y = scrollDirection === 'upscroll' ? getHitY() + gameState.noteSize + 60 : getHitY() - gameState.noteSize - 60;
   const comboScale = 1 + Math.sin(gameState.comboFire) * 0.05;
   ctx.save(); ctx.translate(x, y); ctx.scale(comboScale, comboScale);
   ctx.font = 'bold 60px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1549,7 +1551,7 @@ function drawTouchLaneLabels() {
   const laneColors = getLaneColors();
   const hitY = getHitY();
   const size = gameState.noteSize;
-  const labelY = hitY + size + 20;
+  const labelY = scrollDirection === 'upscroll' ? hitY - size - 20 : hitY + size + 20;
   const alpha = 0.4;
   ctx.globalAlpha = alpha;
   for (let i = 0; i < currentLaneCount; i++) {
