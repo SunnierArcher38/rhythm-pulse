@@ -1373,10 +1373,7 @@ let analyser = null, visualizerData = null, visualizerEnabled = true, cachedVisu
 
 function setupVisualizer() {
   if (!audioCtx || !audioBuffer) return;
-  if (!analyser) {
-    analyser = audioCtx.createAnalyser();
-  }
-  try { analyser.disconnect(); } catch(e) {}
+  analyser = audioCtx.createAnalyser();
   analyser.fftSize = 512;
   analyser.smoothingTimeConstant = 0.85;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
@@ -3373,8 +3370,6 @@ function previewAudius(url, name) {
       previewSource = audioCtx.createBufferSource();
       previewSource.buffer = buffer;
       if (!analyser) setupVisualizerForPreview();
-      try { previewSource.disconnect(); } catch(e) {}
-      try { analyser.disconnect(); } catch(e) {}
       previewSource.connect(analyser);
       analyser.connect(previewGainNode);
       previewSource.start();
@@ -3847,8 +3842,6 @@ async function previewPlay(song) {
   previewSource = audioCtx.createBufferSource();
   previewSource.buffer = song.audioBuffer;
   if (!analyser) setupVisualizerForPreview();
-  try { previewSource.disconnect(); } catch(e) {}
-  try { analyser.disconnect(); } catch(e) {}
   previewSource.connect(analyser);
   analyser.connect(previewGainNode);
   previewSource.start(0, previewPausedAt);
@@ -3873,8 +3866,7 @@ async function previewPlay(song) {
 }
 
 function setupVisualizerForPreview() {
-  if (!analyser) analyser = audioCtx.createAnalyser();
-  try { analyser.disconnect(); } catch(e) {}
+  analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
   analyser.smoothingTimeConstant = 0.8;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
@@ -3969,8 +3961,6 @@ function previewPause() {
 
 function previewStop() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
-  try { if (previewSource) previewSource.disconnect(); } catch(e) {}
-  try { if (analyser) analyser.disconnect(); } catch(e) {}
   previewPlaying = false;
   previewPausedAt = 0;
   previewSong = null;
