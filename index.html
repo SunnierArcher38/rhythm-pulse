@@ -2818,20 +2818,14 @@ document.getElementById('keybindSave').addEventListener('click', () => { saveKey
 let musicPreviewSource = null, musicPreviewPlaying = null;
 
 async function searchMusic(query) {
-  console.log('[Music] searchMusic called with:', query);
   const results = document.getElementById('musicResults');
-  console.log('[Music] Results element:', results);
   results.innerHTML = '<div class="music-loading">Searching...</div>';
   try {
     const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
-    console.log('[Music] Fetching:', url);
     const res = await fetch(url);
-    console.log('[Music] Response status:', res.status);
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     const data = await res.json();
-    console.log('[Music] API data:', data);
     const tracks = data.data || [];
-    console.log('[Music] Found', tracks.length, 'tracks');
     if (tracks.length === 0) {
       results.innerHTML = '<div class="music-error">No tracks found. Try a different genre or search.</div>';
       return;
@@ -2871,7 +2865,6 @@ async function searchMusic(query) {
 }
 
 function previewAudius(url, name) {
-  console.log('[Music] Previewing:', name, url);
   stopMusicPreview();
   initAudio();
   fetch(url, { redirect: 'follow' })
@@ -2888,7 +2881,6 @@ function previewAudius(url, name) {
       musicPreviewSource.connect(audioCtx.destination);
       musicPreviewSource.start();
       musicPreviewPlaying = name;
-      console.log('[Music] Playing:', name);
     })
     .catch(err => {
       console.error('[Music] Preview failed:', err);
@@ -2922,7 +2914,6 @@ async function downloadAudius(url, name, artist) {
       btn.disabled = false;
     }, 2000);
   } catch (err) {
-    console.error('[Music] Download failed:', err);
     btn.textContent = '❌ Failed';
     setTimeout(() => {
       btn.textContent = '⬇ Add';
@@ -2978,10 +2969,9 @@ document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
 
 document.querySelectorAll('.genre-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    console.log('[Music] Genre clicked:', btn.dataset.genre);
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    console.log("[Music] searchMusic exists:", typeof searchMusic); searchMusic(btn.dataset.genre);
+    searchMusic(btn.dataset.genre);
   });
 });
 
