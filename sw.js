@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhythm-pulse-v3';
+const CACHE_NAME = 'rhythm-pulse-v4';
 const ASSETS = [
   'index.html'
 ];
@@ -26,15 +26,29 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('api.audius.co') || e.request.url.includes('api.jamendo.com') || e.request.url.includes('api.deezer.com')) return;
-  e.respondWith(
-    caches.match(e.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(e.request).then((response) => {
-        if (!response.ok || response.status !== 200) return response;
+  
+  const url = new URL(e.request.url);
+  const isMainPage = url.pathname === '/' || url.pathname.endsWith('index.html');
+  
+  if (isMainPage) {
+    e.respondWith(
+      fetch(e.request).then(response => {
         const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         return response;
-      });
-    }).catch(() => caches.match('/index.html'))
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    e.respondWith(
+      caches.match(e.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(e.request).then((response) => {
+          if (!response.ok || response.status !== 200) return response;
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+          return response;
+        });
+      }).catch(() => caches.match('/index.html'))
+    );
+  }
 });
