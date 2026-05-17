@@ -2839,7 +2839,7 @@ async function searchMusic(query) {
         <div class="track-info">
           <div class="track-name">${escapeHtml(track.title)}</div>
           <div class="track-artist">${escapeHtml(track.user?.name || 'Unknown')}</div>
-          <div class="track-meta">${track.duration ? formatTime(track.duration / 1000) : ''} • ${track.genre || ''}</div>
+          <div class="track-meta">${track.duration ? formatTime(track.duration) : ''} • ${track.genre || ''}</div>
         </div>
         <div class="track-actions">
           <button class="track-btn preview" data-stream="${streamUrl}" data-name="${escapeHtml(track.title)}">▶ Preview</button>
@@ -2867,6 +2867,8 @@ async function searchMusic(query) {
 function previewAudius(url, name) {
   stopMusicPreview();
   initAudio();
+  const btn = document.querySelector(`.track-btn.preview[data-name="${escapeHtml(name)}"]`);
+  if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
   fetch(url, { redirect: 'follow' })
     .then(r => {
       if (!r.ok) throw new Error(`Stream error ${r.status}`);
@@ -2881,9 +2883,13 @@ function previewAudius(url, name) {
       musicPreviewSource.connect(audioCtx.destination);
       musicPreviewSource.start();
       musicPreviewPlaying = name;
+      if (btn) { btn.textContent = '⏹ Stop'; btn.disabled = false; btn.onclick = () => stopMusicPreview(); }
+      document.getElementById('playerTitle').querySelector('.player-title-inner').textContent = 'Preview: ' + name;
+      document.getElementById('miniPlayer').classList.add('active');
     })
     .catch(err => {
       console.error('[Music] Preview failed:', err);
+      if (btn) { btn.textContent = '▶ Preview'; btn.disabled = false; }
       alert('Preview failed: ' + err.message);
     });
 }
@@ -2894,6 +2900,10 @@ function stopMusicPreview() {
     musicPreviewSource = null;
   }
   musicPreviewPlaying = null;
+  document.getElementById('miniPlayer').classList.remove('active');
+  const titleEl = document.getElementById('playerTitle');
+  titleEl.querySelector('.player-title-inner').textContent = 'No song selected';
+  titleEl.classList.remove('scrolling');
 }
 
 async function downloadAudius(url, name, artist) {
