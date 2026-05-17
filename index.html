@@ -280,6 +280,139 @@ canvas { display: block; }
         <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">🎵 Import Song</button></div>
        </div>
       </div>
+     <div class="achievements-dropdown" id="achievementsDropdown">
+       <div class="ach-header">🏆 Achievements</div>
+       <div class="ach-list" id="achievementsList"></div>
+     </div>
+   </div>
+  <div id="pause-overlay">
+    <div class="pause-title">PAUSED</div>
+    <button class="pause-btn" id="resumeBtn">Resume</button>
+    <button class="pause-btn" id="restartBtn">Restart</button>
+    <button class="pause-btn" id="quitBtn">Quit to Menu</button>
+  </div>
+  <div id="results">
+    <div class="results-title">RESULTS</div>
+    <div class="results-song-name" id="resultsSongName"></div>
+    <div class="results-grade" id="resultsGrade"></div>
+    <div class="results-stats">
+      <div class="stat-item stat-score"><div class="stat-label">Score</div><div class="stat-value" id="resultScore">0</div></div>
+      <div class="stat-item stat-accuracy"><div class="stat-label">Accuracy</div><div class="stat-value" id="resultAccuracy">0%</div></div>
+      <div class="stat-item stat-marvelous"><div class="stat-label">Marvelous</div><div class="stat-value" id="resultMarvelous">0</div></div>
+      <div class="stat-item stat-perfect"><div class="stat-label">Perfect</div><div class="stat-value" id="resultPerfect">0</div></div>
+      <div class="stat-item stat-great"><div class="stat-label">Great</div><div class="stat-value" id="resultGreat">0</div></div>
+      <div class="stat-item stat-good"><div class="stat-label">Good</div><div class="stat-value" id="resultGood">0</div></div>
+      <div class="stat-item stat-miss"><div class="stat-label">Miss</div><div class="stat-value" id="resultMiss">0</div></div>
+      <div class="stat-item stat-maxcombo"><div class="stat-label">Max Combo</div><div class="stat-value" id="resultMaxCombo">0</div></div>
+    </div>
+    <div class="results-buttons">
+      <button class="results-btn retry" id="retryBtn">Retry</button>
+      <button class="results-btn back" id="backBtn">Song Select</button>
+      <button class="results-btn" id="discordScoreBtn" style="background:linear-gradient(135deg,#5865f2,#7289da);display:none;">Send Score to Discord</button>
+      <button class="results-btn" id="copyScoreBtn" style="background:linear-gradient(135deg,#4dff88,#4dc9ff);">📋 Copy Score</button>
+    </div>
+    <div id="highScoreIndicator" style="display:none;color:#ffd700;font-size:1.2rem;margin-top:1rem;text-align:center;">★ NEW HIGH SCORE! ★</div>
+    <div class="timing-graph" id="timingGraph"><canvas id="timingGraphCanvas"></canvas></div>
+    <div class="results-buttons" style="margin-top:1rem;">
+      <button class="results-btn back" id="showTimingGraphBtn" style="padding:0.5rem 1rem;font-size:0.9rem;">Show Timing Graph</button>
+    </div>
+  </div>
+  <div class="practice-panel" id="practicePanel">
+    <label>Speed:</label>
+    <input type="range" id="practiceSpeed" min="25" max="100" value="100" step="5">
+    <span class="speed-display" id="practiceSpeedDisplay">100%</span>
+    <button id="practiceLoopBtn">Loop Section</button>
+    <span class="loop-display" id="practiceLoopDisplay">--:-- - --:--</span>
+    <button id="practiceSetStart">Set Start</button>
+    <button id="practiceSetEnd">Set End</button>
+    <button id="practiceExit">Exit Practice</button>
+    <canvas id="practiceMinimap" width="400" height="40" style="margin-top:0.5rem;border-radius:4px;background:rgba(0,0,0,0.3);"></canvas>
+  </div>
+  <div class="accuracy-display" id="accuracyDisplay" style="display:none;">
+    <div class="acc-value" id="accValue">100%</div>
+    <div class="acc-label">ACCURACY</div>
+  </div>
+  <div class="judgment-counter" id="judgmentCounter" style="display:none;">
+    <div class="jud-row"><span class="jud-label" style="color:#ffd700;">Marvelous</span><span class="jud-count" id="judMarvelous" style="color:#ffd700;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#ff6bff;">Perfect</span><span class="jud-count" id="judPerfect" style="color:#ff6bff;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#6b9dff;">Great</span><span class="jud-count" id="judGreat" style="color:#6b9dff;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#6bffd7;">Good</span><span class="jud-count" id="judGood" style="color:#6bffd7;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#ff4d4d;">Miss</span><span class="jud-count" id="judMiss" style="color:#ff4d4d;">0</span></div>
+  </div>
+  <div class="autoplay-indicator" id="autoplayIndicator" style="display:none;">AUTOPLAY</div>
+  <div class="autoplay-indicator" id="modifierIndicator" style="display:none;top:3rem;"></div>
+  <div class="density-preview" id="densityPreview" style="display:none;"><div class="density-bar" id="densityBar"></div></div>
+  <div class="achievement-popup" id="achievementPopup"><div class="ach-title">★ ACHIEVEMENT UNLOCKED</div><div class="ach-name" id="achievementName"></div></div>
+  <div class="song-organizer" id="songOrganizer" style="display:none;">
+    <button class="organizer-btn active" data-sort="name">Name</button>
+    <button class="organizer-btn" data-sort="bpm">BPM</button>
+    <button class="organizer-btn" data-sort="length">Length</button>
+    <button class="organizer-btn" data-sort="favorites">★ Favorites</button>
+  </div>
+  <div class="metronome-indicator" id="metronomeIndicator"><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div></div>
+  <div class="mini-player" id="miniPlayer">
+    <div class="player-controls">
+      <button class="player-btn" id="playerPrevBtn">⏮</button>
+      <button class="player-btn play-btn" id="playerPlayBtn">▶</button>
+      <button class="player-btn" id="playerNextBtn">⏭</button>
+      <button class="player-btn" id="playerStopBtn">⏹</button>
+      <button class="player-btn" id="playerLoopBtn">🔁</button>
+      <button class="player-btn" id="playerShuffleBtn">🔀</button>
+    </div>
+    <div class="player-info">
+      <div class="player-title" id="playerTitle"><span class="player-title-inner">No song selected</span></div>
+      <div class="player-meta">
+        <span id="playerTime">0:00 / 0:00</span>
+        <span id="playerBPM"></span>
+      </div>
+      <div class="progress-container" id="playerProgressContainer">
+        <div class="progress-bar" id="playerProgressBar"></div>
+      </div>
+    </div>
+    <input type="range" class="volume-slider" id="playerVolume" min="0" max="100" value="80">
+  </div>
+  <div class="health-mode-indicator" id="healthModeIndicator"></div>
+</div>
+<div id="loadingOverlay">
+    <div class="loading-title">Loading Song...</div>
+    <div class="loading-bar-container"><div class="loading-bar" id="loadingBar"></div></div>
+    <div class="loading-text" id="loadingText">Preparing...</div>
+  </div>
+  <div id="keybindModal">
+  <div class="keybind-panel">
+    <h3>Customize Keys</h3>
+    <div id="keybindList"></div>
+    <div class="keybind-actions">
+      <button class="keybind-btn reset" id="keybindReset">Reset</button>
+      <button class="keybind-btn cancel" id="keybindCancel">Cancel</button>
+      <button class="keybind-btn save" id="keybindSave">Save</button>
+    </div>
+  </div>
+</div>
+<div id="musicBrowserModal">
+    <div class="music-browser-panel">
+    <h3>🎵 Browse Free Music</h3>
+    <p style="font-size:0.75rem;color:#888;margin:0.5rem 0;">Powered by Audius — free & legal music</p>
+    <div class="music-search-bar">
+      <input type="text" id="musicSearchInput" placeholder="Search genre, artist, or mood..." style="flex:1;padding:0.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:0.9rem;">
+      <button id="musicSearchBtn" style="padding:0.5rem 1rem;background:#6c3483;border:none;border-radius:6px;color:#fff;cursor:pointer;">Search</button>
+    </div>
+    <div class="music-genres" id="musicGenres">
+      <button class="genre-btn" data-genre="electronic">Electronic</button>
+      <button class="genre-btn" data-genre="rock">Rock</button>
+      <button class="genre-btn" data-genre="hiphop">Hip Hop</button>
+      <button class="genre-btn" data-genre="pop">Pop</button>
+      <button class="genre-btn" data-genre="ambient">Ambient</button>
+      <button class="genre-btn" data-genre="drum-and-bass">DnB</button>
+      <button class="genre-btn" data-genre="dubstep">Dubstep</button>
+      <button class="genre-btn" data-genre="cinematic">Cinematic</button>
+    </div>
+    <div class="music-results" id="musicResults"></div>
+    <div class="music-browser-actions">
+      <button class="keybind-btn cancel" id="musicBrowserClose">Close</button>
+    </div>
+  </div>
+</div>
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
