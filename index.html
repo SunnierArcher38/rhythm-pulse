@@ -40,7 +40,7 @@ canvas { display: block; }
 .song-export-btn:hover { background: rgba(74,222,128,0.4); transform: scale(1.1); }
 .song-regen-btn { background: rgba(255,200,0,0.15); border: none; color: #ffc800; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; }
 .song-regen-btn:hover { background: rgba(255,200,0,0.4); transform: scale(1.1); }
-.song-download-btn { background: rgba(107,157,255,0.15); border: none; color: #6b9dff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; }
+.song-download-btn { background: rgba(107,157,255,0.15); border: none; color: #6b9dff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
 .song-download-btn:hover { background: rgba(107,157,255,0.4); transform: scale(1.1); }
 .difficulty-select { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 8px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
@@ -86,8 +86,6 @@ canvas { display: block; }
 .results-btn.retry:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(196, 77, 255, 0.5); }
 .results-btn.back { background: rgba(255,255,255,0.1); color: #fff; border: 2px solid rgba(255,255,255,0.2); }
 .results-btn.back:hover { background: rgba(255,255,255,0.2); }
-.results-btn#discordScoreBtn { background: linear-gradient(135deg, #5865f2, #7289da); color: #fff; }
-.results-btn#discordScoreBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(88, 101, 242, 0.5); }
 #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 #pause-overlay.active { opacity: 1; pointer-events: all; }
 .pause-title { font-size: 4rem; font-weight: 900; margin-bottom: 2rem; }
@@ -315,7 +313,6 @@ canvas { display: block; }
     <div class="results-buttons">
       <button class="results-btn retry" id="retryBtn">Retry</button>
       <button class="results-btn back" id="backBtn">Song Select</button>
-      <button class="results-btn" id="discordScoreBtn" style="background:linear-gradient(135deg,#5865f2,#7289da);display:none;">Send Score to Discord</button>
       <button class="results-btn" id="copyScoreBtn" style="background:linear-gradient(135deg,#4dff88,#4dc9ff);">📋 Copy Score</button>
     </div>
     <div id="highScoreIndicator" style="display:none;color:#ffd700;font-size:1.2rem;margin-top:1rem;text-align:center;">★ NEW HIGH SCORE! ★</div>
@@ -2016,56 +2013,6 @@ function showResults() {
   const unlockedCount = Object.keys(achievements).filter(k => achievements[k]).length;
   if (unlockedCount >= 10) checkAchievement('collector');
   if (unlockedCount >= Object.keys(ACHIEVEMENTS).length) checkAchievement('completionist');
-  document.getElementById('discordScoreBtn').style.display = 'none';
-}
-
-function sendScoreToDiscord() {
-  const webhookUrl = prompt('Enter Discord webhook URL:');
-  if (!webhookUrl) return;
-  
-  const songName = gameState.song ? gameState.song.name : 'Unknown';
-  const totalNotes = gameState.chart.length;
-  const accuracy = totalNotes > 0 ? ((gameState.judgments.marvelous * 100 + gameState.judgments.perfect * 80 + gameState.judgments.great * 60 + gameState.judgments.good * 40) / totalNotes).toFixed(2) : 0;
-  let grade = 'F';
-  if (accuracy >= 95) grade = 'S';
-  else if (accuracy >= 90) grade = 'A';
-  else if (accuracy >= 80) grade = 'B';
-  else if (accuracy >= 70) grade = 'C';
-  else if (accuracy >= 60) grade = 'D';
-  
-  const btn = document.getElementById('discordScoreBtn');
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
-  
-  const embed = {
-    title: `🎵 Rhythm Pulse - ${grade} Rank`,
-    color: grade === 'S' ? 0xffd700 : grade === 'A' ? 0x4dff88 : grade === 'B' ? 0x4d9dff : grade === 'C' ? 0xff9d4d : 0xff4d4d,
-    fields: [
-      { name: 'Song', value: songName, inline: true },
-      { name: 'Score', value: gameState.score.toLocaleString(), inline: true },
-      { name: 'Accuracy', value: accuracy + '%', inline: true },
-      { name: 'Max Combo', value: gameState.maxCombo.toString(), inline: true },
-      { name: 'Difficulty', value: gameState.difficulty.toUpperCase(), inline: true },
-      { name: 'Marvelous', value: gameState.judgments.marvelous.toString(), inline: true },
-      { name: 'Perfect', value: gameState.judgments.perfect.toString(), inline: true },
-      { name: 'Great', value: gameState.judgments.great.toString(), inline: true },
-      { name: 'Good', value: gameState.judgments.good.toString(), inline: true },
-      { name: 'Miss', value: gameState.judgments.miss.toString(), inline: true }
-    ],
-    timestamp: new Date().toISOString()
-  };
-  
-  fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ embeds: [embed] })
-  }).then(() => {
-    btn.textContent = 'Sent!';
-    setTimeout(() => { btn.textContent = 'Send Score to Discord'; btn.disabled = false; }, 2000);
-  }).catch(e => {
-    btn.textContent = 'Failed';
-    setTimeout(() => { btn.textContent = 'Send Score to Discord'; btn.disabled = false; }, 2000);
-  });
 }
 
 function copyScoreToClipboard() {
@@ -2670,7 +2617,6 @@ document.getElementById('resumeBtn').addEventListener('click', () => { hidePause
 document.getElementById('restartBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
 document.getElementById('quitBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; });
 document.getElementById('retryBtn').addEventListener('click', () => { hideResults(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
-document.getElementById('discordScoreBtn').addEventListener('click', sendScoreToDiscord);
 document.getElementById('copyScoreBtn').addEventListener('click', copyScoreToClipboard);
 document.getElementById('backBtn').addEventListener('click', () => { hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; });
 
