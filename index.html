@@ -1379,7 +1379,6 @@ function setupVisualizer() {
   analyser.fftSize = 512;
   analyser.smoothingTimeConstant = 0.85;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
-  smoothData = new Float32Array(analyser.frequencyBinCount);
   try { analyser.disconnect(); } catch(e) {}
   gainNode.connect(analyser);
 }
@@ -1457,7 +1456,6 @@ function drawVisualizer() {
 
 let menuBeatZoomValue = 0, menuBeatZoomTarget = 0, menuLastBeatIdx = -1, menuLastZoomUpdate = performance.now();
 function updateMenuBeatZoom() {
-  if (!beatZoomEnabled) { menuBeatZoomValue = 0; menuBeatZoomTarget = 0; return; }
   if (!previewPlaying || !previewSong) return;
   const elapsed = audioCtx.currentTime - previewStartTime;
   const bpm = previewSong.bpm || 140;
