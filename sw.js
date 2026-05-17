@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhythm-pulse-v5';
+const CACHE_NAME = 'rhythm-pulse-v6';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -21,19 +21,23 @@ self.addEventListener('fetch', (e) => {
   
   if (isMainPage) {
     e.respondWith(
-      fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
+      fetch(e.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(e.request))
     );
   } else {
     e.respondWith(
-      caches.match(e.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(e.request).then((response) => {
-          if (!response.ok || response.status !== 200) return response;
+      fetch(e.request).then(response => {
+        if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
-          return response;
-        });
-      }).catch(() => caches.match('/index.html'))
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(e.request).then(cached => cached || caches.match('/index.html')))
     );
   }
 });
