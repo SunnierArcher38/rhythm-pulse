@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhythm-pulse-v1';
+const CACHE_NAME = 'rhythm-pulse-v2';
 const ASSETS = [
   '/',
   '/index.html'
@@ -22,6 +22,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('api.audius.co') || e.request.url.includes('api.jamendo.com') || e.request.url.includes('api.deezer.com')) return;
   e.respondWith(
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
