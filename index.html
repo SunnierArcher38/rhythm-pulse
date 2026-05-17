@@ -2867,9 +2867,10 @@ async function searchMusic(query) {
   try {
     const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('API error');
+    if (!res.ok) throw new Error(`API returned ${res.status}`);
     const data = await res.json();
     const tracks = data.data || [];
+    console.log('[Music] Found', tracks.length, 'tracks');
     if (tracks.length === 0) {
       results.innerHTML = '<div class="music-error">No tracks found. Try a different genre or search.</div>';
       return;
@@ -2886,29 +2887,52 @@ async function searchMusic(query) {
           <div class="track-meta">${track.duration ? formatTime(track.duration / 1000) : ''} • ${track.genre || ''}</div>
         </div>
         <div class="track-actions">
-          <button class="track-btn preview" onclick="previewAudius('${streamUrl}', '${escapeHtml(track.title)}')">▶ Preview</button>
-          <button class="track-btn download" onclick="downloadAudius('${streamUrl}', '${escapeHtml(track.title)}', '${escapeHtml(track.user?.name || 'Unknown')}')">⬇ Add</button>
+          <button class="track-btn preview" data-stream="${streamUrl}" data-name="${escapeHtml(track.title)}">▶ Preview</button>
+          <button class="track-btn download" data-stream="${streamUrl}" data-name="${escapeHtml(track.title)}" data-artist="${escapeHtml(track.user?.name || 'Unknown')}">⬇ Add</button>
         </div>
       `;
       results.appendChild(div);
     }
+    document.querySelectorAll('.track-btn.preview').forEach(btn => {
+      btn.addEventListener('click', () => {
+        previewAudius(btn.dataset.stream, btn.dataset.name);
+      });
+    });
+    document.querySelectorAll('.track-btn.download').forEach(btn => {
+      btn.addEventListener('click', () => {
+        downloadAudius(btn.dataset.stream, btn.dataset.name, btn.dataset.artist);
+      });
+    });
   } catch (err) {
-    results.innerHTML = '<div class="music-error">Search failed. Check your connection.</div>';
+    console.error('[Music] Search failed:', err);
+    results.innerHTML = `<div class="music-error">Search failed: ${err.message}. Check your connection.</div>`;
   }
 }
 
 function previewAudius(url, name) {
+  console.log('[Music] Previewing:', name, url);
   stopMusicPreview();
   initAudio();
-  fetch(url).then(r => r.arrayBuffer()).then(buf => {
-    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
+  fetch(url, { redirect: 'follow' })
+    .then(r => {
+      if (!r.ok) throw new Error(`Stream error ${r.status}`);
+      return r.arrayBuffer();
+    })
+    .then(buf => {
+      return audioCtx.decodeAudioData(buf.slice(0));
+    })
+    .then(buffer => {
       musicPreviewSource = audioCtx.createBufferSource();
       musicPreviewSource.buffer = buffer;
       musicPreviewSource.connect(audioCtx.destination);
       musicPreviewSource.start();
       musicPreviewPlaying = name;
+      console.log('[Music] Playing:', name);
+    })
+    .catch(err => {
+      console.error('[Music] Preview failed:', err);
+      alert('Preview failed: ' + err.message);
     });
-  });
 }
 
 function stopMusicPreview() {
@@ -2925,7 +2949,8 @@ async function downloadAudius(url, name, artist) {
   btn.classList.add('downloading');
   btn.disabled = true;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`Download error ${res.status}`);
     const blob = await res.blob();
     const file = new File([blob], `${artist} - ${name}.mp3`, { type: 'audio/mpeg' });
     await addSong(file);
@@ -2936,12 +2961,14 @@ async function downloadAudius(url, name, artist) {
       btn.disabled = false;
     }, 2000);
   } catch (err) {
+    console.error('[Music] Download failed:', err);
     btn.textContent = '❌ Failed';
     setTimeout(() => {
       btn.textContent = '⬇ Add';
       btn.classList.remove('downloading');
       btn.disabled = false;
     }, 2000);
+    alert('Download failed: ' + err.message);
   }
 }
 
