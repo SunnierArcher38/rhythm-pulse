@@ -1861,11 +1861,6 @@ function updateAccuracyDisplay() {
   document.getElementById('judMiss').textContent = gameState.judgments.miss;
 }
 
-function checkAchievements() {
-  if (gameState.judgments.marvelous > 0) checkAchievement('first_marvelous');
-  if (gameState.judgments.marvelous >= 100) checkAchievement('perfect_100');
-}
-
 function drawTimingGraph() {
   const canvas = document.getElementById('timingGraphCanvas');
   const ctx2 = canvas.getContext('2d');
@@ -1918,6 +1913,8 @@ function showResults() {
   document.getElementById('highScoreIndicator').style.display = isNewHigh ? 'block' : 'none';
   
   checkAchievement('first_song');
+  if (gameState.judgments.marvelous > 0) checkAchievement('first_marvelous');
+  if (gameState.judgments.marvelous >= 100) checkAchievement('perfect_100');
   if (grade === 'S') checkAchievement('grade_s');
   if (grade === 'A' || grade === 'S') checkAchievement('grade_a');
   if (gameState.judgments.miss === 0 && totalNotes > 0) checkAchievement('full_combo');
