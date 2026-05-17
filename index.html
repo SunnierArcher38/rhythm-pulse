@@ -291,7 +291,46 @@ canvas { display: block; position: relative; z-index: 1; }
 .song-select-footer { display: flex; gap: 0.75rem; justify-content: center; }
 .song-select-footer button { transition: all 0.3s; }
 .song-select-footer button:hover { transform: scale(1.05); }
+#leaderboardModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#leaderboardModal.active { display: flex !important; }
+.leaderboard-panel { background: rgba(20,20,35,0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.5rem; width: 90%; max-width: 700px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.leaderboard-panel h3 { text-align: center; margin-bottom: 0.5rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.3rem; }
+.leaderboard-subtitle { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 1rem; }
+.leaderboard-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; justify-content: center; flex-wrap: wrap; }
+.lb-filter-btn { padding: 0.3rem 0.8rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem; transition: all 0.3s; }
+.lb-filter-btn:hover { background: rgba(255,255,255,0.1); }
+.lb-filter-btn.active { background: rgba(196,77,255,0.2); border-color: #c44dff; color: #c44dff; }
+.leaderboard-list { flex: 1; overflow-y: auto; margin-bottom: 1rem; }
+.leaderboard-list::-webkit-scrollbar { width: 6px; }
+.leaderboard-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c44dff, #6b9dff); border-radius: 3px; }
+.lb-entry { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; border-radius: 10px; background: rgba(255,255,255,0.03); margin-bottom: 0.3rem; transition: all 0.2s; border: 1px solid transparent; }
+.lb-entry:hover { background: rgba(255,255,255,0.06); border-color: rgba(196,77,255,0.2); }
+.lb-entry.you { background: rgba(196,77,255,0.1); border-color: rgba(196,77,255,0.3); }
+.lb-rank { font-size: 1rem; font-weight: 700; min-width: 35px; text-align: center; }
+.lb-rank.gold { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+.lb-rank.silver { color: #c0c0c0; text-shadow: 0 0 8px rgba(192,192,192,0.5); }
+.lb-rank.bronze { color: #cd7f32; text-shadow: 0 0 8px rgba(205,127,50,0.5); }
+.lb-info { flex: 1; min-width: 0; }
+.lb-player { font-weight: 600; color: #fff; font-size: 0.9rem; }
+.lb-song { font-size: 0.75rem; color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-stats { display: flex; gap: 0.75rem; align-items: center; }
+.lb-score { font-weight: 700; color: #fff; font-size: 0.95rem; min-width: 70px; text-align: right; }
+.lb-acc { font-size: 0.8rem; color: #4dff88; min-width: 55px; text-align: right; }
+.lb-grade { font-weight: 700; font-size: 0.85rem; min-width: 25px; text-align: center; }
+.lb-grade.grade-S { color: #ffd700; }
+.lb-grade.grade-A { color: #4dff88; }
+.lb-grade.grade-B { color: #4d9dff; }
+.lb-grade.grade-C { color: #ff9d4d; }
+.lb-grade.grade-D { color: #ff4d4d; }
+.lb-grade.grade-F { color: #888; }
+.lb-loading { text-align: center; color: rgba(255,255,255,0.5); padding: 2rem; }
+.lb-error { text-align: center; color: #ff4d4d; padding: 1rem; }
+.lb-empty { text-align: center; color: rgba(255,255,255,0.4); padding: 2rem; }
+.leaderboard-footer { display: flex; gap: 0.5rem; justify-content: center; }
+.leaderboard-footer button { transition: all 0.3s; }
+.leaderboard-footer button:hover { transform: scale(1.05); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div id="game-container">
@@ -348,9 +387,15 @@ canvas { display: block; position: relative; z-index: 1; }
           <div class="setting-row"><span class="setting-label">🤖 Auto Play</span><button class="toggle-btn off" id="autoplayToggle">OFF</button></div>
           <div class="setting-row"><span class="setting-label">🥁 Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
           <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#6c3483,#c44dff);">⌨ Customize Keys</button></div>
-        </div>
-        <div class="settings-section">
-          <div class="settings-section-header">💾 Data Management</div>
+         </div>
+         <div class="settings-section">
+           <div class="settings-section-header">🌐 Online Leaderboard</div>
+           <div class="setting-row"><span class="setting-label">👤 Player Name</span><input type="text" id="playerNameInput" placeholder="Enter your name..." style="width:140px;padding:0.3rem 0.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;" maxlength="20"></div>
+           <div class="setting-row"><span class="setting-label">📤 Auto-Submit Scores</span><button class="toggle-btn" id="autoSubmitToggle">ON</button></div>
+           <div class="setting-row"><button class="pause-btn" id="viewLeaderboardBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#c44dff,#6b9dff);">🏆 View Leaderboard</button></div>
+         </div>
+         <div class="settings-section">
+           <div class="settings-section-header">💾 Data Management</div>
           <div class="setting-row"><span class="setting-label" style="color:#c44dff;font-weight:600;">Save Codes</span></div>
           <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:50px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:0.75rem;resize:none;padding:0.5rem;font-family:monospace;"></textarea></div>
           <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">📋 Copy</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">💾 Load</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">🎵 Import</button></div>
@@ -380,6 +425,26 @@ canvas { display: block; position: relative; z-index: 1; }
        <div class="ach-header">🏆 Achievements</div>
        <div class="ach-list" id="achievementsList"></div>
      </div>
+     <div id="leaderboardModal">
+       <div class="leaderboard-panel">
+         <h3>🏆 Global Leaderboard</h3>
+         <div class="leaderboard-subtitle" id="lbSubtitle">All Songs</div>
+         <div class="leaderboard-filters" id="lbFilters">
+           <button class="lb-filter-btn active" data-filter="all">All</button>
+           <button class="lb-filter-btn" data-filter="easy">Easy</button>
+           <button class="lb-filter-btn" data-filter="normal">Normal</button>
+           <button class="lb-filter-btn" data-filter="hard">Hard</button>
+           <button class="lb-filter-btn" data-filter="insane">Insane</button>
+         </div>
+         <div class="leaderboard-list" id="leaderboardList">
+           <div class="lb-loading">Loading scores...</div>
+         </div>
+         <div class="leaderboard-footer">
+           <button id="refreshLeaderboard" style="padding:0.5rem 1.5rem;background:linear-gradient(135deg,#c44dff,#6b9dff);border:none;border-radius:8px;color:#fff;cursor:pointer;font-weight:600;">🔄 Refresh</button>
+           <button id="closeLeaderboard" style="padding:0.5rem 1.5rem;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#fff;cursor:pointer;">Close</button>
+         </div>
+       </div>
+     </div>
    </div>
   <div id="pause-overlay">
     <div class="pause-title">PAUSED</div>
@@ -405,6 +470,7 @@ canvas { display: block; position: relative; z-index: 1; }
       <button class="results-btn retry" id="retryBtn">Retry</button>
       <button class="results-btn back" id="backBtn">Song Select</button>
       <button class="results-btn" id="copyScoreBtn" style="background:linear-gradient(135deg,#4dff88,#4dc9ff);">📋 Copy Score</button>
+      <button class="results-btn" id="viewResultsLeaderboardBtn" style="background:linear-gradient(135deg,#c44dff,#6b9dff);">🏆 Leaderboard</button>
     </div>
     <div id="highScoreIndicator" style="display:none;color:#ffd700;font-size:1.2rem;margin-top:1rem;text-align:center;">★ NEW HIGH SCORE! ★</div>
     <div class="timing-graph" id="timingGraph"><canvas id="timingGraphCanvas"></canvas></div>
@@ -2428,6 +2494,22 @@ function showResults() {
   const unlockedCount = Object.keys(achievements).filter(k => achievements[k]).length;
   checkProgressiveAchievements('collector', unlockedCount);
   checkProgressiveAchievements('completionist', unlockedCount);
+  
+  submitToLeaderboard({
+    songName: songName,
+    difficulty: diff,
+    score: gameState.score,
+    accuracy: accNum,
+    maxCombo: gameState.maxCombo,
+    grade: grade,
+    judgments: { ...gameState.judgments },
+    modifiers: [...activeModifiers],
+    timingWindow: timingWindow,
+    laneCount: currentLaneCount,
+    scrollSpeed: gameState.scrollSpeed,
+    healthMode: healthMode,
+    totalNotes: totalNotes
+  });
 }
 
 function copyScoreToClipboard() {
@@ -4162,6 +4244,201 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     this.lineTo(x + bl, y + h); this.quadraticCurveTo(x, y + h, x, y + h - bl);
     this.lineTo(x, y + tl); this.quadraticCurveTo(x, y, x + tl, y); this.closePath(); return this;
   };
+}
+
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
+let supabaseClient = null;
+let autoSubmitScores = true;
+
+function initSupabase() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_KEY === 'YOUR_SUPABASE_KEY') {
+    console.warn('Supabase not configured. Set SUPABASE_URL and SUPABASE_KEY in index.html');
+    return false;
+  }
+  try {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    return true;
+  } catch(e) {
+    console.error('Supabase init failed:', e);
+    return false;
+  }
+}
+
+function getPlayerName() {
+  return localStorage.getItem('rhythmPulsePlayerName') || 'Anonymous';
+}
+
+function setPlayerName(name) {
+  localStorage.setItem('rhythmPulsePlayerName', name.trim().substring(0, 20));
+}
+
+function submitToLeaderboard(data) {
+  if (!autoSubmitScores) return;
+  if (!supabaseClient) {
+    if (!initSupabase()) return;
+  }
+  if (!supabaseClient) return;
+  
+  const entry = {
+    player_name: getPlayerName(),
+    song_name: data.songName,
+    difficulty: data.difficulty,
+    score: data.score,
+    accuracy: data.accuracy,
+    max_combo: data.maxCombo,
+    grade: data.grade,
+    judgments: JSON.stringify(data.judgments),
+    modifiers: data.modifiers.join(','),
+    timing_window: data.timingWindow,
+    lane_count: data.laneCount,
+    scroll_speed: data.scrollSpeed,
+    health_mode: data.healthMode,
+    total_notes: data.totalNotes,
+    created_at: new Date().toISOString()
+  };
+  
+  supabaseClient
+    .from('scores')
+    .insert([entry])
+    .then(({ error }) => {
+      if (error) console.error('Leaderboard submit failed:', error);
+      else console.log('Score submitted to leaderboard!');
+    })
+    .catch(err => console.error('Leaderboard submit error:', err));
+}
+
+function fetchLeaderboard(difficulty = 'all', limit = 50) {
+  if (!supabaseClient) {
+    if (!initSupabase()) {
+      document.getElementById('leaderboardList').innerHTML = '<div class="lb-error">Leaderboard not configured.<br><small>Set up Supabase and edit SUPABASE_URL/SUPABASE_KEY in index.html</small></div>';
+      return;
+    }
+  }
+  if (!supabaseClient) return;
+  
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<div class="lb-loading">Loading scores...</div>';
+  
+  let query = supabaseClient
+    .from('scores')
+    .select('*')
+    .order('score', { ascending: false })
+    .limit(limit);
+  
+  if (difficulty !== 'all') {
+    query = query.eq('difficulty', difficulty);
+  }
+  
+  query.then(({ data, error }) => {
+    if (error) {
+      list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+      return;
+    }
+    
+    const playerName = getPlayerName().toLowerCase();
+    let html = '';
+    data.forEach((entry, i) => {
+      const rank = i + 1;
+      let rankClass = '';
+      if (rank === 1) rankClass = 'gold';
+      else if (rank === 2) rankClass = 'silver';
+      else if (rank === 3) rankClass = 'bronze';
+      
+      const isYou = entry.player_name.toLowerCase() === playerName;
+      const gradeClass = `grade-${entry.grade}`;
+      const judgments = entry.judgments ? JSON.parse(entry.judgments) : {};
+      
+      html += `<div class="lb-entry${isYou ? ' you' : ''}">
+        <div class="lb-rank ${rankClass}">#${rank}</div>
+        <div class="lb-info">
+          <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
+          <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
+        </div>
+        <div class="lb-stats">
+          <div class="lb-grade ${gradeClass}">${entry.grade}</div>
+          <div class="lb-acc">${entry.accuracy}%</div>
+          <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
+        </div>
+      </div>`;
+    });
+    list.innerHTML = html;
+  }).catch(err => {
+    list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showLeaderboard(difficulty = 'all') {
+  document.getElementById('leaderboardModal').classList.add('active');
+  document.getElementById('lbSubtitle').textContent = difficulty === 'all' ? 'All Songs' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1) + ' Difficulty';
+  fetchLeaderboard(difficulty);
+  document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === difficulty);
+  });
+}
+
+function hideLeaderboard() {
+  document.getElementById('leaderboardModal').classList.remove('active');
+}
+
+document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lb-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    document.getElementById('lbSubtitle').textContent = filter === 'all' ? 'All Songs' : filter.charAt(0).toUpperCase() + filter.slice(1) + ' Difficulty';
+    fetchLeaderboard(filter);
+  });
+});
+
+document.getElementById('viewLeaderboardBtn').addEventListener('click', () => {
+  showLeaderboard('all');
+});
+
+document.getElementById('viewResultsLeaderboardBtn').addEventListener('click', () => {
+  const diff = gameState.difficulty || 'all';
+  showLeaderboard(diff);
+});
+
+document.getElementById('closeLeaderboard').addEventListener('click', hideLeaderboard);
+document.getElementById('refreshLeaderboard').addEventListener('click', () => {
+  const activeFilter = document.querySelector('.lb-filter-btn.active');
+  fetchLeaderboard(activeFilter ? activeFilter.dataset.filter : 'all');
+});
+
+document.getElementById('leaderboardModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('leaderboardModal')) hideLeaderboard();
+});
+
+const playerNameInput = document.getElementById('playerNameInput');
+playerNameInput.value = getPlayerName() === 'Anonymous' ? '' : getPlayerName();
+playerNameInput.addEventListener('change', () => {
+  setPlayerName(playerNameInput.value);
+});
+
+const autoSubmitToggle = document.getElementById('autoSubmitToggle');
+autoSubmitToggle.addEventListener('click', () => {
+  autoSubmitScores = !autoSubmitScores;
+  autoSubmitToggle.textContent = autoSubmitScores ? 'ON' : 'OFF';
+  autoSubmitToggle.classList.toggle('off', !autoSubmitScores);
+  localStorage.setItem('rhythmPulseAutoSubmit', autoSubmitScores ? '1' : '0');
+});
+
+const savedAutoSubmit = localStorage.getItem('rhythmPulseAutoSubmit');
+if (savedAutoSubmit === '0') {
+  autoSubmitScores = false;
+  autoSubmitToggle.textContent = 'OFF';
+  autoSubmitToggle.classList.add('off');
 }
 
 const noteSymbols = ['♪', '♫', '♬', '♩', '🎵', '🎶'];
