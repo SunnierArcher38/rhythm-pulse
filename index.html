@@ -3385,13 +3385,16 @@ async function previewPlay(song) {
     previewGainNode.connect(audioCtx.destination);
   }
   try {
+    const wasDecoded = !!song.audioBuffer;
     song.audioBuffer = await decodeSong(song);
+    if (!wasDecoded) {
+      song.beats = detectBeats(song.audioBuffer, 0.5);
+      song.bpm = estimateBPM(song.beats);
+    }
   } catch (err) {
     console.error('Failed to decode preview:', err);
     return;
   }
-  song.beats = detectBeats(song.audioBuffer, 0.5);
-  song.bpm = estimateBPM(song.beats);
   previewSong = song;
   menuLastBeatIdx = -1;
   previewSource = audioCtx.createBufferSource();
