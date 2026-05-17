@@ -275,7 +275,6 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
         <div class="setting-row"><span class="setting-label">Lane Hide</span><button class="toggle-btn off" id="laneHideToggle">OFF</button></div>
         <div class="setting-row"><span class="setting-label">Key Press FX</span><button class="toggle-btn" id="keyPressToggle">ON</button></div>
-        <div class="setting-row"><span class="setting-label">Score Webhook URL</span><input type="text" class="style-select" id="discordWebhook" placeholder="Paste webhook URL..." style="width:140px;font-size:0.8rem;"></div>
         <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
         <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
@@ -2017,13 +2016,11 @@ function showResults() {
   const unlockedCount = Object.keys(achievements).filter(k => achievements[k]).length;
   if (unlockedCount >= 10) checkAchievement('collector');
   if (unlockedCount >= Object.keys(ACHIEVEMENTS).length) checkAchievement('completionist');
-  
-  const webhookUrl = document.getElementById('discordWebhook').value.trim();
-  document.getElementById('discordScoreBtn').style.display = webhookUrl ? 'inline-block' : 'none';
+  document.getElementById('discordScoreBtn').style.display = 'none';
 }
 
 function sendScoreToDiscord() {
-  const webhookUrl = document.getElementById('discordWebhook').value.trim();
+  const webhookUrl = prompt('Enter Discord webhook URL:');
   if (!webhookUrl) return;
   
   const songName = gameState.song ? gameState.song.name : 'Unknown';
@@ -2780,10 +2777,6 @@ document.querySelectorAll('.mod-btn').forEach(btn => {
   }
 })();
 
-document.getElementById('discordWebhook').addEventListener('change', (e) => {
-  localStorage.setItem('rhythmPulseDiscordWebhook', e.target.value.trim());
-});
-
 document.getElementById('practiceSpeed').addEventListener('input', (e) => {
   practiceSpeed = parseInt(e.target.value) / 100;
   document.getElementById('practiceSpeedDisplay').textContent = e.target.value + '%';
@@ -2844,8 +2837,6 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   if (sd) { scrollDirection = sd; document.getElementById('scrollDirection').value = sd; }
   const hm = localStorage.getItem('rhythmPulseHealthMode');
   if (hm) { healthMode = hm; document.getElementById('healthMode').value = hm; }
-  const dw = localStorage.getItem('rhythmPulseDiscordWebhook');
-  if (dw) { document.getElementById('discordWebhook').value = dw; }
 })();
 
 let listeningForLane = null;
@@ -3059,7 +3050,6 @@ document.getElementById('generateCodeBtn').addEventListener('click', () => {
       sd: localStorage.getItem('rhythmPulseScrollDirection'),
       hm: localStorage.getItem('rhythmPulseHealthMode'),
       sp: localStorage.getItem('rhythmPulseSpeedPreset'),
-      dw: localStorage.getItem('rhythmPulseDiscordWebhook'),
       ck: localStorage.getItem('rhythmPulseCustomKeys')
     }
   };
@@ -3103,7 +3093,6 @@ document.getElementById('loadCodeBtn').addEventListener('click', () => {
       if (s.sd !== undefined) localStorage.setItem('rhythmPulseScrollDirection', s.sd);
       if (s.hm !== undefined) localStorage.setItem('rhythmPulseHealthMode', s.hm);
       if (s.sp !== undefined) localStorage.setItem('rhythmPulseSpeedPreset', s.sp);
-      if (s.dw !== undefined) localStorage.setItem('rhythmPulseDiscordWebhook', s.dw);
       if (s.ck !== undefined) localStorage.setItem('rhythmPulseCustomKeys', s.ck);
     }
     location.reload();
