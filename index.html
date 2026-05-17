@@ -2817,52 +2817,6 @@ document.getElementById('keybindSave').addEventListener('click', () => { saveKey
 // Music Browser
 let musicPreviewSource = null, musicPreviewPlaying = null;
 
-document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  modal.style.display = 'flex';
-  modal.classList.add('active');
-  searchMusic('electronic');
-});
-
-document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  modal.style.display = 'none';
-  modal.classList.remove('active');
-  stopMusicPreview();
-});
-
-document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
-  if (e.target.id === 'musicBrowserModal') {
-    e.target.style.display = 'none';
-    e.target.classList.remove('active');
-    stopMusicPreview();
-  }
-});
-
-document.getElementById('musicSearchBtn').addEventListener('click', () => {
-  const query = document.getElementById('musicSearchInput').value.trim();
-  if (query) searchMusic(query);
-});
-
-document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    const query = e.target.value.trim();
-    if (query) searchMusic(query);
-  }
-});
-
-document.querySelectorAll('.genre-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    console.log('[Music] Genre clicked:', btn.dataset.genre);
-    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    searchMusic(btn.dataset.genre);
-  });
-});
-
 async function searchMusic(query) {
   console.log('[Music] searchMusic called with:', query);
   const results = document.getElementById('musicResults');
@@ -2985,6 +2939,15 @@ function escapeHtml(text) {
   return div.textContent.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const modal = document.getElementById('musicBrowserModal');
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  searchMusic('electronic');
+});
+
 document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
   e.stopPropagation();
   const modal = document.getElementById('musicBrowserModal');
@@ -3013,189 +2976,43 @@ document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
   }
 });
 
-async function searchMusic(query) {
-  const results = document.getElementById('musicResults');
-  results.innerHTML = '<div class="music-loading">Searching...</div>';
-  try {
-    if (currentMusicSource === 'jamendo') {
-      await searchJamendo(query, results);
-    } else if (currentMusicSource === 'audius') {
-      await searchAudius(query, results);
-    } else if (currentMusicSource === 'deezer') {
-      await searchDeezer(query, results);
-    }
-  } catch (err) {
-    results.innerHTML = '<div class="music-error">Search failed. Check your connection.</div>';
-  }
-}
-
-async function searchJamendo(query, results) {
-  const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=20&order=popularity_total&search=${encodeURIComponent(query)}&audioformat=mp32`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('API error');
-  const data = await res.json();
-  if (!data.results || data.results.length === 0) {
-    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
-    return;
-  }
-  results.innerHTML = '';
-  for (const track of data.results) {
-    const div = document.createElement('div');
-    div.className = 'music-track';
-    div.innerHTML = `
-      <div class="track-info">
-        <div class="track-name">${escapeHtml(track.name)}</div>
-        <div class="track-artist">${escapeHtml(track.artist_name)}</div>
-        <div class="track-meta">${formatTime(track.duration)} • ${track.bpm ? Math.round(track.bpm) + ' BPM' : 'Unknown BPM'}</div>
-      </div>
-      <div class="track-actions">
-        <button class="track-btn preview" onclick="previewJamendo('${track.audiodownload}', '${escapeHtml(track.name)}')">▶ Preview</button>
-        <button class="track-btn download" onclick="downloadTrack('${track.audiodownload}', '${escapeHtml(track.name)}', '${escapeHtml(track.artist_name)}')">⬇ Add</button>
-      </div>
-    `;
-    results.appendChild(div);
-  }
-}
-
-async function searchAudius(query, results) {
-  const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('API error');
-  const data = await res.json();
-  const tracks = data.data || [];
-  if (tracks.length === 0) {
-    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
-    return;
-  }
-  results.innerHTML = '';
-  for (const track of tracks) {
-    const streamUrl = `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=RhythmPulse`;
-    const div = document.createElement('div');
-    div.className = 'music-track';
-    div.innerHTML = `
-      <div class="track-info">
-        <div class="track-name">${escapeHtml(track.title)}</div>
-        <div class="track-artist">${escapeHtml(track.user?.name || 'Unknown')}</div>
-        <div class="track-meta">${track.duration ? formatTime(track.duration / 1000) : ''} • ${track.genre || ''}</div>
-      </div>
-      <div class="track-actions">
-        <button class="track-btn preview" onclick="previewAudius('${streamUrl}', '${escapeHtml(track.title)}')">▶ Preview</button>
-      </div>
-    `;
-    results.appendChild(div);
-  }
-}
-
-async function searchDeezer(query, results) {
-  const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=20`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('API error');
-  const data = await res.json();
-  const tracks = data.data || [];
-  if (tracks.length === 0) {
-    results.innerHTML = '<div class="music-error">No tracks found. Try a different search.</div>';
-    return;
-  }
-  results.innerHTML = '';
-  for (const track of tracks) {
-    const previewUrl = track.preview;
-    const div = document.createElement('div');
-    div.className = 'music-track';
-    div.innerHTML = `
-      <div class="track-info">
-        <div class="track-name">${escapeHtml(track.title)}</div>
-        <div class="track-artist">${escapeHtml(track.artist?.name || 'Unknown')}</div>
-        <div class="track-meta">${formatTime(track.duration)} • 30s preview</div>
-      </div>
-      <div class="track-actions">
-        <button class="track-btn preview" onclick="previewDeezer('${previewUrl}', '${escapeHtml(track.title)}')">▶ Preview</button>
-      </div>
-    `;
-    results.appendChild(div);
-  }
-}
-
-function previewJamendo(url, name) {
-  stopMusicPreview();
-  initAudio();
-  fetch(url).then(r => r.arrayBuffer()).then(buf => {
-    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
-      musicPreviewSource = audioCtx.createBufferSource();
-      musicPreviewSource.buffer = buffer;
-      musicPreviewSource.connect(audioCtx.destination);
-      musicPreviewSource.start();
-      musicPreviewPlaying = name;
-    });
+document.querySelectorAll('.genre-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    console.log('[Music] Genre clicked:', btn.dataset.genre);
+    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchMusic(btn.dataset.genre);
   });
-}
+});
 
-function previewAudius(url, name) {
+document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const modal = document.getElementById('musicBrowserModal');
+  modal.style.display = 'none';
+  modal.classList.remove('active');
   stopMusicPreview();
-  initAudio();
-  fetch(url).then(r => r.arrayBuffer()).then(buf => {
-    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
-      musicPreviewSource = audioCtx.createBufferSource();
-      musicPreviewSource.buffer = buffer;
-      musicPreviewSource.connect(audioCtx.destination);
-      musicPreviewSource.start();
-      musicPreviewPlaying = name;
-    });
-  });
-}
+});
 
-function previewDeezer(url, name) {
-  stopMusicPreview();
-  initAudio();
-  fetch(url).then(r => r.arrayBuffer()).then(buf => {
-    audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
-      musicPreviewSource = audioCtx.createBufferSource();
-      musicPreviewSource.buffer = buffer;
-      musicPreviewSource.connect(audioCtx.destination);
-      musicPreviewSource.start();
-      musicPreviewPlaying = name;
-    });
-  });
-}
-
-function stopMusicPreview() {
-  if (musicPreviewSource) {
-    try { musicPreviewSource.stop(); } catch(e) {}
-    musicPreviewSource = null;
+document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
+  if (e.target.id === 'musicBrowserModal') {
+    e.target.style.display = 'none';
+    e.target.classList.remove('active');
+    stopMusicPreview();
   }
-  musicPreviewPlaying = null;
-}
+});
 
-async function downloadTrack(url, name, artist) {
-  const btn = event.target;
-  btn.textContent = '⏳ Downloading...';
-  btn.classList.add('downloading');
-  btn.disabled = true;
-  try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    const file = new File([blob], `${artist} - ${name}.mp3`, { type: 'audio/mpeg' });
-    await addSong(file);
-    btn.textContent = '✅ Added!';
-    setTimeout(() => {
-      btn.textContent = '⬇ Add';
-      btn.classList.remove('downloading');
-      btn.disabled = false;
-    }, 2000);
-  } catch (err) {
-    btn.textContent = '❌ Failed';
-    setTimeout(() => {
-      btn.textContent = '⬇ Add';
-      btn.classList.remove('downloading');
-      btn.disabled = false;
-    }, 2000);
+document.getElementById('musicSearchBtn').addEventListener('click', () => {
+  const query = document.getElementById('musicSearchInput').value.trim();
+  if (query) searchMusic(query);
+});
+
+document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const query = e.target.value.trim();
+    if (query) searchMusic(query);
   }
-}
+});
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.textContent.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
 
 function renderKeybinds() {
