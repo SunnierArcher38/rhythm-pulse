@@ -11,235 +11,286 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: radial-gradient(ellipse at center, #1a0a2e 0%, #0d0520 50%, #050210 100%); overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; color: #fff; user-select: none; }
+body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 50%, rgba(196,77,255,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(107,157,255,0.08) 0%, transparent 50%), radial-gradient(circle at 50% 80%, rgba(255,107,157,0.06) 0%, transparent 50%); animation: bgShift 20s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
+@keyframes bgShift { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.1) rotate(5deg); } }
 #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-canvas { display: block; }
-#song-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(10,10,26,0.5) 0%, rgba(26,10,42,0.5) 50%, rgba(10,26,42,0.5) 100%); display: flex; flex-direction: column; align-items: center; z-index: 100; overflow: hidden; }
+canvas { display: block; position: relative; z-index: 1; }
+@keyframes floatUp { 0% { transform: translateY(100vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
+.floating-note { position: fixed; font-size: 1.5rem; opacity: 0; pointer-events: none; z-index: 0; animation: floatUp linear infinite; }
+#song-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; display: flex; flex-direction: column; align-items: center; z-index: 100; overflow: hidden; }
 #song-select.hidden { display: none; }
-.select-title { font-size: 4rem; font-weight: 900; background: linear-gradient(45deg, #ff6b9d, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 2rem; animation: titlePulse 2s ease-in-out infinite; }
-@keyframes titlePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
-.select-subtitle { font-size: 1.2rem; color: #888; margin-bottom: 2rem; }
-.file-drop-zone { width: 80%; max-width: 600px; height: 150px; border: 3px dashed #4a4a6a; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; margin-bottom: 2rem; background: rgba(255,255,255,0.02); }
-.file-drop-zone:hover, .file-drop-zone.dragover { border-color: #c44dff; background: rgba(196, 77, 255, 0.1); box-shadow: 0 0 30px rgba(196, 77, 255, 0.2); }
-.file-drop-zone .icon { font-size: 3rem; margin-bottom: 0.5rem; }
-.file-drop-zone .text { font-size: 1.1rem; color: #aaa; }
-.file-drop-zone .hint { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
-.song-list { width: 80%; max-width: 700px; max-height: 35vh; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 15px; padding: 1rem; }
-.song-list::-webkit-scrollbar { width: 8px; }
-.song-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
-.song-list::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 4px; }
-.song-item { display: flex; align-items: center; padding: 1rem; margin: 0.5rem 0; background: rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-.song-item:hover { background: rgba(196, 77, 255, 0.15); border-color: rgba(196, 77, 255, 0.3); transform: translateX(5px); }
-.song-item .song-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #ff6b9d, #c44dff); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 1rem; flex-shrink: 0; }
-.song-item .song-info { flex: 1; }
+.select-title { font-size: 4.5rem; font-weight: 900; background: linear-gradient(135deg, #ff6b9d, #c44dff, #6b9dff, #ff6b9d); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: 2rem; animation: titleGradient 4s ease infinite, titleFloat 3s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(196,77,255,0.5)); letter-spacing: 2px; }
+@keyframes titleGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes titleFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
+.select-subtitle { font-size: 1.1rem; color: rgba(255,255,255,0.5); margin-bottom: 2rem; letter-spacing: 4px; text-transform: uppercase; }
+.file-drop-zone { width: 80%; max-width: 600px; height: 150px; border: 2px dashed rgba(196,77,255,0.4); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 2rem; background: rgba(255,255,255,0.02); backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+.file-drop-zone::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(196,77,255,0.1), rgba(107,157,255,0.1)); opacity: 0; transition: opacity 0.4s; }
+.file-drop-zone:hover::before, .file-drop-zone.dragover::before { opacity: 1; }
+.file-drop-zone:hover, .file-drop-zone.dragover { border-color: #c44dff; transform: scale(1.02); box-shadow: 0 0 40px rgba(196,77,255,0.3), inset 0 0 40px rgba(196,77,255,0.1); }
+.file-drop-zone .icon { font-size: 3rem; margin-bottom: 0.5rem; z-index: 1; animation: iconBounce 2s ease-in-out infinite; }
+@keyframes iconBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.file-drop-zone .text { font-size: 1.1rem; color: rgba(255,255,255,0.8); z-index: 1; }
+.file-drop-zone .hint { font-size: 0.85rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem; z-index: 1; }
+.song-list { width: 80%; max-width: 700px; max-height: 35vh; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 1rem; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+.song-list::-webkit-scrollbar { width: 6px; }
+.song-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+.song-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c44dff, #6b9dff); border-radius: 3px; }
+.song-item { display: flex; align-items: center; padding: 1rem; margin: 0.5rem 0; background: rgba(255,255,255,0.04); border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+.song-item::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(196,77,255,0.15), rgba(107,157,255,0.15)); opacity: 0; transition: opacity 0.3s; }
+.song-item:hover::before { opacity: 1; }
+.song-item:hover { border-color: rgba(196,77,255,0.4); transform: translateX(8px); box-shadow: 0 4px 20px rgba(196,77,255,0.2); }
+.song-item .song-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #ff6b9d, #c44dff); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 1rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(196,77,255,0.4); position: relative; z-index: 1; }
+.song-item .song-info { flex: 1; position: relative; z-index: 1; }
 .song-item .song-name { font-size: 1.1rem; font-weight: 600; }
-.song-item .song-meta { font-size: 0.85rem; color: #888; margin-top: 0.25rem; }
-.song-item .song-diffs { margin-top: 0.3rem; display: flex; flex-wrap: wrap; gap: 2px; }
-.song-delete-btn { background: rgba(255,77,77,0.15); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
-.song-delete-btn:hover { background: rgba(255,77,77,0.4); transform: scale(1.1); }
-.song-export-btn { background: rgba(74,222,128,0.15); border: none; color: #4ade80; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
-.song-export-btn:hover { background: rgba(74,222,128,0.4); transform: scale(1.1); }
-.song-regen-btn { background: rgba(255,200,0,0.15); border: none; color: #ffc800; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; }
-.song-regen-btn:hover { background: rgba(255,200,0,0.4); transform: scale(1.1); }
-.song-download-btn { background: rgba(107,157,255,0.15); border: none; color: #6b9dff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
-.song-download-btn:hover { background: rgba(107,157,255,0.4); transform: scale(1.1); }
+.song-item .song-meta { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; }
+.song-item .song-diffs { margin-top: 0.3rem; display: flex; flex-wrap: wrap; gap: 4px; }
+.song-delete-btn { background: rgba(255,77,77,0.15); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: all 0.3s; flex-shrink: 0; margin-left: 0.5rem; position: relative; z-index: 1; }
+.song-delete-btn:hover { background: rgba(255,77,77,0.4); transform: scale(1.15) rotate(10deg); box-shadow: 0 0 15px rgba(255,77,77,0.4); }
+.song-export-btn { background: rgba(74,222,128,0.15); border: none; color: #4ade80; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: all 0.3s; flex-shrink: 0; margin-left: 0.5rem; position: relative; z-index: 1; }
+.song-export-btn:hover { background: rgba(74,222,128,0.4); transform: scale(1.15); box-shadow: 0 0 15px rgba(74,222,128,0.4); }
+.song-regen-btn { background: rgba(255,200,0,0.15); border: none; color: #ffc800; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: all 0.3s; flex-shrink: 0; position: relative; z-index: 1; }
+.song-regen-btn:hover { background: rgba(255,200,0,0.4); transform: scale(1.15) rotate(180deg); box-shadow: 0 0 15px rgba(255,200,0,0.4); }
+.song-download-btn { background: rgba(107,157,255,0.15); border: none; color: #6b9dff; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; transition: all 0.3s; flex-shrink: 0; margin-left: 0.5rem; position: relative; z-index: 1; }
+.song-download-btn:hover { background: rgba(107,157,255,0.4); transform: scale(1.15); box-shadow: 0 0 15px rgba(107,157,255,0.4); }
 .difficulty-select { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 8px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+.diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 10px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.9rem; position: relative; overflow: hidden; }
+.diff-btn::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s; }
 .diff-btn.easy { border-color: #4dff88; color: #4dff88; }
-.diff-btn.easy:hover { background: rgba(77, 255, 136, 0.2); }
+.diff-btn.easy::before { background: rgba(77,255,136,0.2); }
+.diff-btn.easy:hover { background: rgba(77,255,136,0.2); transform: scale(1.05); box-shadow: 0 0 20px rgba(77,255,136,0.4); }
 .diff-btn.normal { border-color: #4d9dff; color: #4d9dff; }
-.diff-btn.normal:hover { background: rgba(77, 157, 255, 0.2); }
+.diff-btn.normal::before { background: rgba(77,157,255,0.2); }
+.diff-btn.normal:hover { background: rgba(77,157,255,0.2); transform: scale(1.05); box-shadow: 0 0 20px rgba(77,157,255,0.4); }
 .diff-btn.hard { border-color: #ff6b4d; color: #ff6b4d; }
-.diff-btn.hard:hover { background: rgba(255, 107, 77, 0.2); }
+.diff-btn.hard::before { background: rgba(255,107,77,0.2); }
+.diff-btn.hard:hover { background: rgba(255,107,77,0.2); transform: scale(1.05); box-shadow: 0 0 20px rgba(255,107,77,0.4); }
 .diff-btn.insane { border-color: #ff4d88; color: #ff4d88; }
-.diff-btn.insane:hover { background: rgba(255, 77, 136, 0.2); }
+.diff-btn.insane::before { background: rgba(255,77,136,0.2); }
+.diff-btn.insane:hover { background: rgba(255,77,136,0.2); transform: scale(1.05); box-shadow: 0 0 20px rgba(255,77,136,0.4); }
 #countdown { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8rem; font-weight: 900; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
 #countdown.active { opacity: 1; }
-#countdown .count-text { animation: countPop 0.5s ease-out; text-shadow: 0 0 40px rgba(255,255,255,0.8); }
+#countdown .count-text { animation: countPop 0.5s ease-out; text-shadow: 0 0 40px rgba(255,255,255,0.8), 0 0 80px rgba(196,77,255,0.5); }
 @keyframes countPop { 0% { transform: scale(2); opacity: 0; } 50% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-#results { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 15, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+#results { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,15,0.95); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 #results.active { opacity: 1; pointer-events: all; }
-.results-title { font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; }
+.results-title { font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 20px rgba(196,77,255,0.5)); }
 .results-grade { font-size: 6rem; font-weight: 900; margin: 1rem 0; animation: gradeReveal 1s ease-out; }
 @keyframes gradeReveal { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 60% { transform: scale(1.2) rotate(10deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
-.grade-S { color: #ffd700; text-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
-.grade-A { color: #4dff88; text-shadow: 0 0 40px rgba(77, 255, 136, 0.8); }
-.grade-B { color: #4d9dff; text-shadow: 0 0 40px rgba(77, 157, 255, 0.8); }
-.grade-C { color: #ff9d4d; text-shadow: 0 0 40px rgba(255, 157, 77, 0.8); }
-.grade-D { color: #ff4d4d; text-shadow: 0 0 40px rgba(255, 77, 77, 0.8); }
-.grade-F { color: #888; text-shadow: 0 0 20px rgba(136, 136, 136, 0.5); }
-.results-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 3rem; margin: 2rem 0; padding: 2rem; background: rgba(255,255,255,0.05); border-radius: 15px; }
-.stat-item { text-align: center; }
-.stat-label { font-size: 0.9rem; color: #888; }
+.grade-S { color: #ffd700; text-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,215,0,0.4); animation: gradeGlow 2s ease-in-out infinite alternate; }
+@keyframes gradeGlow { 0% { filter: drop-shadow(0 0 20px rgba(255,215,0,0.6)); } 100% { filter: drop-shadow(0 0 40px rgba(255,215,0,1)); } }
+.grade-A { color: #4dff88; text-shadow: 0 0 40px rgba(77,255,136,0.8); }
+.grade-B { color: #4d9dff; text-shadow: 0 0 40px rgba(77,157,255,0.8); }
+.grade-C { color: #ff9d4d; text-shadow: 0 0 40px rgba(255,157,77,0.8); }
+.grade-D { color: #ff4d4d; text-shadow: 0 0 40px rgba(255,77,77,0.8); }
+.grade-F { color: #888; text-shadow: 0 0 20px rgba(136,136,136,0.5); }
+.results-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 3rem; margin: 2rem 0; padding: 2rem; background: rgba(255,255,255,0.05); border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); }
+.stat-item { text-align: center; padding: 0.5rem; border-radius: 8px; transition: transform 0.3s; }
+.stat-item:hover { transform: scale(1.05); }
+.stat-label { font-size: 0.9rem; color: rgba(255,255,255,0.5); }
 .stat-value { font-size: 1.5rem; font-weight: 700; }
-.stat-marvelous .stat-value { color: #ffd700; }
-.stat-perfect .stat-value { color: #ff6bff; }
-.stat-great .stat-value { color: #6b9dff; }
-.stat-good .stat-value { color: #6bffd7; }
-.stat-miss .stat-value { color: #ff4d4d; }
-.stat-maxcombo .stat-value { color: #ff9d4d; }
-.stat-score .stat-value { color: #fff; }
-.stat-accuracy .stat-value { color: #4dff88; }
-.results-song-name { font-size: 1.3rem; color: #aaa; margin-top: 0.5rem; }
+.stat-marvelous .stat-value { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+.stat-perfect .stat-value { color: #ff6bff; text-shadow: 0 0 10px rgba(255,107,255,0.5); }
+.stat-great .stat-value { color: #6b9dff; text-shadow: 0 0 10px rgba(107,157,255,0.5); }
+.stat-good .stat-value { color: #6bffd7; text-shadow: 0 0 10px rgba(107,255,215,0.5); }
+.stat-miss .stat-value { color: #ff4d4d; text-shadow: 0 0 10px rgba(255,77,77,0.5); }
+.stat-maxcombo .stat-value { color: #ff9d4d; text-shadow: 0 0 10px rgba(255,157,77,0.5); }
+.stat-score .stat-value { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+.stat-accuracy .stat-value { color: #4dff88; text-shadow: 0 0 10px rgba(77,255,136,0.5); }
+.results-song-name { font-size: 1.3rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem; }
 .results-buttons { display: flex; gap: 1rem; margin-top: 2rem; }
-.results-btn { padding: 1rem 2rem; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.results-btn { padding: 1rem 2rem; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+.results-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent); opacity: 0; transition: opacity 0.3s; }
+.results-btn:hover::before { opacity: 1; }
 .results-btn.retry { background: linear-gradient(135deg, #c44dff, #6b9dff); color: #fff; }
-.results-btn.retry:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(196, 77, 255, 0.5); }
-.results-btn.back { background: rgba(255,255,255,0.1); color: #fff; border: 2px solid rgba(255,255,255,0.2); }
-.results-btn.back:hover { background: rgba(255,255,255,0.2); }
-#pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.results-btn.retry:hover { transform: scale(1.08); box-shadow: 0 0 30px rgba(196,77,255,0.6); }
+.results-btn.back { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(5px); }
+.results-btn.back:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+#pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 #pause-overlay.active { opacity: 1; pointer-events: all; }
-.pause-title { font-size: 4rem; font-weight: 900; margin-bottom: 2rem; }
-.pause-btn { padding: 1rem 3rem; margin: 0.5rem; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; transition: all 0.2s; }
-.pause-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+.pause-title { font-size: 4rem; font-weight: 900; margin-bottom: 2rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 20px rgba(196,77,255,0.5)); }
+.pause-btn { padding: 1rem 3rem; margin: 0.5rem; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.08); color: #fff; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
+.pause-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); box-shadow: 0 0 20px rgba(196,77,255,0.3); }
 .settings-panel { position: absolute; top: 1rem; right: 1rem; z-index: 150; display: flex; gap: 0.5rem; }
-.settings-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
-.settings-btn:hover { background: rgba(255,255,255,0.2); }
+.settings-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(5px); }
+.settings-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); box-shadow: 0 0 15px rgba(196,77,255,0.3); }
 #song-select.ui-hidden .select-title,
 #song-select.ui-hidden .select-subtitle,
 #song-select.ui-hidden .file-drop-zone,
 #song-select.ui-hidden .song-list,
 #song-select.ui-hidden .key-hints,
 #song-select.ui-hidden .song-organizer { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.settings-dropdown { position: absolute; top: 50px; right: 0; background: rgba(20, 20, 30, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 1rem; min-width: 250px; display: none; max-height: 80vh; overflow-y: auto; }
-.settings-dropdown.active { display: block; }
-.achievements-dropdown { position: absolute; top: 50px; right: 50px; background: rgba(20, 20, 30, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 1rem; min-width: 320px; max-width: 400px; display: none; max-height: 80vh; overflow-y: auto; }
-.achievements-dropdown.active { display: block; }
-.ach-header { font-size: 1.2rem; font-weight: 700; color: #ffd700; margin-bottom: 0.75rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
-.ach-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.settings-dropdown { position: absolute; top: 55px; right: 0; background: rgba(20,20,30,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(196,77,255,0.2); border-radius: 16px; padding: 1rem; min-width: 280px; max-width: 320px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(196,77,255,0.1); }
+.settings-dropdown.active { display: block; animation: slideDown 0.3s ease-out; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.settings-dropdown::-webkit-scrollbar { width: 6px; }
+.settings-dropdown::-webkit-scrollbar-track { background: transparent; }
+.settings-dropdown::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c44dff, #6b9dff); border-radius: 3px; }
+.settings-section { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.settings-section-header { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid rgba(196,77,255,0.2); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; margin: 0.5rem 0; padding: 0.25rem 0.5rem; border-radius: 8px; transition: background 0.2s; }
+.setting-row:hover { background: rgba(255,255,255,0.03); }
+.setting-value { font-size: 0.75rem; color: rgba(196,77,255,0.8); font-weight: 600; min-width: 35px; text-align: right; font-family: monospace; }
+.achievements-dropdown { position: absolute; top: 55px; right: 55px; background: rgba(20,20,30,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1rem; min-width: 320px; max-width: 400px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.achievements-dropdown.active { display: block; animation: slideDown 0.3s ease-out; }
+.ach-header { font-size: 1.2rem; font-weight: 700; color: #ffd700; margin-bottom: 0.75rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+.ach-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
+.ach-item:hover { background: rgba(255,255,255,0.03); border-radius: 8px; }
 .ach-item:last-child { border-bottom: none; }
 .ach-icon { font-size: 1.5rem; width: 36px; text-align: center; }
 .ach-info { flex: 1; }
 .ach-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
-.ach-desc { font-size: 0.75rem; color: #888; margin-top: 2px; }
-.ach-item.locked .ach-name { color: #666; }
-.ach-item.locked .ach-desc { color: #555; }
+.ach-desc { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.ach-item.locked .ach-name { color: rgba(255,255,255,0.3); }
+.ach-item.locked .ach-desc { color: rgba(255,255,255,0.2); }
 .ach-item.locked .ach-icon { opacity: 0.3; }
-.ach-item.unlocked .ach-icon { filter: drop-shadow(0 0 4px rgba(255,215,0,0.5)); }
-.setting-row { display: flex; align-items: center; justify-content: space-between; margin: 0.75rem 0; }
-.setting-label { font-size: 0.9rem; color: #aaa; }
-.setting-slider { width: 100px; accent-color: #c44dff; }
-.toggle-btn { padding: 0.3rem 1rem; border: 2px solid #c44dff; border-radius: 6px; background: transparent; color: #c44dff; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
-.toggle-btn:hover { background: rgba(196, 77, 255, 0.2); }
-.toggle-btn.off { border-color: #666; color: #666; }
-.style-select { padding: 0.3rem 0.5rem; border: 2px solid #c44dff; border-radius: 6px; background: rgba(20, 20, 30, 0.9); color: #c44dff; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; }
+.ach-item.unlocked .ach-icon { filter: drop-shadow(0 0 6px rgba(255,215,0,0.6)); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; margin: 0.75rem 0; padding: 0.25rem 0; }
+.setting-label { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+.setting-slider { width: 100px; accent-color: #c44dff; cursor: pointer; }
+.toggle-btn { padding: 0.3rem 1rem; border: 1px solid #c44dff; border-radius: 8px; background: transparent; color: #c44dff; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+.toggle-btn:hover { background: rgba(196,77,255,0.2); box-shadow: 0 0 10px rgba(196,77,255,0.3); }
+.toggle-btn.off { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.4); }
+.toggle-btn.off:hover { background: rgba(255,255,255,0.1); }
+.style-select { padding: 0.3rem 0.5rem; border: 1px solid rgba(196,77,255,0.4); border-radius: 8px; background: rgba(20,20,30,0.8); color: #c44dff; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; transition: all 0.2s; }
+.style-select:hover { border-color: #c44dff; box-shadow: 0 0 10px rgba(196,77,255,0.3); }
 .style-select option { background: #1a1a2a; color: #fff; }
 .key-hints { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 105; }
-.key-hint { padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.85rem; color: #888; }
-.key-hint kbd { background: rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; color: #fff; }
-#keybindModal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 300; }
+.key-hint { padding: 0.5rem 1rem; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.5); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.08); }
+.key-hint kbd { background: rgba(255,255,255,0.1); padding: 0.2rem 0.5rem; border-radius: 6px; font-family: monospace; color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+#keybindModal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 300; }
 #keybindModal.active { display: flex; }
-.keybind-panel { background: rgba(20, 20, 35, 0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; min-width: 350px; }
-.keybind-panel h3 { text-align: center; margin-bottom: 1.5rem; color: #c44dff; }
-.keybind-row { display: flex; align-items: center; justify-content: space-between; margin: 0.75rem 0; padding: 0.5rem; border-radius: 8px; background: rgba(255,255,255,0.03); }
+.keybind-panel { background: rgba(20,20,35,0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem; min-width: 350px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.keybind-panel h3 { text-align: center; margin-bottom: 1.5rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.keybind-row { display: flex; align-items: center; justify-content: space-between; margin: 0.75rem 0; padding: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.03); transition: background 0.2s; }
+.keybind-row:hover { background: rgba(255,255,255,0.06); }
 .keybind-row .label { font-size: 0.95rem; }
-.keybind-row .key-display { padding: 0.4rem 1rem; background: rgba(255,255,255,0.1); border-radius: 6px; font-family: monospace; font-size: 1rem; min-width: 60px; text-align: center; cursor: pointer; transition: all 0.2s; }
-.keybind-row .key-display.listening { background: rgba(196, 77, 255, 0.3); border: 2px solid #c44dff; animation: keyPulse 1s ease-in-out infinite; }
-@keyframes keyPulse { 0%, 100% { box-shadow: 0 0 5px rgba(196, 77, 255, 0.3); } 50% { box-shadow: 0 0 15px rgba(196, 77, 255, 0.6); } }
+.keybind-row .key-display { padding: 0.4rem 1rem; background: rgba(255,255,255,0.08); border-radius: 8px; font-family: monospace; font-size: 1rem; min-width: 60px; text-align: center; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+.keybind-row .key-display.listening { background: rgba(196,77,255,0.2); border: 1px solid #c44dff; animation: keyPulse 1s ease-in-out infinite; }
+@keyframes keyPulse { 0%, 100% { box-shadow: 0 0 5px rgba(196,77,255,0.3); } 50% { box-shadow: 0 0 15px rgba(196,77,255,0.6); } }
 .keybind-actions { display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center; }
-.keybind-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.keybind-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .keybind-btn.save { background: linear-gradient(135deg, #c44dff, #6b9dff); color: #fff; }
-.keybind-btn.save:hover { transform: scale(1.05); }
-.keybind-btn.cancel { background: rgba(255,255,255,0.1); color: #fff; }
-.keybind-btn.reset { background: rgba(255,77,77,0.2); color: #ff4d4d; }
-#musicBrowserModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.keybind-btn.save:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(196,77,255,0.5); }
+.keybind-btn.cancel { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+.keybind-btn.cancel:hover { background: rgba(255,255,255,0.15); }
+.keybind-btn.reset { background: rgba(255,77,77,0.15); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.3); }
+.keybind-btn.reset:hover { background: rgba(255,77,77,0.3); }
+#musicBrowserModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
 #musicBrowserModal.active { display: flex !important; }
-.music-browser-panel { background: rgba(20, 20, 35, 0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
-.music-browser-panel h3 { text-align: center; margin-bottom: 0.5rem; color: #c44dff; }
+.music-browser-panel { background: rgba(20,20,35,0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.music-browser-panel h3 { text-align: center; margin-bottom: 0.5rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .music-search-bar { display: flex; gap: 0.5rem; margin: 0.75rem 0; }
+.music-search-bar input { flex: 1; padding: 0.6rem 1rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.2s; }
+.music-search-bar input:focus { border-color: #c44dff; box-shadow: 0 0 15px rgba(196,77,255,0.3); }
+.music-search-bar button { padding: 0.6rem 1.2rem; background: linear-gradient(135deg, #6c3483, #c44dff); border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+.music-search-bar button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(196,77,255,0.5); }
 .music-genres { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-.genre-btn { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #ccc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-.genre-btn:hover, .genre-btn.active { background: rgba(196, 77, 255, 0.3); border-color: #c44dff; color: #fff; }
+.genre-btn { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 0.8rem; transition: all 0.3s; }
+.genre-btn:hover, .genre-btn.active { background: rgba(196,77,255,0.25); border-color: #c44dff; color: #fff; box-shadow: 0 0 10px rgba(196,77,255,0.3); }
 .music-results { flex: 1; overflow-y: auto; margin: 0.5rem 0; }
-.music-track { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.5rem; transition: background 0.2s; }
-.music-track:hover { background: rgba(255,255,255,0.08); }
+.music-results::-webkit-scrollbar { width: 6px; }
+.music-results::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c44dff, #6b9dff); border-radius: 3px; }
+.music-track { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: 10px; background: rgba(255,255,255,0.03); margin-bottom: 0.5rem; transition: all 0.2s; border: 1px solid transparent; }
+.music-track:hover { background: rgba(255,255,255,0.06); border-color: rgba(196,77,255,0.2); }
 .music-track .track-info { flex: 1; min-width: 0; }
 .music-track .track-name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.music-track .track-artist { font-size: 0.8rem; color: #888; }
-.music-track .track-meta { font-size: 0.75rem; color: #666; }
+.music-track .track-artist { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+.music-track .track-meta { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
 .music-track .track-actions { display: flex; gap: 0.4rem; }
-.track-btn { padding: 0.3rem 0.7rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-.track-btn.preview { background: rgba(196, 77, 255, 0.3); color: #c44dff; }
-.track-btn.preview:hover { background: rgba(196, 77, 255, 0.5); }
-.track-btn.download { background: rgba(107, 157, 255, 0.3); color: #6b9dff; }
-.track-btn.download:hover { background: rgba(107, 157, 255, 0.5); }
-.track-btn.downloading { background: rgba(255,255,255,0.1); color: #888; cursor: default; }
+.track-btn { padding: 0.3rem 0.7rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; }
+.track-btn.preview { background: rgba(196,77,255,0.2); color: #c44dff; }
+.track-btn.preview:hover { background: rgba(196,77,255,0.4); transform: scale(1.1); }
+.track-btn.download { background: rgba(107,157,255,0.2); color: #6b9dff; }
+.track-btn.download:hover { background: rgba(107,157,255,0.4); transform: scale(1.1); }
+.track-btn.downloading { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); cursor: default; }
 .music-browser-actions { display: flex; justify-content: center; margin-top: 0.75rem; }
-.music-loading { text-align: center; color: #888; padding: 2rem; }
+.music-loading { text-align: center; color: rgba(255,255,255,0.5); padding: 2rem; }
 .music-error { text-align: center; color: #ff4d4d; padding: 1rem; }
-.practice-panel { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 1rem 1.5rem; display: none; z-index: 120; align-items: center; gap: 1rem; }
+.practice-panel { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); backdrop-filter: blur(15px); border: 1px solid rgba(196,77,255,0.3); border-radius: 16px; padding: 1rem 1.5rem; display: none; z-index: 120; align-items: center; gap: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
 .practice-panel.active { display: flex; }
-.practice-panel label { color: #aaa; font-size: 0.85rem; }
+.practice-panel label { color: rgba(255,255,255,0.6); font-size: 0.85rem; }
 .practice-panel input[type="range"] { width: 80px; accent-color: #c44dff; }
-.practice-panel button { padding: 0.4rem 0.8rem; border: none; border-radius: 6px; background: rgba(196,77,255,0.2); color: #c44dff; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+.practice-panel button { padding: 0.4rem 0.8rem; border: none; border-radius: 8px; background: rgba(196,77,255,0.2); color: #c44dff; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: all 0.2s; }
 .practice-panel button:hover { background: rgba(196,77,255,0.4); }
 .practice-panel button.active-btn { background: #c44dff; color: #fff; }
 .practice-panel .speed-display { color: #fff; font-weight: 700; font-size: 1rem; min-width: 40px; text-align: center; }
 .practice-panel .loop-display { color: #4dff88; font-size: 0.8rem; }
 .accuracy-display { position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 60; pointer-events: none; }
 .accuracy-display .acc-value { font-size: 1.5rem; font-weight: 700; color: #4dff88; text-shadow: 0 0 10px rgba(77,255,136,0.5); }
-.accuracy-display .acc-label { font-size: 0.75rem; color: #888; text-align: center; }
-.judgment-counter { position: absolute; top: 7rem; left: 1rem; z-index: 60; pointer-events: none; background: rgba(0,0,0,0.6); padding: 0.8rem 1.2rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
+.accuracy-display .acc-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; }
+.judgment-counter { position: absolute; top: 7rem; left: 1rem; z-index: 60; pointer-events: none; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
 .judgment-counter .jud-row { font-size: 1.1rem; padding: 0.4rem 0; line-height: 2; display: flex; align-items: center; gap: 0.5rem; }
 .judgment-counter .jud-label { font-weight: 600; min-width: 90px; }
 .judgment-counter .jud-count { font-weight: 700; font-size: 1.2rem; }
-.autoplay-indicator { position: absolute; top: 1rem; right: 1rem; z-index: 60; background: rgba(255,77,77,0.2); border: 1px solid #ff4d4d; border-radius: 8px; padding: 0.5rem 1rem; color: #ff4d4d; font-weight: 700; font-size: 0.9rem; }
-#modifierIndicator { background: rgba(196,77,255,0.2); border-color: #c44dff; color: #c44dff; }
+.autoplay-indicator { position: absolute; top: 1rem; right: 1rem; z-index: 60; background: rgba(255,77,77,0.15); backdrop-filter: blur(5px); border: 1px solid rgba(255,77,77,0.4); border-radius: 10px; padding: 0.5rem 1rem; color: #ff4d4d; font-weight: 700; font-size: 0.9rem; }
+#modifierIndicator { background: rgba(196,77,255,0.15); border-color: rgba(196,77,255,0.4); color: #c44dff; }
 .density-preview { position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); width: 8px; height: 60vh; background: rgba(255,255,255,0.05); border-radius: 4px; z-index: 60; pointer-events: none; overflow: hidden; }
 .density-preview .density-bar { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #4dff88, #ff4d4d); border-radius: 4px; transition: height 0.3s; }
-.timing-graph { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); width: 400px; height: 100px; background: rgba(20,20,35,0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.5rem; display: none; z-index: 210; }
+.timing-graph { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); width: 400px; height: 100px; background: rgba(20,20,35,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.5rem; display: none; z-index: 210; }
 .timing-graph.active { display: block; }
 .timing-graph canvas { width: 100%; height: 100%; }
-.achievement-popup { position: absolute; top: 5rem; right: 2rem; background: rgba(20,20,35,0.95); border: 2px solid #ffd700; border-radius: 12px; padding: 1rem; z-index: 250; opacity: 0; transform: translateX(100%); transition: all 0.5s; pointer-events: none; }
+.achievement-popup { position: absolute; top: 5rem; right: 2rem; background: rgba(20,20,35,0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255,215,0,0.4); border-radius: 14px; padding: 1rem; z-index: 250; opacity: 0; transform: translateX(100%); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; box-shadow: 0 0 30px rgba(255,215,0,0.3); }
 .achievement-popup.show { opacity: 1; transform: translateX(0); }
-.achievement-popup .ach-title { color: #ffd700; font-size: 0.8rem; font-weight: 700; }
+.achievement-popup .ach-title { color: #ffd700; font-size: 0.8rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
 .achievement-popup .ach-name { color: #fff; font-size: 1rem; font-weight: 600; margin-top: 0.25rem; }
 .song-organizer { position: absolute; top: 1rem; left: 1rem; z-index: 110; display: flex; gap: 0.5rem; }
-.organizer-btn { padding: 0.4rem 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: rgba(255,255,255,0.05); color: #aaa; cursor: pointer; font-size: 0.8rem; }
-.organizer-btn.active { background: rgba(196,77,255,0.2); border-color: #c44dff; color: #c44dff; }
+.organizer-btn { padding: 0.4rem 0.8rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem; transition: all 0.3s; backdrop-filter: blur(5px); }
+.organizer-btn:hover { background: rgba(255,255,255,0.1); }
+.organizer-btn.active { background: rgba(196,77,255,0.2); border-color: #c44dff; color: #c44dff; box-shadow: 0 0 10px rgba(196,77,255,0.3); }
 .metronome-indicator { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 60; pointer-events: none; opacity: 0; }
 .metronome-indicator.active { opacity: 1; }
 .metronome-dot { width: 10px; height: 10px; border-radius: 50%; background: #4dff88; opacity: 0.3; transition: all 0.1s; }
 .metronome-dot.beat { opacity: 1; transform: scale(1.5); box-shadow: 0 0 10px #4dff88; }
-.health-mode-indicator { position: absolute; top: 3.5rem; left: 30px; z-index: 60; font-size: 0.75rem; color: #888; pointer-events: none; }
-.mini-player { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 0.75rem 1.5rem; display: none; z-index: 110; align-items: center; gap: 1rem; min-width: 400px; max-width: 600px; }
+.health-mode-indicator { position: absolute; top: 3.5rem; left: 30px; z-index: 60; font-size: 0.75rem; color: rgba(255,255,255,0.4); pointer-events: none; }
+.mini-player { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); backdrop-filter: blur(15px); border: 1px solid rgba(196,77,255,0.3); border-radius: 16px; padding: 0.75rem 1.5rem; display: none; z-index: 110; align-items: center; gap: 1rem; min-width: 400px; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
 .mini-player.active { display: flex; }
 .mini-player .player-info { flex: 1; min-width: 0; }
 .mini-player .player-title { font-size: 0.9rem; font-weight: 600; overflow: hidden; max-width: 250px; }
 .mini-player .player-title-inner { display: inline-block; white-space: nowrap; }
 .mini-player .player-title.scrolling .player-title-inner { animation: marquee 10s linear infinite; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-.mini-player .player-meta { font-size: 0.75rem; color: #888; display: flex; gap: 1rem; }
+.mini-player .player-meta { font-size: 0.75rem; color: rgba(255,255,255,0.5); display: flex; gap: 1rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.5rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.4rem; }
-.mini-player .player-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 1.1rem; padding: 0; margin: 0; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; line-height: 1; }
-.mini-player .player-btn:hover { color: #c44dff; transform: scale(1.1); }
-.mini-player .player-btn.play-btn { font-size: 1.25rem; }
+.mini-player .player-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 1.1rem; padding: 0; margin: 0; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1; border-radius: 10px; }
+.mini-player .player-btn:hover { background: rgba(196,77,255,0.2); border-color: rgba(196,77,255,0.4); transform: scale(1.1); box-shadow: 0 0 15px rgba(196,77,255,0.3); }
+.mini-player .player-btn.play-btn { font-size: 1.25rem; background: linear-gradient(135deg, #c44dff, #6b9dff); border: none; }
+.mini-player .player-btn.play-btn:hover { box-shadow: 0 0 20px rgba(196,77,255,0.5); }
 .mini-player .player-btn.active-loop { color: #c44dff; text-shadow: 0 0 8px rgba(196,77,255,0.6); }
 .mini-player .player-btn.skip-btn { font-size: 1.1rem; }
-.mini-player .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; cursor: pointer; margin-top: 0.5rem; }
-.mini-player .progress-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 2px; width: 0%; transition: width 0.1s; }
+.mini-player .progress-container { width: 100%; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; cursor: pointer; margin-top: 0.5rem; overflow: hidden; }
+.mini-player .progress-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 3px; width: 0%; transition: width 0.1s; box-shadow: 0 0 10px rgba(196,77,255,0.5); }
 .mini-player .volume-slider { width: 60px; accent-color: #c44dff; }
-.mod-btn { padding: 0.3rem 0.6rem; border: 2px solid #666; border-radius: 6px; background: transparent; color: #666; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-.mod-btn:hover { border-color: #c44dff; color: #c44dff; }
-.mod-btn.active { border-color: #c44dff; background: rgba(196,77,255,0.2); color: #c44dff; }
-#loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,15,0.9); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 400; }
+.mod-btn { padding: 0.3rem 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: rgba(255,255,255,0.4); font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
+.mod-btn:hover { border-color: #c44dff; color: #c44dff; box-shadow: 0 0 10px rgba(196,77,255,0.3); }
+.mod-btn.active { border-color: #c44dff; background: rgba(196,77,255,0.2); color: #c44dff; box-shadow: 0 0 15px rgba(196,77,255,0.4); }
+#loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,15,0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 400; }
 #loadingOverlay.active { display: flex; }
-#loadingOverlay .loading-title { font-size: 2rem; font-weight: 700; color: #c44dff; margin-bottom: 1rem; }
-#loadingOverlay .loading-bar-container { width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-#loadingOverlay .loading-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 4px; width: 0%; transition: width 0.3s; }
-#loadingOverlay .loading-text { font-size: 0.9rem; color: #888; margin-top: 0.5rem; }
-#songSelectModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#loadingOverlay .loading-title { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner { width: 50px; height: 50px; border: 3px solid rgba(196,77,255,0.2); border-top-color: #c44dff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 1rem; }
+#loadingOverlay .loading-bar-container { width: 300px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+#loadingOverlay .loading-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 3px; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px rgba(196,77,255,0.5); }
+#loadingOverlay .loading-text { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+#songSelectModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
 #songSelectModal.active { display: flex !important; }
-.song-select-panel { background: rgba(20,20,35,0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 1.5rem; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
-.song-select-panel h3 { text-align: center; margin-bottom: 0.75rem; color: #c44dff; font-size: 1.1rem; }
+.song-select-panel { background: rgba(20,20,35,0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.5rem; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.song-select-panel h3 { text-align: center; margin-bottom: 0.75rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.1rem; }
 .song-select-actions { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; justify-content: center; }
+.song-select-actions button { transition: all 0.3s; }
+.song-select-actions button:hover { transform: scale(1.05); }
 #songSelectList { flex: 1; overflow-y: auto; margin-bottom: 0.75rem; }
-.song-select-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.3rem; cursor: pointer; transition: background 0.2s; }
-.song-select-item:hover { background: rgba(255,255,255,0.08); }
+#songSelectList::-webkit-scrollbar { width: 6px; }
+#songSelectList::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c44dff, #6b9dff); border-radius: 3px; }
+.song-select-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 10px; background: rgba(255,255,255,0.03); margin-bottom: 0.3rem; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+.song-select-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(196,77,255,0.2); }
 .song-select-item input[type="checkbox"] { accent-color: #c44dff; width: 16px; height: 16px; }
 .song-select-item .song-name { flex: 1; font-size: 0.85rem; color: #fff; }
-.song-select-item .song-size { font-size: 0.7rem; color: #888; }
+.song-select-item .song-size { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
 .song-select-footer { display: flex; gap: 0.75rem; justify-content: center; }
+.song-select-footer button { transition: all 0.3s; }
+.song-select-footer button:hover { transform: scale(1.05); }
 </style>
 </head>
 <body>
@@ -267,38 +318,48 @@ canvas { display: block; }
       <button class="settings-btn" id="discordBtn" title="Join GENIMPACT" style="background:rgba(88,101,242,0.3);">💬</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
-        <div class="setting-row"><span class="setting-label">Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"></div>
-        <div class="setting-row"><span class="setting-label">Scroll Speed</span><input type="range" class="setting-slider" id="scrollSpeed" min="1" max="30" value="15"></div>
-        <div class="setting-row"><span class="setting-label">Note Size</span><input type="range" class="setting-slider" id="noteSize" min="30" max="80" value="50"></div>
-        <div class="setting-row"><span class="setting-label">Volume</span><input type="range" class="setting-slider" id="volume" min="0" max="100" value="80"></div>
-        <div class="setting-row"><span class="setting-label">Lanes</span><input type="range" class="setting-slider" id="laneCount" min="4" max="8" value="4" step="1"></div>
-        <div class="setting-row"><span class="setting-label">Hit Sounds</span><button class="toggle-btn" id="hitSoundToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Show FPS</span><button class="toggle-btn off" id="fpsToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Visualizer</span><button class="toggle-btn" id="visualizerToggle">ON</button></div>
-        <div class="setting-row"><span class="setting-label">Note Style</span><select class="style-select" id="noteStyle"><option value="blocks">Blocks</option><option value="arrows">Arrows</option><option value="circles" selected>Circles</option><option value="diamonds">Diamonds</option><option value="bars">Bars</option></select></div>
-        <div class="setting-row"><span class="setting-label">Color Scheme</span><select class="style-select" id="colorScheme"><option value="default">Default</option><option value="rainbow">Rainbow</option><option value="neon" selected>Neon</option><option value="pastel">Pastel</option><option value="fire">Fire</option><option value="ocean">Ocean</option><option value="monochrome">Monochrome</option></select></div>
-        <div class="setting-row"><span class="setting-label">Timing Window</span><select class="style-select" id="timingWindow"><option value="lenient">Lenient</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select></div>
-        <div class="setting-row"><span class="setting-label">Scroll Direction</span><select class="style-select" id="scrollDirection"><option value="downscroll" selected>Downscroll</option><option value="upscroll">Upscroll</option></select></div>
-        <div class="setting-row"><span class="setting-label">Health Mode</span><select class="style-select" id="healthMode"><option value="normal" selected>Normal</option><option value="nofail">No Fail</option><option value="sudden">Sudden Death</option><option value="drain">Life Drain</option></select></div>
-        <div class="setting-row"><span class="setting-label">Speed Preset</span><select class="style-select" id="speedPreset"><option value="custom">Custom</option><option value="vslow">Very Slow</option><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option><option value="vfast">Very Fast</option><option value="insane">Insane</option><option value="extreme">Extreme</option><option value="godlike">Godlike</option></select></div>
-        <div class="setting-row"><span class="setting-label">Practice Mode</span><button class="toggle-btn off" id="practiceToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Auto Play</span><button class="toggle-btn off" id="autoplayToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Lane Hide</span><button class="toggle-btn off" id="laneHideToggle">OFF</button></div>
-        <div class="setting-row"><span class="setting-label">Key Press FX</span><button class="toggle-btn" id="keyPressToggle">ON</button></div>
-        <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
-        <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
-        <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
-        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Save Codes</span></div>
-        <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:0.8rem;resize:none;padding:0.5rem;"></textarea></div>
-        <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">🎵 Import Song</button></div>
-        <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
-        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#4ade80;">Song Library</span></div>
-        <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load Songs</button></div>
-        <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
-        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#ffd700;">Full Backup</span></div>
-        <div class="setting-row"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📦 Save Everything</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📂 Load Everything</button></div>
-        <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
+        <div class="settings-section">
+          <div class="settings-section-header">🎵 Audio & Visual</div>
+          <div class="setting-row"><span class="setting-label">🔊 Volume</span><input type="range" class="setting-slider" id="volume" min="0" max="100" value="80"><span class="setting-value" id="volumeVal">80</span></div>
+          <div class="setting-row"><span class="setting-label">🎚 Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"><span class="setting-value" id="audioOffsetVal">0</span></div>
+          <div class="setting-row"><span class="setting-label">🔔 Hit Sounds</span><button class="toggle-btn" id="hitSoundToggle">OFF</button></div>
+          <div class="setting-row"><span class="setting-label">📊 Visualizer</span><button class="toggle-btn" id="visualizerToggle">ON</button></div>
+          <div class="setting-row"><span class="setting-label">🎨 Color Scheme</span><select class="style-select" id="colorScheme"><option value="default">Default</option><option value="rainbow">Rainbow</option><option value="neon" selected>Neon</option><option value="pastel">Pastel</option><option value="fire">Fire</option><option value="ocean">Ocean</option><option value="monochrome">Monochrome</option></select></div>
+          <div class="setting-row"><span class="setting-label">📐 Note Style</span><select class="style-select" id="noteStyle"><option value="blocks">Blocks</option><option value="arrows">Arrows</option><option value="circles" selected>Circles</option><option value="diamonds">Diamonds</option><option value="bars">Bars</option></select></div>
+          <div class="setting-row"><span class="setting-label">🔍 Note Size</span><input type="range" class="setting-slider" id="noteSize" min="30" max="80" value="50"><span class="setting-value" id="noteSizeVal">50</span></div>
+          <div class="setting-row"><span class="setting-label">📺 Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
+          <div class="setting-row"><span class="setting-label">📈 Show FPS</span><button class="toggle-btn off" id="fpsToggle">OFF</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">🎮 Gameplay</div>
+          <div class="setting-row"><span class="setting-label">⚡ Scroll Speed</span><input type="range" class="setting-slider" id="scrollSpeed" min="1" max="30" value="15"><span class="setting-value" id="scrollSpeedVal">15</span></div>
+          <div class="setting-row"><span class="setting-label">🛤 Lanes</span><input type="range" class="setting-slider" id="laneCount" min="4" max="8" value="4" step="1"><span class="setting-value" id="laneCountVal">4</span></div>
+          <div class="setting-row"><span class="setting-label">🎯 Timing Window</span><select class="style-select" id="timingWindow"><option value="lenient">Lenient</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select></div>
+          <div class="setting-row"><span class="setting-label">↕ Scroll Direction</span><select class="style-select" id="scrollDirection"><option value="downscroll" selected>Downscroll</option><option value="upscroll">Upscroll</option></select></div>
+          <div class="setting-row"><span class="setting-label">❤️ Health Mode</span><select class="style-select" id="healthMode"><option value="normal" selected>Normal</option><option value="nofail">No Fail</option><option value="sudden">Sudden Death</option><option value="drain">Life Drain</option></select></div>
+          <div class="setting-row"><span class="setting-label">🏎 Speed Preset</span><select class="style-select" id="speedPreset"><option value="custom">Custom</option><option value="vslow">Very Slow</option><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option><option value="vfast">Very Fast</option><option value="insane">Insane</option><option value="extreme">Extreme</option><option value="godlike">Godlike</option></select></div>
+          <div class="setting-row"><span class="setting-label">👁 Lane Hide</span><button class="toggle-btn off" id="laneHideToggle">OFF</button></div>
+          <div class="setting-row"><span class="setting-label">✨ Key Press FX</span><button class="toggle-btn" id="keyPressToggle">ON</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">⚡ Modifiers & Practice</div>
+          <div class="setting-row"><span class="setting-label">🔄 Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
+          <div class="setting-row"><span class="setting-label">🎓 Practice Mode</span><button class="toggle-btn off" id="practiceToggle">OFF</button></div>
+          <div class="setting-row"><span class="setting-label">🤖 Auto Play</span><button class="toggle-btn off" id="autoplayToggle">OFF</button></div>
+          <div class="setting-row"><span class="setting-label">🥁 Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
+          <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#6c3483,#c44dff);">⌨ Customize Keys</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">💾 Data Management</div>
+          <div class="setting-row"><span class="setting-label" style="color:#c44dff;font-weight:600;">Save Codes</span></div>
+          <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:50px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:0.75rem;resize:none;padding:0.5rem;font-family:monospace;"></textarea></div>
+          <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">📋 Copy</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">💾 Load</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">🎵 Import</button></div>
+          <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
+          <div class="setting-row" style="margin-top:0.5rem;"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">💾 Save Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">📂 Load Songs</button></div>
+          <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
+          <div class="setting-row" style="margin-top:0.5rem;"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#b8860b,#daa520);border:none;">📦 Save All</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#b8860b,#daa520);border:none;">📂 Load All</button></div>
+          <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
+        </div>
        </div>
       </div>
      <div id="songSelectModal">
@@ -407,6 +468,7 @@ canvas { display: block; }
   </div>
   <div class="health-mode-indicator" id="healthModeIndicator"></div>
 </div>
+<div id="floatingNotes"></div>
 <div id="loadingOverlay">
     <div class="loading-title">Loading Song...</div>
     <div class="loading-bar-container"><div class="loading-bar" id="loadingBar"></div></div>
@@ -2667,11 +2729,11 @@ document.getElementById('uiToggle').addEventListener('click', () => { document.g
 document.getElementById('achievementsToggle').addEventListener('click', () => { document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); });
 document.getElementById('settingsToggle').addEventListener('click', () => { document.getElementById('settingsDropdown').classList.toggle('active'); });
 document.getElementById('discordBtn').addEventListener('click', () => { window.open('https://discord.gg/aa83vhpC4v', '_blank'); });
-document.getElementById('audioOffset').addEventListener('input', (e) => { gameState.audioOffset = parseInt(e.target.value); localStorage.setItem('rhythmPulseAudioOffset', e.target.value); });
-document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); });
-document.getElementById('noteSize').addEventListener('input', (e) => { gameState.noteSize = parseInt(e.target.value); localStorage.setItem('rhythmPulseNoteSize', e.target.value); });
-document.getElementById('volume').addEventListener('input', (e) => { currentVolume = parseInt(e.target.value) / 100; if (gainNode) gainNode.gain.value = currentVolume; localStorage.setItem('rhythmPulseVolume', e.target.value); });
-document.getElementById('laneCount').addEventListener('input', (e) => { currentLaneCount = parseInt(e.target.value); localStorage.setItem('rhythmPulseLaneCount', e.target.value); });
+document.getElementById('audioOffset').addEventListener('input', (e) => { gameState.audioOffset = parseInt(e.target.value); localStorage.setItem('rhythmPulseAudioOffset', e.target.value); document.getElementById('audioOffsetVal').textContent = e.target.value; });
+document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); document.getElementById('scrollSpeedVal').textContent = e.target.value; });
+document.getElementById('noteSize').addEventListener('input', (e) => { gameState.noteSize = parseInt(e.target.value); localStorage.setItem('rhythmPulseNoteSize', e.target.value); document.getElementById('noteSizeVal').textContent = e.target.value; });
+document.getElementById('volume').addEventListener('input', (e) => { currentVolume = parseInt(e.target.value) / 100; if (gainNode) gainNode.gain.value = currentVolume; localStorage.setItem('rhythmPulseVolume', e.target.value); document.getElementById('volumeVal').textContent = e.target.value; });
+document.getElementById('laneCount').addEventListener('input', (e) => { currentLaneCount = parseInt(e.target.value); localStorage.setItem('rhythmPulseLaneCount', e.target.value); document.getElementById('laneCountVal').textContent = e.target.value; });
 
 document.getElementById('hitSoundToggle').addEventListener('click', (e) => {
   hitSoundEnabled = !hitSoundEnabled; e.target.textContent = hitSoundEnabled ? 'ON' : 'OFF';
@@ -2708,6 +2770,7 @@ document.getElementById('speedPreset').addEventListener('change', (e) => {
   if (SPEED_PRESETS[preset]) {
     gameState.scrollSpeed = SPEED_PRESETS[preset];
     document.getElementById('scrollSpeed').value = SPEED_PRESETS[preset];
+    document.getElementById('scrollSpeedVal').textContent = SPEED_PRESETS[preset];
   }
 });
 document.getElementById('practiceToggle').addEventListener('click', (e) => {
@@ -2812,15 +2875,15 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   const cs = localStorage.getItem('rhythmPulseColorScheme');
   if (cs) { currentColorScheme = cs; document.getElementById('colorScheme').value = cs; }
   const ao = localStorage.getItem('rhythmPulseAudioOffset');
-  if (ao) { gameState.audioOffset = parseInt(ao); document.getElementById('audioOffset').value = ao; }
+  if (ao) { gameState.audioOffset = parseInt(ao); document.getElementById('audioOffset').value = ao; document.getElementById('audioOffsetVal').textContent = ao; }
   const ss = localStorage.getItem('rhythmPulseScrollSpeed');
-  if (ss) { gameState.scrollSpeed = parseInt(ss); document.getElementById('scrollSpeed').value = ss; }
+  if (ss) { gameState.scrollSpeed = parseInt(ss); document.getElementById('scrollSpeed').value = ss; document.getElementById('scrollSpeedVal').textContent = ss; }
   const nsize = localStorage.getItem('rhythmPulseNoteSize');
-  if (nsize) { gameState.noteSize = parseInt(nsize); document.getElementById('noteSize').value = nsize; }
+  if (nsize) { gameState.noteSize = parseInt(nsize); document.getElementById('noteSize').value = nsize; document.getElementById('noteSizeVal').textContent = nsize; }
   const vol = localStorage.getItem('rhythmPulseVolume');
-  if (vol) { currentVolume = parseInt(vol) / 100; document.getElementById('volume').value = vol; if (gainNode) gainNode.gain.value = currentVolume; }
+  if (vol) { currentVolume = parseInt(vol) / 100; document.getElementById('volume').value = vol; document.getElementById('volumeVal').textContent = vol; if (gainNode) gainNode.gain.value = currentVolume; }
   const lc = localStorage.getItem('rhythmPulseLaneCount');
-  if (lc) { currentLaneCount = parseInt(lc); document.getElementById('laneCount').value = lc; }
+  if (lc) { currentLaneCount = parseInt(lc); document.getElementById('laneCount').value = lc; document.getElementById('laneCountVal').textContent = lc; }
   const tw = localStorage.getItem('rhythmPulseTimingWindow');
   if (tw) { timingWindow = tw; document.getElementById('timingWindow').value = tw; }
   const sd = localStorage.getItem('rhythmPulseScrollDirection');
@@ -3714,6 +3777,20 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     this.lineTo(x + bl, y + h); this.quadraticCurveTo(x, y + h, x, y + h - bl);
     this.lineTo(x, y + tl); this.quadraticCurveTo(x, y, x + tl, y); this.closePath(); return this;
   };
+}
+
+const noteSymbols = ['♪', '♫', '♬', '♩', '🎵', '🎶'];
+const floatingContainer = document.getElementById('floatingNotes');
+for (let i = 0; i < 15; i++) {
+  const note = document.createElement('div');
+  note.className = 'floating-note';
+  note.textContent = noteSymbols[Math.floor(Math.random() * noteSymbols.length)];
+  note.style.left = Math.random() * 100 + '%';
+  note.style.fontSize = (0.8 + Math.random() * 1.5) + 'rem';
+  note.style.animationDuration = (15 + Math.random() * 25) + 's';
+  note.style.animationDelay = -(Math.random() * 30) + 's';
+  note.style.color = `hsl(${260 + Math.random() * 60}, 70%, ${60 + Math.random() * 20}%)`;
+  floatingContainer.appendChild(note);
 }
 </script>
 </body>
