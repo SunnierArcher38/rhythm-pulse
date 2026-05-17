@@ -3277,7 +3277,8 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
     btn.textContent = '⏳ Saving...';
     btn.disabled = true;
     try {
-      const compressed = await compressWithSongs({ type: 'rpsongs', v: 1 }, songData);
+      const metadata = { type: 'rpsongs', v: 1, songs: songData.map(s => s.meta) };
+      const compressed = await compressWithSongs(metadata, songData);
       const count = await downloadChunks(compressed, `rhythm-pulse-songs-${Date.now()}`, 'rpsongs');
       btn.textContent = `✅ Saved! ${count} part(s)`;
       setTimeout(() => { btn.textContent = '💾 Save Songs'; btn.disabled = false; }, 2000);
