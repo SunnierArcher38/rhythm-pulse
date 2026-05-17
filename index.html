@@ -3875,20 +3875,16 @@ function setupVisualizerForPreview() {
 }
 
 let menuCachedVisualizerData = null;
-let menuVisualizerFrame = 0;
 function drawMenuVisualizer() {
   if (!visualizerEnabled) return;
   if (!analyser || (!previewPlaying && !menuCachedVisualizerData)) return;
   if (previewPlaying) {
-    menuVisualizerFrame++;
-    if (menuVisualizerFrame === 1 || menuVisualizerFrame % 3 === 0) {
-      analyser.getByteFrequencyData(visualizerData);
-      menuCachedVisualizerData = new Uint8Array(visualizerData);
-      updateMenuBeatZoom();
-    }
+    analyser.getByteFrequencyData(visualizerData);
+    menuCachedVisualizerData = new Uint8Array(visualizerData);
+    updateMenuBeatZoom();
+  } else {
+    visualizerData = menuCachedVisualizerData;
   }
-  visualizerData = menuCachedVisualizerData;
-  if (!visualizerData) return;
   
   ctx.save();
   if (menuBeatZoomValue > 0.001) {
@@ -3898,9 +3894,9 @@ function drawMenuVisualizer() {
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
   
-  const barCount = 48;
+  const barCount = 64;
   const barWidth = canvas.width / barCount;
-  const maxBarHeight = canvas.height * 0.35;
+  const maxBarHeight = canvas.height * 0.4;
   const srcStep = visualizerData.length / barCount;
   for (let i = 0; i < barCount; i++) {
     const idx = i * srcStep;
@@ -3918,9 +3914,9 @@ function drawMenuVisualizer() {
     ctx.fillRect((barCount - 1 - i) * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
   }
   const cx = canvas.width / 2, cy = canvas.height * 0.38;
-  const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+  const baseRadius = Math.min(canvas.width, canvas.height) * 0.2;
   const radialBarWidth = (baseRadius * 2 * Math.PI) / (barCount * 2);
-  const maxRadialLength = baseRadius * 0.7;
+  const maxRadialLength = baseRadius * 0.8;
   ctx.strokeStyle = 'rgba(196, 77, 255, 0.08)';
   ctx.lineWidth = 1;
   ctx.beginPath();
