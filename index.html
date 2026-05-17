@@ -1191,6 +1191,7 @@ function drawVisualizer() {
 
 let menuBeatZoomValue = 0, menuBeatZoomTarget = 0, menuLastBeatIdx = -1, menuLastZoomUpdate = performance.now();
 function updateMenuBeatZoom() {
+  if (!beatZoomEnabled) { menuBeatZoomValue = 0; menuBeatZoomTarget = 0; return; }
   if (!previewPlaying || !previewSong) return;
   const elapsed = audioCtx.currentTime - previewStartTime;
   const bpm = previewSong.bpm || 140;
@@ -2755,6 +2756,7 @@ document.getElementById('beatZoomToggle').addEventListener('click', (e) => {
   beatZoomEnabled = !beatZoomEnabled;
   e.target.textContent = beatZoomEnabled ? 'ON' : 'OFF';
   e.target.classList.toggle('off', !beatZoomEnabled);
+  localStorage.setItem('rhythmPulseBeatZoom', beatZoomEnabled);
 });
 
 document.querySelectorAll('.mod-btn').forEach(btn => {
@@ -2817,6 +2819,8 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   if (hs !== null) { hitSoundEnabled = hs === 'true'; const btn = document.getElementById('hitSoundToggle'); btn.textContent = hitSoundEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !hitSoundEnabled); }
   const vis = localStorage.getItem('rhythmPulseVisualizer');
   if (vis !== null) { visualizerEnabled = vis === 'true'; const btn = document.getElementById('visualizerToggle'); btn.textContent = visualizerEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !visualizerEnabled); }
+  const bz = localStorage.getItem('rhythmPulseBeatZoom');
+  if (bz !== null) { beatZoomEnabled = bz === 'true'; const btn = document.getElementById('beatZoomToggle'); btn.textContent = beatZoomEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !beatZoomEnabled); }
   const ns = localStorage.getItem('rhythmPulseNoteStyle');
   if (ns) { currentNoteStyle = ns; document.getElementById('noteStyle').value = ns; }
   const cs = localStorage.getItem('rhythmPulseColorScheme');
@@ -3045,6 +3049,7 @@ document.getElementById('generateCodeBtn').addEventListener('click', () => {
       hs: localStorage.getItem('rhythmPulseHitSound'),
       fps: localStorage.getItem('rhythmPulseShowFPS'),
       vis: localStorage.getItem('rhythmPulseVisualizer'),
+      bz: localStorage.getItem('rhythmPulseBeatZoom'),
       nst: localStorage.getItem('rhythmPulseNoteStyle'),
       cs: localStorage.getItem('rhythmPulseColorScheme'),
       tw: localStorage.getItem('rhythmPulseTimingWindow'),
@@ -3088,6 +3093,7 @@ document.getElementById('loadCodeBtn').addEventListener('click', () => {
       if (s.hs !== undefined) localStorage.setItem('rhythmPulseHitSound', s.hs);
       if (s.fps !== undefined) localStorage.setItem('rhythmPulseShowFPS', s.fps);
       if (s.vis !== undefined) localStorage.setItem('rhythmPulseVisualizer', s.vis);
+      if (s.bz !== undefined) localStorage.setItem('rhythmPulseBeatZoom', s.bz);
       if (s.nst !== undefined) localStorage.setItem('rhythmPulseNoteStyle', s.nst);
       if (s.cs !== undefined) localStorage.setItem('rhythmPulseColorScheme', s.cs);
       if (s.tw !== undefined) localStorage.setItem('rhythmPulseTimingWindow', s.tw);
