@@ -1373,20 +1373,23 @@ let analyser = null, visualizerData = null, visualizerEnabled = true, cachedVisu
 
 function setupVisualizer() {
   if (!audioCtx || !audioBuffer) return;
-  analyser = audioCtx.createAnalyser();
+  if (!analyser) {
+    analyser = audioCtx.createAnalyser();
+  }
   analyser.fftSize = 512;
   analyser.smoothingTimeConstant = 0.85;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
   smoothData = new Float32Array(analyser.frequencyBinCount);
+  try { analyser.disconnect(); } catch(e) {}
   gainNode.connect(analyser);
 }
 
 function drawVisualizer() {
-  if (!visualizerEnabled || !analyser || !visualizerData) return;
+  if (!visualizerEnabled || !analyser) return;
   
   let data = visualizerData;
   if (gameState.mode === 'playing' || previewPlaying) {
-    try { analyser.getByteFrequencyData(visualizerData); } catch(e) { return; }
+    analyser.getByteFrequencyData(visualizerData);
     if (!cachedVisualizerData || cachedVisualizerData.length !== visualizerData.length) {
       cachedVisualizerData = new Uint8Array(visualizerData.length);
     }
@@ -1488,18 +1491,7 @@ function updateFPS() {
   const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
   fps = Math.round(1000 / avg);
 }
-function drawFPS() {
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (!showFPS) { ctx.restore(); return; }
-  ctx.font = 'bold 14px monospace';
-  ctx.fillStyle = fps >= 55 ? '#4dff88' : fps >= 30 ? '#ff9d4d' : '#ff4d4d';
-  ctx.textAlign = 'left';
-  ctx.shadowColor = 'rgba(0,0,0,0.8)';
-  ctx.shadowBlur = 4;
-  ctx.fillText(`${fps} FPS`, 10, canvas.height - 10);
-  ctx.restore();
-}
+function drawFPS() { if (!showFPS) return; ctx.font = 'bold 14px monospace'; ctx.fillStyle = fps >= 55 ? '#4dff88' : fps >= 30 ? '#ff9d4d' : '#ff4d4d'; ctx.textAlign = 'left'; ctx.fillText(`${fps} FPS`, 10, canvas.height - 10); }
 
 function getLaneX(lane) { const totalWidth = gameState.noteSize * currentLaneCount + (currentLaneCount - 1) * 4; const startX = Math.floor((canvas.width - totalWidth) / 2); return startX + lane * (gameState.noteSize + 4); }
 function getHitY() { return scrollDirection === 'upscroll' ? canvas.height * 0.15 : canvas.height * 0.85; }
@@ -4127,10 +4119,8 @@ function gameLoop() {
     drawKeyPressEffects(); drawLaneGlow();
     ctx.restore();
   } else if (gameState.mode === 'paused') {
-    ctx.save();
     drawBackground();
     drawNotes(); drawReceptors(); drawHitEffects(); drawCombo(); drawComboTrails(); drawScore(); drawHealthBar(); drawProgressBar(); drawSongInfo(); drawTouchLaneLabels();
-    ctx.restore();
   }
   drawFPS();
   requestAnimationFrame(gameLoop);
