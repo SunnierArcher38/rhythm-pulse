@@ -2954,14 +2954,12 @@ document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
   const modal = document.getElementById('musicBrowserModal');
   modal.style.display = 'none';
   modal.classList.remove('active');
-  stopMusicPreview();
 });
 
 document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
   if (e.target.id === 'musicBrowserModal') {
     e.target.style.display = 'none';
     e.target.classList.remove('active');
-    stopMusicPreview();
   }
 });
 
