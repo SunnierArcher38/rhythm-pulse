@@ -3969,13 +3969,13 @@ function drawMenuVisualizer() {
   if (!analyser || (!previewPlaying && !menuCachedVisualizerData)) return;
   if (previewPlaying) {
     menuVisualizerFrame++;
-    if (menuVisualizerFrame % 3 !== 0) return;
-    analyser.getByteFrequencyData(visualizerData);
-    menuCachedVisualizerData = new Uint8Array(visualizerData);
-    updateMenuBeatZoom();
-  } else {
-    visualizerData = menuCachedVisualizerData;
+    if (menuVisualizerFrame % 3 === 0) {
+      analyser.getByteFrequencyData(visualizerData);
+      menuCachedVisualizerData = new Uint8Array(visualizerData);
+      updateMenuBeatZoom();
+    }
   }
+  visualizerData = menuCachedVisualizerData;
   
   ctx.save();
   if (menuBeatZoomValue > 0.001) {
