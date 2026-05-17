@@ -988,24 +988,7 @@ function loadSongsFromDB() {
 }
 
 function cleanupIndexedDB() {
-  if (!dbReady || !songDB) return;
-  const MAX_SONGS = 50;
-  const MAX_AGE_DAYS = 30;
-  const tx = songDB.transaction('songs', 'readwrite');
-  const store = tx.objectStore('songs');
-  const request = store.getAll();
-  request.onsuccess = () => {
-    const songs = request.result || [];
-    if (songs.length <= MAX_SONGS) return;
-    const cutoff = Date.now() - (MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
-    const toDelete = songs
-      .filter(s => s.uploadedAt && new Date(s.uploadedAt).getTime() < cutoff)
-      .sort((a, b) => (a.uploadedAt || 0) - (b.uploadedAt || 0))
-      .slice(0, songs.length - MAX_SONGS);
-    for (const song of toDelete) {
-      store.delete(song.id);
-    }
-  };
+  // No cleanup - songs persist forever
 }
 
 async function decodeSong(song) {
@@ -3474,6 +3457,7 @@ initIndexedDB().then(() => {
   loadSongsFromDB().then(savedSongs => {
     for (const saved of savedSongs) {
       if (!songs.find(s => s.id === saved.id)) {
+        const file = new File([saved.rawData], saved.fileName || saved.name + '.mp3', { type: 'audio/mpeg' });
         songs.push({
           id: saved.id,
           name: saved.name,
@@ -3483,6 +3467,7 @@ initIndexedDB().then(() => {
           beats: saved.beats,
           charts: saved.charts || {},
           rawData: saved.rawData,
+          file: file,
           isFavorite: saved.isFavorite || false
         });
       }
