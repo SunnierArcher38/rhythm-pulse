@@ -3963,10 +3963,13 @@ function setupVisualizerForPreview() {
 }
 
 let menuCachedVisualizerData = null;
+let menuVisualizerFrame = 0;
 function drawMenuVisualizer() {
   if (!visualizerEnabled) return;
   if (!analyser || (!previewPlaying && !menuCachedVisualizerData)) return;
   if (previewPlaying) {
+    menuVisualizerFrame++;
+    if (menuVisualizerFrame % 3 !== 0) return;
     analyser.getByteFrequencyData(visualizerData);
     menuCachedVisualizerData = new Uint8Array(visualizerData);
     updateMenuBeatZoom();
@@ -3982,9 +3985,9 @@ function drawMenuVisualizer() {
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
   
-  const barCount = 64;
+  const barCount = 48;
   const barWidth = canvas.width / barCount;
-  const maxBarHeight = canvas.height * 0.4;
+  const maxBarHeight = canvas.height * 0.35;
   const srcStep = visualizerData.length / barCount;
   for (let i = 0; i < barCount; i++) {
     const idx = i * srcStep;
@@ -4002,9 +4005,9 @@ function drawMenuVisualizer() {
     ctx.fillRect((barCount - 1 - i) * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
   }
   const cx = canvas.width / 2, cy = canvas.height * 0.38;
-  const baseRadius = Math.min(canvas.width, canvas.height) * 0.2;
+  const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
   const radialBarWidth = (baseRadius * 2 * Math.PI) / (barCount * 2);
-  const maxRadialLength = baseRadius * 0.8;
+  const maxRadialLength = baseRadius * 0.7;
   ctx.strokeStyle = 'rgba(196, 77, 255, 0.08)';
   ctx.lineWidth = 1;
   ctx.beginPath();
