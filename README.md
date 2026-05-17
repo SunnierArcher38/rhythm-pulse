@@ -5,7 +5,7 @@
   </p>
   <p align="center">
     <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/%F0%9F%8E%AE%20Play%20Now-7c3aed?style=for-the-badge&logoColor=white" alt="Play Now"></a>
-    <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+    <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/GENIMPACT-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="GENIMPACT"></a>
   </p>
 </p>
 
@@ -181,7 +181,7 @@ MIT — do whatever you want with it.
 
 Join the Discord server for updates, feedback, and support:
 
-[![Join Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
+[![Join GENIMPACT](https://img.shields.io/badge/GENIMPACT-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
 
 ---
 
