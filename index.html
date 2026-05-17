@@ -228,6 +228,18 @@ canvas { display: block; }
 #loadingOverlay .loading-bar-container { width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
 #loadingOverlay .loading-bar { height: 100%; background: linear-gradient(90deg, #c44dff, #6b9dff); border-radius: 4px; width: 0%; transition: width 0.3s; }
 #loadingOverlay .loading-text { font-size: 0.9rem; color: #888; margin-top: 0.5rem; }
+#songSelectModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#songSelectModal.active { display: flex !important; }
+.song-select-panel { background: rgba(20,20,35,0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 1.5rem; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
+.song-select-panel h3 { text-align: center; margin-bottom: 0.75rem; color: #c44dff; font-size: 1.1rem; }
+.song-select-actions { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; justify-content: center; }
+#songSelectList { flex: 1; overflow-y: auto; margin-bottom: 0.75rem; }
+.song-select-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.3rem; cursor: pointer; transition: background 0.2s; }
+.song-select-item:hover { background: rgba(255,255,255,0.08); }
+.song-select-item input[type="checkbox"] { accent-color: #c44dff; width: 16px; height: 16px; }
+.song-select-item .song-name { flex: 1; font-size: 0.85rem; color: #fff; }
+.song-select-item .song-size { font-size: 0.7rem; color: #888; }
+.song-select-footer { display: flex; gap: 0.75rem; justify-content: center; }
 </style>
 </head>
 <body>
@@ -282,13 +294,27 @@ canvas { display: block; }
         <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">🎵 Import Song</button></div>
         <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#4ade80;">Song Library</span></div>
-        <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save All Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load All Songs</button></div>
-        <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
+        <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load Songs</button></div>
+        <input type="file" id="loadAllSongsInput" accept=".rpsongs" multiple style="display:none;">
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#ffd700;">Full Backup</span></div>
         <div class="setting-row"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📦 Save Everything</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📂 Load Everything</button></div>
-        <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
+        <input type="file" id="loadEverythingInput" accept=".rpbackup" multiple style="display:none;">
        </div>
       </div>
+     <div id="songSelectModal">
+       <div class="song-select-panel">
+         <h3>📤 Select Songs to Export</h3>
+         <div class="song-select-actions">
+           <button id="selectAllSongsBtn" style="padding:0.3rem 0.8rem;background:rgba(196,77,255,0.2);border:1px solid #c44dff;border-radius:6px;color:#c44dff;cursor:pointer;font-size:0.8rem;">Select All</button>
+           <button id="deselectAllSongsBtn" style="padding:0.3rem 0.8rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;cursor:pointer;font-size:0.8rem;">Deselect All</button>
+         </div>
+         <div id="songSelectList"></div>
+         <div class="song-select-footer">
+           <button id="cancelSongSelect" style="padding:0.5rem 1.5rem;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:#fff;cursor:pointer;">Cancel</button>
+           <button id="confirmSongExport" style="padding:0.5rem 1.5rem;background:linear-gradient(135deg,#27ae60,#2ecc71);border:none;border-radius:8px;color:#fff;cursor:pointer;font-weight:600;">Export Selected</button>
+         </div>
+       </div>
+     </div>
       <div class="achievements-dropdown" id="achievementsDropdown">
        <div class="ach-header">🏆 Achievements</div>
        <div class="ach-list" id="achievementsList"></div>
@@ -2406,6 +2432,8 @@ async function decompressData(buffer) {
   return JSON.parse(json);
 }
 
+const DISCORD_LIMIT = 10 * 1024 * 1024; // 10MB Discord limit
+
 async function compressWithSongs(metadata, songs) {
   const metaJson = JSON.stringify(metadata);
   const metaBytes = new TextEncoder().encode(metaJson);
@@ -2418,17 +2446,14 @@ async function compressWithSongs(metadata, songs) {
   const result = new Uint8Array(totalSize);
   let offset = 0;
   
-  // Write metadata length (4 bytes, big-endian)
   result[offset++] = (metaLen >>> 24) & 0xFF;
   result[offset++] = (metaLen >>> 16) & 0xFF;
   result[offset++] = (metaLen >>> 8) & 0xFF;
   result[offset++] = metaLen & 0xFF;
   
-  // Write metadata
   result.set(metaBytes, offset);
   offset += metaLen;
   
-  // Write each song
   for (const s of songs) {
     const audioLen = s.audio.length;
     for (let i = 7; i >= 0; i--) {
@@ -2438,15 +2463,11 @@ async function compressWithSongs(metadata, songs) {
     offset += audioLen;
   }
   
-  const blob = new Blob([result]);
-  const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
-  return new Response(stream).arrayBuffer();
+  return result.buffer;
 }
 
 async function decompressWithSongs(buffer) {
-  const blob = new Blob([buffer]);
-  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'));
-  const raw = new Uint8Array(await new Response(stream).arrayBuffer());
+  const raw = new Uint8Array(buffer);
   
   let offset = 0;
   const metaLen = (raw[offset] << 24) | (raw[offset + 1] << 16) | (raw[offset + 2] << 8) | raw[offset + 3];
@@ -2468,6 +2489,18 @@ async function decompressWithSongs(buffer) {
   }
   
   return { metadata, songs };
+}
+
+async function mergeChunkFiles(files) {
+  const buffers = await Promise.all(files.map(f => f.arrayBuffer()));
+  const totalSize = buffers.reduce((sum, b) => sum + b.byteLength, 0);
+  const result = new Uint8Array(totalSize);
+  let offset = 0;
+  for (const buf of buffers) {
+    result.set(new Uint8Array(buf), offset);
+    offset += buf.byteLength;
+  }
+  return result.buffer;
 }
 
 async function exportSongCode(idx, btn) {
@@ -3101,54 +3134,173 @@ document.getElementById('importSongInput').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-document.getElementById('saveAllSongsBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('saveAllSongsBtn');
-  btn.textContent = '⏳ Saving...';
-  btn.disabled = true;
-  try {
-    const dbSongs = await loadSongsFromDB();
-    const songData = [];
-    for (const s of songs) {
-      let rawData = s.rawData;
-      if (!rawData) {
-        const dbSong = dbSongs.find(d => d.id === s.id);
-        if (dbSong) rawData = dbSong.rawData;
-      }
-      if (!rawData) continue;
-      songData.push({
-        audio: new Uint8Array(rawData),
-        meta: { id: s.id, name: s.name, bpm: s.bpm, duration: s.duration, beats: s.beats, charts: s.charts, isFavorite: s.isFavorite }
-      });
-    }
-    const compressed = await compressWithSongs({ type: 'rpsongs', v: 1 }, songData);
-    const blob = new Blob([compressed], { type: 'application/octet-stream' });
+async function downloadChunks(data, baseName, ext) {
+  const chunks = [];
+  for (let i = 0; i < data.byteLength; i += DISCORD_LIMIT) {
+    chunks.push(data.slice(i, Math.min(i + DISCORD_LIMIT, data.byteLength)));
+  }
+  if (chunks.length === 1) {
+    const blob = new Blob([data], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `rhythm-pulse-songs-${Date.now()}.rpsongs`;
+    a.download = `${baseName}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
-    btn.textContent = '✅ Saved!';
-    setTimeout(() => { btn.textContent = '💾 Save All Songs'; btn.disabled = false; }, 2000);
-  } catch (err) {
-    console.error('Save all songs failed:', err);
-    alert('Save failed: ' + err.message);
-    btn.textContent = '💾 Save All Songs';
-    btn.disabled = false;
+  } else {
+    for (let i = 0; i < chunks.length; i++) {
+      const blob = new Blob([chunks[i]], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${baseName}.${i + 1}of${chunks.length}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      await new Promise(r => setTimeout(r, 300));
+    }
+    alert(`File split into ${chunks.length} parts.\nDownload ALL parts to restore.`);
+  }
+  return chunks.length;
+}
+
+let songExportMode = 'songs';
+
+function showSongSelectModal(mode) {
+  songExportMode = mode || 'songs';
+  const list = document.getElementById('songSelectList');
+  list.innerHTML = '';
+  for (let i = 0; i < songs.length; i++) {
+    const s = songs[i];
+    const size = (s.size / 1024 / 1024).toFixed(1);
+    const item = document.createElement('label');
+    item.className = 'song-select-item';
+    item.innerHTML = `<input type="checkbox" data-idx="${i}" checked><span class="song-name">${s.name}</span><span class="song-size">${size} MB</span>`;
+    list.appendChild(item);
+  }
+  const confirmBtn = document.getElementById('confirmSongExport');
+  confirmBtn.textContent = songExportMode === 'backup' ? 'Export Full Backup' : 'Export Selected';
+  document.getElementById('songSelectModal').classList.add('active');
+}
+
+document.getElementById('saveAllSongsBtn').addEventListener('click', () => {
+  if (songs.length === 0) { alert('No songs to export!'); return; }
+  showSongSelectModal('songs');
+});
+
+document.getElementById('saveEverythingBtn').addEventListener('click', () => {
+  if (songs.length === 0) { alert('No songs to backup!'); return; }
+  showSongSelectModal('backup');
+});
+
+document.getElementById('selectAllSongsBtn').addEventListener('click', () => {
+  document.querySelectorAll('#songSelectList input[type="checkbox"]').forEach(cb => cb.checked = true);
+});
+
+document.getElementById('deselectAllSongsBtn').addEventListener('click', () => {
+  document.querySelectorAll('#songSelectList input[type="checkbox"]').forEach(cb => cb.checked = false);
+});
+
+document.getElementById('cancelSongSelect').addEventListener('click', () => {
+  document.getElementById('songSelectModal').classList.remove('active');
+});
+
+document.getElementById('songSelectModal').addEventListener('click', (e) => {
+  if (e.target.id === 'songSelectModal') e.target.classList.remove('active');
+});
+
+document.getElementById('confirmSongExport').addEventListener('click', async () => {
+  const selected = [];
+  document.querySelectorAll('#songSelectList input[type="checkbox"]').forEach(cb => {
+    if (cb.checked) selected.push(parseInt(cb.dataset.idx));
+  });
+  if (selected.length === 0) { alert('No songs selected!'); return; }
+  document.getElementById('songSelectModal').classList.remove('active');
+  
+  const dbSongs = await loadSongsFromDB();
+  const songData = [];
+  for (const i of selected) {
+    const s = songs[i];
+    let rawData = s.rawData;
+    if (!rawData) {
+      const dbSong = dbSongs.find(d => d.id === s.id);
+      if (dbSong) rawData = dbSong.rawData;
+    }
+    if (!rawData) continue;
+    songData.push({
+      audio: new Uint8Array(rawData),
+      meta: { id: s.id, name: s.name, bpm: s.bpm, duration: s.duration, beats: s.beats, charts: s.charts, isFavorite: s.isFavorite }
+    });
+  }
+  
+  if (songExportMode === 'backup') {
+    const btn = document.getElementById('saveEverythingBtn');
+    btn.textContent = '⏳ Saving...';
+    btn.disabled = true;
+    try {
+      const metadata = {
+        type: 'rpbackup',
+        v: 1,
+        achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
+        favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
+        settings: {
+          ao: localStorage.getItem('rhythmPulseAudioOffset'),
+          ss: localStorage.getItem('rhythmPulseScrollSpeed'),
+          ns: localStorage.getItem('rhythmPulseNoteSize'),
+          vol: localStorage.getItem('rhythmPulseVolume'),
+          lc: localStorage.getItem('rhythmPulseLaneCount'),
+          hs: localStorage.getItem('rhythmPulseHitSound'),
+          fps: localStorage.getItem('rhythmPulseShowFPS'),
+          vis: localStorage.getItem('rhythmPulseVisualizer'),
+          bz: localStorage.getItem('rhythmPulseBeatZoom'),
+          nst: localStorage.getItem('rhythmPulseNoteStyle'),
+          cs: localStorage.getItem('rhythmPulseColorScheme'),
+          tw: localStorage.getItem('rhythmPulseTimingWindow'),
+          sd: localStorage.getItem('rhythmPulseScrollDirection'),
+          hm: localStorage.getItem('rhythmPulseHealthMode'),
+          sp: localStorage.getItem('rhythmPulseSpeedPreset'),
+          ck: localStorage.getItem('rhythmPulseCustomKeys')
+        },
+        songs: songData.map(s => s.meta)
+      };
+      const compressed = await compressWithSongs(metadata, songData);
+      const count = await downloadChunks(compressed, `rhythm-pulse-backup-${Date.now()}`, 'rpbackup');
+      btn.textContent = `✅ Saved! ${count} part(s)`;
+      setTimeout(() => { btn.textContent = '📦 Save Everything'; btn.disabled = false; }, 2000);
+    } catch (err) {
+      console.error('Save everything failed:', err);
+      alert('Save failed: ' + err.message);
+      btn.textContent = '📦 Save Everything';
+      btn.disabled = false;
+    }
+  } else {
+    const btn = document.getElementById('saveAllSongsBtn');
+    btn.textContent = '⏳ Saving...';
+    btn.disabled = true;
+    try {
+      const compressed = await compressWithSongs({ type: 'rpsongs', v: 1 }, songData);
+      const count = await downloadChunks(compressed, `rhythm-pulse-songs-${Date.now()}`, 'rpsongs');
+      btn.textContent = `✅ Saved! ${count} part(s)`;
+      setTimeout(() => { btn.textContent = '💾 Save Songs'; btn.disabled = false; }, 2000);
+    } catch (err) {
+      console.error('Save songs failed:', err);
+      alert('Save failed: ' + err.message);
+      btn.textContent = '💾 Save Songs';
+      btn.disabled = false;
+    }
   }
 });
 
 document.getElementById('loadAllSongsBtn').addEventListener('click', () => { document.getElementById('loadAllSongsInput').click(); });
 document.getElementById('loadAllSongsInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
   const btn = document.getElementById('loadAllSongsBtn');
   btn.textContent = '⏳ Loading...';
   btn.disabled = true;
   try {
-    const buffer = await file.arrayBuffer();
+    const buffer = files.length > 1 ? await mergeChunkFiles(files) : await files[0].arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
-    if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load All Songs'; btn.disabled = false; return; }
+    if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load Songs'; btn.disabled = false; return; }
     let loaded = 0;
     for (let i = 0; i < songFiles.length; i++) {
       const sf = songFiles[i];
@@ -3175,87 +3327,25 @@ document.getElementById('loadAllSongsInput').addEventListener('change', async (e
     }
     updateSongList();
     btn.textContent = `✅ Loaded ${loaded} songs!`;
-    setTimeout(() => { btn.textContent = '📂 Load All Songs'; btn.disabled = false; }, 2000);
+    setTimeout(() => { btn.textContent = '📂 Load Songs'; btn.disabled = false; }, 2000);
   } catch (err) {
-    console.error('Load all songs failed:', err);
+    console.error('Load songs failed:', err);
     alert('Load failed: ' + err.message);
-    btn.textContent = '📂 Load All Songs';
+    btn.textContent = '📂 Load Songs';
     btn.disabled = false;
   }
   e.target.value = '';
 });
 
-document.getElementById('saveEverythingBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('saveEverythingBtn');
-  btn.textContent = '⏳ Saving...';
-  btn.disabled = true;
-  try {
-    const dbSongs = await loadSongsFromDB();
-    const songData = [];
-    for (const s of songs) {
-      let rawData = s.rawData;
-      if (!rawData) {
-        const dbSong = dbSongs.find(d => d.id === s.id);
-        if (dbSong) rawData = dbSong.rawData;
-      }
-      if (!rawData) continue;
-      songData.push({
-        audio: new Uint8Array(rawData),
-        meta: { id: s.id, name: s.name, bpm: s.bpm, duration: s.duration, beats: s.beats, charts: s.charts, isFavorite: s.isFavorite }
-      });
-    }
-    const metadata = {
-      type: 'rpbackup',
-      v: 1,
-      achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
-      favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
-      settings: {
-        ao: localStorage.getItem('rhythmPulseAudioOffset'),
-        ss: localStorage.getItem('rhythmPulseScrollSpeed'),
-        ns: localStorage.getItem('rhythmPulseNoteSize'),
-        vol: localStorage.getItem('rhythmPulseVolume'),
-        lc: localStorage.getItem('rhythmPulseLaneCount'),
-        hs: localStorage.getItem('rhythmPulseHitSound'),
-        fps: localStorage.getItem('rhythmPulseShowFPS'),
-        vis: localStorage.getItem('rhythmPulseVisualizer'),
-        bz: localStorage.getItem('rhythmPulseBeatZoom'),
-        nst: localStorage.getItem('rhythmPulseNoteStyle'),
-        cs: localStorage.getItem('rhythmPulseColorScheme'),
-        tw: localStorage.getItem('rhythmPulseTimingWindow'),
-        sd: localStorage.getItem('rhythmPulseScrollDirection'),
-        hm: localStorage.getItem('rhythmPulseHealthMode'),
-        sp: localStorage.getItem('rhythmPulseSpeedPreset'),
-        ck: localStorage.getItem('rhythmPulseCustomKeys')
-      },
-      songs: songData.map(s => s.meta)
-    };
-    const compressed = await compressWithSongs(metadata, songData);
-    const blob = new Blob([compressed], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rhythm-pulse-backup-${Date.now()}.rpbackup`;
-    a.click();
-    URL.revokeObjectURL(url);
-    btn.textContent = '✅ Saved!';
-    setTimeout(() => { btn.textContent = '📦 Save Everything'; btn.disabled = false; }, 2000);
-  } catch (err) {
-    console.error('Save everything failed:', err);
-    alert('Save failed: ' + err.message);
-    btn.textContent = '📦 Save Everything';
-    btn.disabled = false;
-  }
-});
-
 document.getElementById('loadEverythingBtn').addEventListener('click', () => { document.getElementById('loadEverythingInput').click(); });
 document.getElementById('loadEverythingInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
   const btn = document.getElementById('loadEverythingBtn');
   btn.textContent = '⏳ Loading...';
   btn.disabled = true;
   try {
-    const buffer = await file.arrayBuffer();
+    const buffer = files.length > 1 ? await mergeChunkFiles(files) : await files[0].arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
     if (metadata.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
     if (metadata.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(metadata.achievements));
