@@ -2856,6 +2856,7 @@ document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
 
 document.querySelectorAll('.genre-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    console.log('[Music] Genre clicked:', btn.dataset.genre);
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     searchMusic(btn.dataset.genre);
@@ -2863,13 +2864,18 @@ document.querySelectorAll('.genre-btn').forEach(btn => {
 });
 
 async function searchMusic(query) {
+  console.log('[Music] searchMusic called with:', query);
   const results = document.getElementById('musicResults');
+  console.log('[Music] Results element:', results);
   results.innerHTML = '<div class="music-loading">Searching...</div>';
   try {
     const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
+    console.log('[Music] Fetching:', url);
     const res = await fetch(url);
+    console.log('[Music] Response status:', res.status);
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     const data = await res.json();
+    console.log('[Music] API data:', data);
     const tracks = data.data || [];
     console.log('[Music] Found', tracks.length, 'tracks');
     if (tracks.length === 0) {
@@ -3005,14 +3011,6 @@ document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
     const query = e.target.value.trim();
     if (query) searchMusic(query);
   }
-});
-
-document.querySelectorAll('.genre-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    searchMusic(btn.dataset.genre);
-  });
 });
 
 async function searchMusic(query) {
