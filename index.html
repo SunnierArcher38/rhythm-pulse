@@ -471,76 +471,146 @@ function stopAudio() { if (audioSource) { try { audioSource.stop(); } catch(e) {
 function getCurrentTime() { if (!isPlaying) return audioPausedAt; return audioCtx.currentTime - audioStartTime; }
 function getAudioDuration() { return audioBuffer ? audioBuffer.duration : 0; }
 
-function detectBeats(buffer, threshold = 0.6) {
+function detectBeats(buffer, threshold = 0.5) {
   const sampleRate = buffer.sampleRate;
-  const windowSize = Math.floor(sampleRate * 0.05);
-  const hopSize = Math.floor(sampleRate * 0.01);
   const numChannels = buffer.numberOfChannels;
-  const frameCount = Math.floor((buffer.length - windowSize) / hopSize);
+  const length = buffer.length;
   
-  const energies = [];
-  for (let frame = 0; frame < frameCount; frame++) {
-    const offset = frame * hopSize;
+  // Mix down and apply low-pass filter to focus on bass/kick
+  const mixed = new Float32Array(length);
+  for (let ch = 0; ch < numChannels; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      mixed[i] += data[i] / numChannels;
+    }
+  }
+  
+  // Simple low-pass filter (moving average) to emphasize bass
+  const lpWindow = Math.floor(sampleRate * 0.01); // 10ms smoothing
+  const filtered = new Float32Array(length);
+  let sum = 0;
+  for (let i = 0; i < length; i++) {
+    sum += mixed[i] * mixed[i];
+    if (i >= lpWindow) sum -= mixed[i - lpWindow] * mixed[i - lpWindow];
+    filtered[i] = sum / Math.min(i + 1, lpWindow);
+  }
+  
+  // Compute spectral flux (onset strength) using frame differences
+  const frameSize = Math.floor(sampleRate * 0.02); // 20ms frames
+  const hopSize = Math.floor(sampleRate * 0.005); // 5ms hop
+  const frameCount = Math.floor((length - frameSize) / hopSize);
+  
+  const flux = [];
+  for (let f = 0; f < frameCount; f++) {
+    const offset = f * hopSize;
     let energy = 0;
-    for (let ch = 0; ch < numChannels; ch++) {
-      const data = buffer.getChannelData(ch);
-      for (let i = 0; i < windowSize; i++) {
-        const sample = data[offset + i];
-        energy += sample * sample;
+    for (let i = 0; i < frameSize; i++) {
+      energy += filtered[offset + i];
+    }
+    flux.push(energy / frameSize);
+  }
+  
+  // Compute onset strength (difference of energy)
+  const onsetStrength = [];
+  for (let i = 1; i < flux.length; i++) {
+    const diff = flux[i] - flux[i - 1];
+    onsetStrength.push(diff > 0 ? diff : 0);
+  }
+  
+  if (onsetStrength.length === 0) return [];
+  
+  // Adaptive threshold using local mean
+  const windowFrames = Math.floor(sampleRate * 0.5 / (hopSize)); // 0.5s window
+  const beats = [];
+  const minBeatFrames = Math.floor(sampleRate * 0.15 / (hopSize)); // 150ms min
+  
+  for (let i = 0; i < onsetStrength.length; i++) {
+    // Local mean
+    const start = Math.max(0, i - windowFrames);
+    const end = Math.min(onsetStrength.length, i + windowFrames);
+    let localSum = 0;
+    for (let j = start; j < end; j++) localSum += onsetStrength[j];
+    const localMean = localSum / (end - start);
+    
+    const adaptiveThreshold = localMean * (1 + threshold);
+    
+    if (onsetStrength[i] > adaptiveThreshold && onsetStrength[i] > 0.001) {
+      // Check minimum distance
+      if (beats.length === 0 || (i - beats[beats.length - 1].frame) >= minBeatFrames) {
+        // Check local peak
+        let isPeak = true;
+        const peakRange = Math.max(1, Math.floor(minBeatFrames / 2));
+        for (let j = Math.max(0, i - peakRange); j <= Math.min(onsetStrength.length - 1, i + peakRange); j++) {
+          if (j !== i && onsetStrength[j] > onsetStrength[i]) { isPeak = false; break; }
+        }
+        if (isPeak) {
+          beats.push({ frame: i, time: i * hopSize / sampleRate, strength: onsetStrength[i] });
+        }
       }
     }
-    energies.push(energy / (windowSize * numChannels));
   }
   
-  const onsets = [];
-  for (let i = 1; i < energies.length; i++) {
-    const diff = energies[i] - energies[i - 1];
-    if (diff > 0) onsets.push({ time: i * hopSize / sampleRate, strength: diff });
-  }
-  
-  if (onsets.length === 0) return [];
-  
-  const avgStrength = onsets.reduce((a, b) => a + b.strength, 0) / onsets.length;
-  const onsetThreshold = avgStrength * threshold;
-  
-  const beats = [];
-  let lastBeatTime = -1;
-  const minBeatInterval = 0.15;
-  
-  for (let i = 0; i < onsets.length; i++) {
-    const onset = onsets[i];
-    if (onset.strength < onsetThreshold) continue;
-    if (onset.time - lastBeatTime < minBeatInterval) continue;
-    
-    let isPeak = true;
-    for (let j = Math.max(0, i - 3); j <= Math.min(onsets.length - 1, i + 3); j++) {
-      if (j !== i && onsets[j].strength > onset.strength) { isPeak = false; break; }
-    }
-    
-    if (isPeak) { beats.push(onset.time); lastBeatTime = onset.time; }
-  }
-  
-  return beats;
+  return beats.map(b => b.time);
 }
 
 function estimateBPM(beats) {
   if (beats.length < 4) return 140;
+  
+  // Build inter-onset interval histogram
   const intervals = [];
-  for (let i = 1; i < beats.length; i++) {
-    const diff = beats[i] - beats[i-1];
-    if (diff > 0.2 && diff < 2.0) intervals.push(diff);
+  for (let i = 1; i < Math.min(beats.length, 200); i++) {
+    const diff = beats[i] - beats[i - 1];
+    if (diff > 0.15 && diff < 2.0) intervals.push(diff);
   }
-  if (intervals.length === 0) return 140;
   
-  // Use median for robustness
-  intervals.sort((a, b) => a - b);
-  const median = intervals[Math.floor(intervals.length / 2)];
-  const bpm = 60 / median;
+  if (intervals.length < 3) return 140;
   
-  // Clamp to reasonable range
-  if (bpm < 60) return bpm * 2;
-  if (bpm > 200) return bpm / 2;
-  return Math.round(bpm);
+  // Use autocorrelation for more robust BPM detection
+  // Build onset strength envelope at 10ms resolution
+  const resolution = 0.01; // 10ms
+  const maxTime = beats[beats.length - 1];
+  const envLength = Math.floor(maxTime / resolution);
+  const envelope = new Float32Array(envLength);
+  
+  // Place beats into envelope
+  for (const beat of beats) {
+    const idx = Math.floor(beat / resolution);
+    if (idx < envLength) envelope[idx] = 1;
+  }
+  
+  // Autocorrelation
+  let bestLag = 0;
+  let bestCorr = -1;
+  const minLag = Math.floor(60 / 200 / resolution); // 200 BPM max
+  const maxLag = Math.floor(60 / 60 / resolution);  // 60 BPM min
+  
+  for (let lag = minLag; lag <= maxLag && lag < envLength; lag++) {
+    let corr = 0;
+    let count = 0;
+    for (let i = 0; i < envLength - lag; i++) {
+      corr += envelope[i] * envelope[i + lag];
+      count++;
+    }
+    corr /= count;
+    if (corr > bestCorr) {
+      bestCorr = corr;
+      bestLag = lag;
+    }
+  }
+  
+  if (bestLag === 0) return 140;
+  
+  const bpm = Math.round(60 / (bestLag * resolution));
+  
+  // Handle common octave errors
+  if (bpm < 70) return bpm * 2;
+  if (bpm > 180) {
+    // Check if half tempo makes more sense
+    const halfBpm = bpm / 2;
+    if (halfBpm > 70 && halfBpm < 150) return Math.round(halfBpm);
+  }
+  
+  return bpm;
 }
 
 function findFirstStrongBeat(beats, bpm) {
