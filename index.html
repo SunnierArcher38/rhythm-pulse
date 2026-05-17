@@ -3404,6 +3404,8 @@ document.getElementById('loadEverythingInput').addEventListener('change', async 
 });
 
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
+document.getElementById('keybindCancel').addEventListener('click', () => { document.getElementById('keybindModal').classList.remove('active'); });
+document.getElementById('keybindSave').addEventListener('click', () => { saveKeys(); document.getElementById('keybindModal').classList.remove('active'); });
 
 function renderKeybinds() {
   const list = document.getElementById('keybindList'); const keys = getLaneKeys();
@@ -3425,10 +3427,15 @@ document.addEventListener('keydown', (e) => {
     if (!customKeys[currentLaneCount]) customKeys[currentLaneCount] = [...getLaneKeys()];
     customKeys[currentLaneCount][listeningForLane] = key === ' ' ? ' ' : key;
     listeningForLane = null; renderKeybinds();
+  } else if (e.key === 'Escape' && document.getElementById('keybindModal').classList.contains('active')) {
+    document.getElementById('keybindModal').classList.remove('active');
   }
 });
 
-document.addEventListener('click', (e) => { if (!e.target.closest('.settings-panel')) { document.getElementById('settingsDropdown').classList.remove('active'); } });
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.settings-panel')) { document.getElementById('settingsDropdown').classList.remove('active'); }
+  if (e.target === document.getElementById('keybindModal')) { document.getElementById('keybindModal').classList.remove('active'); }
+});
 
 document.querySelectorAll('.organizer-btn').forEach(btn => {
   btn.addEventListener('click', () => {
