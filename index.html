@@ -3119,9 +3119,8 @@ async function previewPlay(song) {
     console.error('Failed to decode preview:', err);
     return;
   }
-  if (!song.beats) {
-    song.beats = detectBeats(song.audioBuffer, 0.5);
-  }
+  song.beats = detectBeats(song.audioBuffer, 0.5);
+  song.bpm = estimateBPM(song.beats);
   previewSong = song;
   menuLastBeatIdx = -1;
   previewSource = audioCtx.createBufferSource();
@@ -3146,6 +3145,7 @@ async function previewPlay(song) {
   });
   document.getElementById('playerBPM').textContent = song.bpm ? `${Math.round(song.bpm)} BPM` : '';
   document.getElementById('miniPlayer').classList.add('active');
+  updateSongList();
   updatePreviewProgress();
 }
 
