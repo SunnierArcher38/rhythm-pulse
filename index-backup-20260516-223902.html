@@ -3,11 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Rhythm Pulse - FNF x osu!mania</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: radial-gradient(ellipse at center, #1a0a2e 0%, #0d0520 50%, #050210 100%); overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; color: #fff; user-select: none; }
@@ -33,9 +29,6 @@ canvas { display: block; }
 .song-item .song-info { flex: 1; }
 .song-item .song-name { font-size: 1.1rem; font-weight: 600; }
 .song-item .song-meta { font-size: 0.85rem; color: #888; margin-top: 0.25rem; }
-.song-item .song-diffs { margin-top: 0.3rem; display: flex; flex-wrap: wrap; gap: 2px; }
-.song-delete-btn { background: rgba(255,77,77,0.15); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
-.song-delete-btn:hover { background: rgba(255,77,77,0.4); transform: scale(1.1); }
 .difficulty-select { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 8px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .diff-btn.easy { border-color: #4dff88; color: #4dff88; }
@@ -87,7 +80,7 @@ canvas { display: block; }
 .pause-title { font-size: 4rem; font-weight: 900; margin-bottom: 2rem; }
 .pause-btn { padding: 1rem 3rem; margin: 0.5rem; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; transition: all 0.2s; }
 .pause-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-.settings-panel { position: absolute; top: 1rem; right: 1rem; z-index: 150; display: flex; gap: 0.5rem; }
+.settings-panel { position: absolute; top: 1rem; right: 1rem; z-index: 110; display: flex; gap: 0.5rem; }
 .settings-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
 .settings-btn:hover { background: rgba(255,255,255,0.2); }
 #song-select.ui-hidden .select-title,
@@ -137,31 +130,6 @@ canvas { display: block; }
 .keybind-btn.save:hover { transform: scale(1.05); }
 .keybind-btn.cancel { background: rgba(255,255,255,0.1); color: #fff; }
 .keybind-btn.reset { background: rgba(255,77,77,0.2); color: #ff4d4d; }
-#musicBrowserModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
-#musicBrowserModal.active { display: flex !important; }
-.music-browser-panel { background: rgba(20, 20, 35, 0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
-.music-browser-panel h3 { text-align: center; margin-bottom: 0.5rem; color: #c44dff; }
-.music-search-bar { display: flex; gap: 0.5rem; margin: 0.75rem 0; }
-.music-genres { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-.genre-btn { padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: #ccc; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-.genre-btn:hover, .genre-btn.active { background: rgba(196, 77, 255, 0.3); border-color: #c44dff; color: #fff; }
-.music-results { flex: 1; overflow-y: auto; margin: 0.5rem 0; }
-.music-track { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.5rem; transition: background 0.2s; }
-.music-track:hover { background: rgba(255,255,255,0.08); }
-.music-track .track-info { flex: 1; min-width: 0; }
-.music-track .track-name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.music-track .track-artist { font-size: 0.8rem; color: #888; }
-.music-track .track-meta { font-size: 0.75rem; color: #666; }
-.music-track .track-actions { display: flex; gap: 0.4rem; }
-.track-btn { padding: 0.3rem 0.7rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
-.track-btn.preview { background: rgba(196, 77, 255, 0.3); color: #c44dff; }
-.track-btn.preview:hover { background: rgba(196, 77, 255, 0.5); }
-.track-btn.download { background: rgba(107, 157, 255, 0.3); color: #6b9dff; }
-.track-btn.download:hover { background: rgba(107, 157, 255, 0.5); }
-.track-btn.downloading { background: rgba(255,255,255,0.1); color: #888; cursor: default; }
-.music-browser-actions { display: flex; justify-content: center; margin-top: 0.75rem; }
-.music-loading { text-align: center; color: #888; padding: 2rem; }
-.music-error { text-align: center; color: #ff4d4d; padding: 1rem; }
 .practice-panel { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 1rem 1.5rem; display: none; z-index: 120; align-items: center; gap: 1rem; }
 .practice-panel.active { display: flex; }
 .practice-panel label { color: #aaa; font-size: 0.85rem; }
@@ -200,10 +168,7 @@ canvas { display: block; }
 .mini-player { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(20,20,35,0.95); border: 1px solid rgba(196,77,255,0.3); border-radius: 12px; padding: 0.75rem 1.5rem; display: none; z-index: 110; align-items: center; gap: 1rem; min-width: 400px; max-width: 600px; }
 .mini-player.active { display: flex; }
 .mini-player .player-info { flex: 1; min-width: 0; }
-.mini-player .player-title { font-size: 0.9rem; font-weight: 600; overflow: hidden; max-width: 250px; }
-.mini-player .player-title-inner { display: inline-block; white-space: nowrap; }
-.mini-player .player-title.scrolling .player-title-inner { animation: marquee 10s linear infinite; }
-@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.mini-player .player-title { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-player .player-meta { font-size: 0.75rem; color: #888; display: flex; gap: 1rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.5rem; }
 .mini-player .player-controls { display: flex; align-items: center; gap: 0.4rem; }
@@ -246,7 +211,6 @@ canvas { display: block; }
     </div>
     <div class="settings-panel">
       <button class="settings-btn" id="uiToggle" title="Toggle UI">👁</button>
-      <button class="settings-btn" id="browseMusicBtn" title="Browse Free Music" style="background:rgba(108,52,131,0.5);">🎵</button>
       <button class="settings-btn" id="achievementsToggle" title="Achievements">🏆</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
@@ -263,7 +227,7 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Timing Window</span><select class="style-select" id="timingWindow"><option value="lenient">Lenient</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select></div>
         <div class="setting-row"><span class="setting-label">Scroll Direction</span><select class="style-select" id="scrollDirection"><option value="downscroll" selected>Downscroll</option><option value="upscroll">Upscroll</option></select></div>
         <div class="setting-row"><span class="setting-label">Health Mode</span><select class="style-select" id="healthMode"><option value="normal" selected>Normal</option><option value="nofail">No Fail</option><option value="sudden">Sudden Death</option><option value="drain">Life Drain</option></select></div>
-        <div class="setting-row"><span class="setting-label">Speed Preset</span><select class="style-select" id="speedPreset"><option value="custom">Custom</option><option value="vslow">Very Slow</option><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option><option value="vfast">Very Fast</option><option value="insane">Insane</option><option value="extreme">Extreme</option><option value="godlike">Godlike</option></select></div>
+        <div class="setting-row"><span class="setting-label">Speed Preset</span><select class="style-select" id="speedPreset"><option value="custom">Custom</option><option value="c1">C1</option><option value="c2">C2</option><option value="c3">C3</option><option value="c4">C4</option><option value="c5">C5</option><option value="c6">C6</option><option value="c7">C7</option><option value="c8">C8</option><option value="c9">C9</option><option value="c10">C10</option><option value="m1">M1</option><option value="m2">M2</option><option value="m3">M3</option><option value="m4">M4</option><option value="m5">M5</option></select></div>
         <div class="setting-row"><span class="setting-label">Practice Mode</span><button class="toggle-btn off" id="practiceToggle">OFF</button></div>
         <div class="setting-row"><span class="setting-label">Auto Play</span><button class="toggle-btn off" id="autoplayToggle">OFF</button></div>
         <div class="setting-row"><span class="setting-label">Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
@@ -273,11 +237,117 @@ canvas { display: block; }
         <div class="setting-row"><span class="setting-label">Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
         <div class="setting-row"><span class="setting-label">Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
         <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;">Customize Keys</button></div>
-        <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#c44dff;">Save Codes</span></div>
-        <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:0.8rem;resize:none;padding:0.5rem;"></textarea></div>
-        <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">📋 Copy Code</button><button class="pause-btn" id="loadCodeBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#6c3483;">💾 Load Code</button></div>
        </div>
+     </div>
+     <div class="achievements-dropdown" id="achievementsDropdown">
+       <div class="ach-header">🏆 Achievements</div>
+       <div class="ach-list" id="achievementsList"></div>
+     </div>
+   </div>
+  <div id="pause-overlay">
+    <div class="pause-title">PAUSED</div>
+    <button class="pause-btn" id="resumeBtn">Resume</button>
+    <button class="pause-btn" id="restartBtn">Restart</button>
+    <button class="pause-btn" id="quitBtn">Quit to Menu</button>
+  </div>
+  <div id="results">
+    <div class="results-title">RESULTS</div>
+    <div class="results-song-name" id="resultsSongName"></div>
+    <div class="results-grade" id="resultsGrade"></div>
+    <div class="results-stats">
+      <div class="stat-item stat-score"><div class="stat-label">Score</div><div class="stat-value" id="resultScore">0</div></div>
+      <div class="stat-item stat-accuracy"><div class="stat-label">Accuracy</div><div class="stat-value" id="resultAccuracy">0%</div></div>
+      <div class="stat-item stat-marvelous"><div class="stat-label">Marvelous</div><div class="stat-value" id="resultMarvelous">0</div></div>
+      <div class="stat-item stat-perfect"><div class="stat-label">Perfect</div><div class="stat-value" id="resultPerfect">0</div></div>
+      <div class="stat-item stat-great"><div class="stat-label">Great</div><div class="stat-value" id="resultGreat">0</div></div>
+      <div class="stat-item stat-good"><div class="stat-label">Good</div><div class="stat-value" id="resultGood">0</div></div>
+      <div class="stat-item stat-miss"><div class="stat-label">Miss</div><div class="stat-value" id="resultMiss">0</div></div>
+      <div class="stat-item stat-maxcombo"><div class="stat-label">Max Combo</div><div class="stat-value" id="resultMaxCombo">0</div></div>
+    </div>
+    <div class="results-buttons">
+      <button class="results-btn retry" id="retryBtn">Retry</button>
+      <button class="results-btn back" id="backBtn">Song Select</button>
+      <button class="results-btn" id="discordScoreBtn" style="background:linear-gradient(135deg,#5865f2,#7289da);display:none;">Send Score to Discord</button>
+      <button class="results-btn" id="copyScoreBtn" style="background:linear-gradient(135deg,#4dff88,#4dc9ff);">📋 Copy Score</button>
+    </div>
+    <div id="highScoreIndicator" style="display:none;color:#ffd700;font-size:1.2rem;margin-top:1rem;text-align:center;">★ NEW HIGH SCORE! ★</div>
+    <div class="timing-graph" id="timingGraph"><canvas id="timingGraphCanvas"></canvas></div>
+    <div class="results-buttons" style="margin-top:1rem;">
+      <button class="results-btn back" id="showTimingGraphBtn" style="padding:0.5rem 1rem;font-size:0.9rem;">Show Timing Graph</button>
+    </div>
+  </div>
+  <div class="practice-panel" id="practicePanel">
+    <label>Speed:</label>
+    <input type="range" id="practiceSpeed" min="25" max="100" value="100" step="5">
+    <span class="speed-display" id="practiceSpeedDisplay">100%</span>
+    <button id="practiceLoopBtn">Loop Section</button>
+    <span class="loop-display" id="practiceLoopDisplay">--:-- - --:--</span>
+    <button id="practiceSetStart">Set Start</button>
+    <button id="practiceSetEnd">Set End</button>
+    <button id="practiceExit">Exit Practice</button>
+    <canvas id="practiceMinimap" width="400" height="40" style="margin-top:0.5rem;border-radius:4px;background:rgba(0,0,0,0.3);"></canvas>
+  </div>
+  <div class="accuracy-display" id="accuracyDisplay" style="display:none;">
+    <div class="acc-value" id="accValue">100%</div>
+    <div class="acc-label">ACCURACY</div>
+  </div>
+  <div class="judgment-counter" id="judgmentCounter" style="display:none;">
+    <div class="jud-row"><span class="jud-label" style="color:#ffd700;">Marvelous</span><span class="jud-count" id="judMarvelous" style="color:#ffd700;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#ff6bff;">Perfect</span><span class="jud-count" id="judPerfect" style="color:#ff6bff;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#6b9dff;">Great</span><span class="jud-count" id="judGreat" style="color:#6b9dff;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#6bffd7;">Good</span><span class="jud-count" id="judGood" style="color:#6bffd7;">0</span></div>
+    <div class="jud-row"><span class="jud-label" style="color:#ff4d4d;">Miss</span><span class="jud-count" id="judMiss" style="color:#ff4d4d;">0</span></div>
+  </div>
+  <div class="autoplay-indicator" id="autoplayIndicator" style="display:none;">AUTOPLAY</div>
+  <div class="autoplay-indicator" id="modifierIndicator" style="display:none;top:3rem;"></div>
+  <div class="density-preview" id="densityPreview" style="display:none;"><div class="density-bar" id="densityBar"></div></div>
+  <div class="achievement-popup" id="achievementPopup"><div class="ach-title">★ ACHIEVEMENT UNLOCKED</div><div class="ach-name" id="achievementName"></div></div>
+  <div class="song-organizer" id="songOrganizer" style="display:none;">
+    <button class="organizer-btn active" data-sort="name">Name</button>
+    <button class="organizer-btn" data-sort="bpm">BPM</button>
+    <button class="organizer-btn" data-sort="length">Length</button>
+    <button class="organizer-btn" data-sort="favorites">★ Favorites</button>
+  </div>
+  <div class="metronome-indicator" id="metronomeIndicator"><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div></div>
+  <div class="mini-player" id="miniPlayer">
+    <div class="player-controls">
+      <button class="player-btn" id="playerPrevBtn">⏮</button>
+      <button class="player-btn play-btn" id="playerPlayBtn">▶</button>
+      <button class="player-btn" id="playerNextBtn">⏭</button>
+      <button class="player-btn" id="playerStopBtn">⏹</button>
+      <button class="player-btn" id="playerLoopBtn">🔁</button>
+      <button class="player-btn" id="playerShuffleBtn">🔀</button>
+    </div>
+    <div class="player-info">
+      <div class="player-title" id="playerTitle">No song selected</div>
+      <div class="player-meta">
+        <span id="playerTime">0:00 / 0:00</span>
+        <span id="playerBPM"></span>
       </div>
+      <div class="progress-container" id="playerProgressContainer">
+        <div class="progress-bar" id="playerProgressBar"></div>
+      </div>
+    </div>
+    <input type="range" class="volume-slider" id="playerVolume" min="0" max="100" value="80">
+  </div>
+  <div class="health-mode-indicator" id="healthModeIndicator"></div>
+</div>
+<div id="loadingOverlay">
+    <div class="loading-title">Loading Song...</div>
+    <div class="loading-bar-container"><div class="loading-bar" id="loadingBar"></div></div>
+    <div class="loading-text" id="loadingText">Preparing...</div>
+  </div>
+  <div id="keybindModal">
+  <div class="keybind-panel">
+    <h3>Customize Keys</h3>
+    <div id="keybindList"></div>
+    <div class="keybind-actions">
+      <button class="keybind-btn reset" id="keybindReset">Reset</button>
+      <button class="keybind-btn cancel" id="keybindCancel">Cancel</button>
+      <button class="keybind-btn save" id="keybindSave">Save</button>
+    </div>
+  </div>
+</div>
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -723,7 +793,8 @@ const TIMING_WINDOWS = {
 };
 
 const SPEED_PRESETS = {
-  vslow: 3, slow: 6, normal: 10, fast: 14, vfast: 18, insane: 22, extreme: 26, godlike: 30
+  c1: 1, c2: 2, c3: 3, c4: 4, c5: 5, c6: 6, c7: 7, c8: 8, c9: 9, c10: 10,
+  m1: 11, m2: 12, m3: 13, m4: 14, m5: 15
 };
 
 const ACHIEVEMENTS = {
@@ -740,7 +811,7 @@ const ACHIEVEMENTS = {
   fifty_songs: { name: 'Veteran', desc: 'Play 50 songs', icon: '🎸' },
   no_miss: { name: 'Untouchable', desc: 'Complete a song with 0 misses', icon: '🛡️' },
   perfect_song: { name: 'Flawless', desc: 'Get 100% accuracy on any song', icon: '💯' },
-  speed_demon: { name: 'Speed Demon', desc: 'Play a song at Very Fast speed or higher', icon: '🚀' },
+  speed_demon: { name: 'Speed Demon', desc: 'Play a song at 2x speed or higher', icon: '🚀' },
   marathon: { name: 'Marathon', desc: 'Play a song longer than 5 minutes', icon: '⏱️' },
   all_mods: { name: 'Challenge Accepted', desc: 'Play with 3+ modifiers active', icon: '🎯' },
   hard_worker: { name: 'Hard Worker', desc: 'Complete 100 songs total', icon: '💪' },
@@ -1732,6 +1803,12 @@ function updateAccuracyDisplay() {
   document.getElementById('judMiss').textContent = gameState.judgments.miss;
 }
 
+function checkAchievements() {
+  if (gameState.judgments.marvelous > 0) checkAchievement('first_marvelous');
+  if (gameState.judgments.marvelous >= 100) checkAchievement('perfect_100');
+  if (gameState.judgments.miss === 0 && gameState.mode === 'results') checkAchievement('no_miss');
+}
+
 function drawTimingGraph() {
   const canvas = document.getElementById('timingGraphCanvas');
   const ctx2 = canvas.getContext('2d');
@@ -1784,12 +1861,9 @@ function showResults() {
   document.getElementById('highScoreIndicator').style.display = isNewHigh ? 'block' : 'none';
   
   checkAchievement('first_song');
-  if (gameState.judgments.marvelous > 0) checkAchievement('first_marvelous');
-  if (gameState.judgments.marvelous >= 100) checkAchievement('perfect_100');
   if (grade === 'S') checkAchievement('grade_s');
   if (grade === 'A' || grade === 'S') checkAchievement('grade_a');
   if (gameState.judgments.miss === 0 && totalNotes > 0) checkAchievement('full_combo');
-  if (gameState.judgments.miss === 0 && totalNotes > 0) checkAchievement('no_miss');
   if (accuracy == 100) checkAchievement('perfect_song');
   if (activeModifiers.length >= 3) checkAchievement('all_mods');
   const songsPlayed = parseInt(localStorage.getItem('rhythmPulseSongsPlayed') || '0') + 1;
@@ -1799,7 +1873,7 @@ function showResults() {
   if (songsPlayed >= 100) checkAchievement('hard_worker');
   const duration = getAudioDuration();
   if (duration > 300) checkAchievement('marathon');
-  if (gameState.scrollSpeed >= 18) checkAchievement('speed_demon');
+  if (gameState.scrollSpeed >= 30) checkAchievement('speed_demon');
   const unlockedCount = Object.keys(achievements).filter(k => achievements[k]).length;
   if (unlockedCount >= 10) checkAchievement('collector');
   if (unlockedCount >= Object.keys(ACHIEVEMENTS).length) checkAchievement('completionist');
@@ -2086,11 +2160,8 @@ function updateSongList() {
     const item = document.createElement('div'); item.className = 'song-item';
     const favStar = song.isFavorite ? '★' : '☆';
     const charts = song.charts || {};
-    const diffStatus = ['easy', 'normal', 'hard', 'insane'].map(d => {
-      const ready = charts[d];
-      return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
-    }).join('');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    const diffIndicators = ['easy', 'normal', 'hard', 'insane'].map(d => charts[d] ? '✓' : '·').join(' ');
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm || '?'} BPM • ${formatTime(song.duration || 0)} <span style="color:#666;margin-left:0.5rem;">Charts: ${diffIndicators}</span></div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.fav-toggle').forEach(el => {
@@ -2128,38 +2199,12 @@ function updateSongList() {
         }
         await startGame(song, diff);
       } catch (err) {
-        console.error('Failed to start game:', err);
-        btn.textContent = 'Error';
-        setTimeout(() => { btn.textContent = diff.charAt(0).toUpperCase() + diff.slice(1); }, 2000);
+        console.error('Failed to load song:', err);
+        btn.textContent = 'Failed';
+        setTimeout(() => { btn.textContent = diff.charAt(0).toUpperCase() + diff.slice(1); }, 3000);
       }
     });
   });
-  document.querySelectorAll('.song-delete-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx);
-      if (confirm(`Delete "${songs[idx].name}"? This cannot be undone.`)) {
-        deleteSong(idx);
-      }
-    });
-  });
-}
-
-async function deleteSong(idx) {
-  const song = songs[idx];
-  if (dbReady && songDB) {
-    const tx = songDB.transaction('songs', 'readwrite');
-    tx.objectStore('songs').delete(song.id);
-    await new Promise(resolve => { tx.oncomplete = resolve; });
-  }
-  songs.splice(idx, 1);
-  if (previewSong === song) previewStop();
-  if (gameState.song === song) {
-    gameState.mode = 'menu';
-    document.getElementById('song-select').classList.remove('hidden');
-    document.getElementById('songOrganizer').style.display = 'flex';
-  }
-  updateSongList();
 }
 
 const dropZone = document.getElementById('fileDropZone');
@@ -2466,460 +2511,8 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
 
 let listeningForLane = null;
 document.getElementById('keybindBtn').addEventListener('click', () => { document.getElementById('keybindModal').classList.add('active'); renderKeybinds(); });
-
-document.getElementById('exportSaveBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const saveData = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
-    favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
-    settings: {
-      audioOffset: localStorage.getItem('rhythmPulseAudioOffset') || '0',
-      scrollSpeed: localStorage.getItem('rhythmPulseScrollSpeed') || '15',
-      noteSize: localStorage.getItem('rhythmPulseNoteSize') || '50',
-      volume: localStorage.getItem('rhythmPulseVolume') || '80',
-      laneCount: localStorage.getItem('rhythmPulseLaneCount') || '4',
-      hitSound: localStorage.getItem('rhythmPulseHitSound') || 'false',
-      showFPS: localStorage.getItem('rhythmPulseShowFPS') || 'true',
-      visualizer: localStorage.getItem('rhythmPulseVisualizer') || 'true',
-      noteStyle: localStorage.getItem('rhythmPulseNoteStyle') || 'circles',
-      colorScheme: localStorage.getItem('rhythmPulseColorScheme') || 'neon',
-      timingWindow: localStorage.getItem('rhythmPulseTimingWindow') || 'normal',
-      scrollDirection: localStorage.getItem('rhythmPulseScrollDirection') || 'downscroll',
-      healthMode: localStorage.getItem('rhythmPulseHealthMode') || 'normal',
-      speedPreset: localStorage.getItem('rhythmPulseSpeedPreset') || 'custom',
-      discordWebhook: localStorage.getItem('rhythmPulseWebhook') || '',
-      customKeys: localStorage.getItem('rhythmPulseCustomKeys') || '{}'
-    }
-  };
-  const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `rhythm-pulse-save-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-document.getElementById('importSaveBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('importSaveInput').click();
-});
-
-document.getElementById('importSaveInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (data.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.achievements));
-      if (data.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.favorites));
-      if (data.settings) {
-        for (const [key, value] of Object.entries(data.settings)) {
-          if (key === 'audioOffset') localStorage.setItem('rhythmPulseAudioOffset', value);
-          else if (key === 'scrollSpeed') localStorage.setItem('rhythmPulseScrollSpeed', value);
-          else if (key === 'noteSize') localStorage.setItem('rhythmPulseNoteSize', value);
-          else if (key === 'volume') localStorage.setItem('rhythmPulseVolume', value);
-          else if (key === 'laneCount') localStorage.setItem('rhythmPulseLaneCount', value);
-          else if (key === 'hitSound') localStorage.setItem('rhythmPulseHitSound', value);
-          else if (key === 'showFPS') localStorage.setItem('rhythmPulseShowFPS', value);
-          else if (key === 'visualizer') localStorage.setItem('rhythmPulseVisualizer', value);
-          else if (key === 'noteStyle') localStorage.setItem('rhythmPulseNoteStyle', value);
-          else if (key === 'colorScheme') localStorage.setItem('rhythmPulseColorScheme', value);
-          else if (key === 'timingWindow') localStorage.setItem('rhythmPulseTimingWindow', value);
-          else if (key === 'scrollDirection') localStorage.setItem('rhythmPulseScrollDirection', value);
-          else if (key === 'healthMode') localStorage.setItem('rhythmPulseHealthMode', value);
-          else if (key === 'speedPreset') localStorage.setItem('rhythmPulseSpeedPreset', value);
-          else if (key === 'discordWebhook') localStorage.setItem('rhythmPulseWebhook', value);
-          else if (key === 'customKeys') localStorage.setItem('rhythmPulseCustomKeys', value);
-        }
-      }
-      location.reload();
-    } catch (err) {
-      alert('Invalid save file!');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-});
-
-function getSaveData() {
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    achievements: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
-    favorites: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
-    settings: {
-      audioOffset: localStorage.getItem('rhythmPulseAudioOffset') || '0',
-      scrollSpeed: localStorage.getItem('rhythmPulseScrollSpeed') || '15',
-      noteSize: localStorage.getItem('rhythmPulseNoteSize') || '50',
-      volume: localStorage.getItem('rhythmPulseVolume') || '80',
-      laneCount: localStorage.getItem('rhythmPulseLaneCount') || '4',
-      hitSound: localStorage.getItem('rhythmPulseHitSound') || 'false',
-      showFPS: localStorage.getItem('rhythmPulseShowFPS') || 'true',
-      visualizer: localStorage.getItem('rhythmPulseVisualizer') || 'true',
-      noteStyle: localStorage.getItem('rhythmPulseNoteStyle') || 'circles',
-      colorScheme: localStorage.getItem('rhythmPulseColorScheme') || 'neon',
-      timingWindow: localStorage.getItem('rhythmPulseTimingWindow') || 'normal',
-      scrollDirection: localStorage.getItem('rhythmPulseScrollDirection') || 'downscroll',
-      healthMode: localStorage.getItem('rhythmPulseHealthMode') || 'normal',
-      speedPreset: localStorage.getItem('rhythmPulseSpeedPreset') || 'custom',
-      discordWebhook: localStorage.getItem('rhythmPulseWebhook') || '',
-      customKeys: localStorage.getItem('rhythmPulseCustomKeys') || '{}'
-    }
-  };
-}
-
-function applySaveData(data) {
-  if (data.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.achievements));
-  if (data.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.favorites));
-  if (data.settings) {
-    for (const [key, value] of Object.entries(data.settings)) {
-      if (key === 'audioOffset') localStorage.setItem('rhythmPulseAudioOffset', value);
-      else if (key === 'scrollSpeed') localStorage.setItem('rhythmPulseScrollSpeed', value);
-      else if (key === 'noteSize') localStorage.setItem('rhythmPulseNoteSize', value);
-      else if (key === 'volume') localStorage.setItem('rhythmPulseVolume', value);
-      else if (key === 'laneCount') localStorage.setItem('rhythmPulseLaneCount', value);
-      else if (key === 'hitSound') localStorage.setItem('rhythmPulseHitSound', value);
-      else if (key === 'showFPS') localStorage.setItem('rhythmPulseShowFPS', value);
-      else if (key === 'visualizer') localStorage.setItem('rhythmPulseVisualizer', value);
-      else if (key === 'noteStyle') localStorage.setItem('rhythmPulseNoteStyle', value);
-      else if (key === 'colorScheme') localStorage.setItem('rhythmPulseColorScheme', value);
-      else if (key === 'timingWindow') localStorage.setItem('rhythmPulseTimingWindow', value);
-      else if (key === 'scrollDirection') localStorage.setItem('rhythmPulseScrollDirection', value);
-      else if (key === 'healthMode') localStorage.setItem('rhythmPulseHealthMode', value);
-      else if (key === 'speedPreset') localStorage.setItem('rhythmPulseSpeedPreset', value);
-      else if (key === 'discordWebhook') localStorage.setItem('rhythmPulseWebhook', value);
-      else if (key === 'customKeys') localStorage.setItem('rhythmPulseCustomKeys', value);
-    }
-  }
-}
-
-const GIST_FILENAME = 'rhythm-pulse-save.json';
-
-document.getElementById('cloudSaveBtn').addEventListener('click', async () => {
-  const token = document.getElementById('githubToken').value.trim();
-  if (!token) { alert('Enter your GitHub Personal Access Token first.\n\nCreate one at:\nhttps://github.com/settings/tokens\n(Select "gist" scope)'); return; }
-  const btn = document.getElementById('cloudSaveBtn');
-  btn.textContent = '⏳ Saving...';
-  btn.disabled = true;
-  try {
-    const saveData = getSaveData();
-    const content = JSON.stringify(saveData, null, 2);
-    const res = await fetch('https://api.github.com/gists', {
-      method: 'POST',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github+json'
-      },
-      body: JSON.stringify({
-        description: 'Rhythm Pulse Cloud Save',
-        public: false,
-        files: { [GIST_FILENAME]: { content } }
-      })
-    });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'Failed to save'); }
-    const gist = await res.json();
-    localStorage.setItem('rhythmPulseGistId', gist.id);
-    localStorage.setItem('rhythmPulseGithubToken', token);
-    btn.textContent = '✅ Saved!';
-    setTimeout(() => { btn.textContent = '☁️ Save to Cloud'; btn.disabled = false; }, 2000);
-  } catch (err) {
-    btn.textContent = '❌ Failed';
-    setTimeout(() => { btn.textContent = '☁️ Save to Cloud'; btn.disabled = false; }, 2000);
-    alert('Cloud save failed: ' + err.message);
-  }
-});
-
-document.getElementById('cloudLoadBtn').addEventListener('click', async () => {
-  const token = document.getElementById('githubToken').value.trim() || localStorage.getItem('rhythmPulseGithubToken') || '';
-  if (!token) { alert('Enter your GitHub Personal Access Token first.'); return; }
-  const gistId = localStorage.getItem('rhythmPulseGistId');
-  const btn = document.getElementById('cloudLoadBtn');
-  btn.textContent = '⏳ Loading...';
-  btn.disabled = true;
-  try {
-    let url;
-    if (gistId) {
-      url = `https://api.github.com/gists/${gistId}`;
-    } else {
-      const res = await fetch('https://api.github.com/gists?per_page=100', {
-        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' }
-      });
-      if (!res.ok) throw new Error('Failed to list gists');
-      const gists = await res.json();
-      const saveGist = gists.find(g => g.description === 'Rhythm Pulse Cloud Save' && g.files[GIST_FILENAME]);
-      if (!saveGist) { alert('No cloud save found!'); btn.textContent = '☁️ Load from Cloud'; btn.disabled = false; return; }
-      url = saveGist.url;
-    }
-    const res = await fetch(url, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' }
-    });
-    if (!res.ok) throw new Error('Failed to load save');
-    const gist = await res.json();
-    const fileContent = gist.files[GIST_FILENAME]?.content;
-    if (!fileContent) throw new Error('Save file not found in gist');
-    const data = JSON.parse(fileContent);
-    applySaveData(data);
-    localStorage.setItem('rhythmPulseGistId', gist.id);
-    localStorage.setItem('rhythmPulseGithubToken', token);
-    btn.textContent = '✅ Loaded!';
-    setTimeout(() => { btn.textContent = '☁️ Load from Cloud'; btn.disabled = false; location.reload(); }, 1500);
-  } catch (err) {
-    btn.textContent = '❌ Failed';
-    setTimeout(() => { btn.textContent = '☁️ Load from Cloud'; btn.disabled = false; }, 2000);
-    alert('Cloud load failed: ' + err.message);
-  }
-});
-
-// Music Browser
-document.getElementById('browseMusicBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  modal.style.display = 'flex';
-  modal.classList.add('active');
-  searchMusic('electronic');
-});
-
-document.getElementById('musicBrowserClose').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const modal = document.getElementById('musicBrowserModal');
-  modal.style.display = 'none';
-  modal.classList.remove('active');
-});
-
-document.getElementById('musicBrowserModal').addEventListener('click', (e) => {
-  if (e.target.id === 'musicBrowserModal') {
-    e.target.style.display = 'none';
-    e.target.classList.remove('active');
-  }
-});
-
-document.getElementById('musicSearchBtn').addEventListener('click', () => {
-  const query = document.getElementById('musicSearchInput').value.trim();
-  if (query) searchMusic(query);
-});
-
-document.getElementById('musicSearchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    const query = e.target.value.trim();
-    if (query) searchMusic(query);
-  }
-});
-
-document.querySelectorAll('.genre-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    searchMusic(btn.dataset.genre);
-  });
-});
-
-async function searchMusic(query) {
-  const results = document.getElementById('musicResults');
-  results.innerHTML = '<div class="music-loading">Searching...</div>';
-  try {
-    const url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=20&app_name=RhythmPulse`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API returned ${res.status}`);
-    const data = await res.json();
-    const tracks = data.data || [];
-    if (tracks.length === 0) {
-      results.innerHTML = '<div class="music-error">No tracks found. Try a different genre or search.</div>';
-      return;
-    }
-    results.innerHTML = '';
-    for (const track of tracks) {
-      const streamUrl = `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=RhythmPulse`;
-      const div = document.createElement('div');
-      div.className = 'music-track';
-      div.innerHTML = `
-        <div class="track-info">
-          <div class="track-name">${escapeHtml(track.title)}</div>
-          <div class="track-artist">${escapeHtml(track.user?.name || 'Unknown')}</div>
-          <div class="track-meta">${track.duration ? formatTime(track.duration) : ''} • ${track.genre || ''}</div>
-        </div>
-        <div class="track-actions">
-          <button class="track-btn preview" data-stream="${streamUrl}" data-name="${escapeHtml(track.title)}">▶ Preview</button>
-          <button class="track-btn download" data-stream="${streamUrl}" data-name="${escapeHtml(track.title)}" data-artist="${escapeHtml(track.user?.name || 'Unknown')}">⬇ Add</button>
-        </div>
-      `;
-      results.appendChild(div);
-    }
-    document.querySelectorAll('.track-btn.preview').forEach(btn => {
-      btn.addEventListener('click', () => {
-        previewAudius(btn.dataset.stream, btn.dataset.name);
-      });
-    });
-    document.querySelectorAll('.track-btn.download').forEach(btn => {
-      btn.addEventListener('click', () => {
-        downloadAudius(btn.dataset.stream, btn.dataset.name, btn.dataset.artist);
-      });
-    });
-  } catch (err) {
-    console.error('[Music] Search failed:', err);
-    results.innerHTML = `<div class="music-error">Search failed: ${err.message}</div>`;
-  }
-}
-
-function previewAudius(url, name) {
-  previewStop();
-  initAudio();
-  if (!previewGainNode) {
-    previewGainNode = audioCtx.createGain();
-    previewGainNode.gain.value = 0.7;
-    previewGainNode.connect(audioCtx.destination);
-  }
-  if (!analyser) setupVisualizerForPreview();
-  
-  const btn = document.querySelector(`.track-btn.preview[data-name="${escapeHtml(name)}"]`);
-  if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
-  
-  fetch(url, { redirect: 'follow' })
-    .then(r => {
-      if (!r.ok) throw new Error(`Stream error ${r.status}`);
-      return r.arrayBuffer();
-    })
-    .then(buf => audioCtx.decodeAudioData(buf.slice(0)))
-    .then(buffer => {
-      previewSong = { name: 'Preview: ' + name, audioBuffer: buffer, duration: buffer.duration, bpm: 0, beats: [] };
-      previewSource = audioCtx.createBufferSource();
-      previewSource.buffer = buffer;
-      previewSource.connect(analyser);
-      analyser.connect(previewGainNode);
-      previewSource.start();
-      previewStartTime = audioCtx.currentTime;
-      previewPausedAt = 0;
-      previewPlaying = true;
-      
-      document.getElementById('playerPlayBtn').textContent = '⏸';
-      document.getElementById('playerTitle').querySelector('.player-title-inner').textContent = previewSong.name;
-      document.getElementById('playerBPM').textContent = '';
-      document.getElementById('miniPlayer').classList.add('active');
-      if (btn) { btn.textContent = '⏹ Stop'; btn.disabled = false; btn.onclick = () => { previewStop(); if (btn) { btn.textContent = '▶ Preview'; btn.onclick = null; } }; }
-      updatePreviewProgress();
-    })
-    .catch(err => {
-      console.error('[Music] Preview failed:', err);
-      if (btn) { btn.textContent = '▶ Preview'; btn.disabled = false; }
-      alert('Preview failed: ' + err.message);
-    });
-}
-
-function stopMusicPreview() {
-  previewStop();
-}
-
-async function downloadAudius(url, name, artist) {
-  const btn = event.target;
-  btn.textContent = '⏳ Downloading...';
-  btn.classList.add('downloading');
-  btn.disabled = true;
-  try {
-    const res = await fetch(url, { redirect: 'follow' });
-    if (!res.ok) throw new Error(`Download error ${res.status}`);
-    const blob = await res.blob();
-    const file = new File([blob], `${artist} - ${name}.mp3`, { type: 'audio/mpeg' });
-    await addSong(file);
-    btn.textContent = '✅ Added!';
-    setTimeout(() => {
-      btn.textContent = '⬇ Add';
-      btn.classList.remove('downloading');
-      btn.disabled = false;
-    }, 2000);
-  } catch (err) {
-    btn.textContent = '❌ Failed';
-    setTimeout(() => {
-      btn.textContent = '⬇ Add';
-      btn.classList.remove('downloading');
-      btn.disabled = false;
-    }, 2000);
-    alert('Download failed: ' + err.message);
-  }
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.textContent.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-// Save Codes
-document.getElementById('generateCodeBtn').addEventListener('click', () => {
-  const data = {
-    v: 1,
-    a: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
-    f: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
-    s: {
-      ao: localStorage.getItem('rhythmPulseAudioOffset'),
-      ss: localStorage.getItem('rhythmPulseScrollSpeed'),
-      ns: localStorage.getItem('rhythmPulseNoteSize'),
-      vol: localStorage.getItem('rhythmPulseVolume'),
-      lc: localStorage.getItem('rhythmPulseLaneCount'),
-      hs: localStorage.getItem('rhythmPulseHitSound'),
-      fps: localStorage.getItem('rhythmPulseShowFPS'),
-      vis: localStorage.getItem('rhythmPulseVisualizer'),
-      nst: localStorage.getItem('rhythmPulseNoteStyle'),
-      cs: localStorage.getItem('rhythmPulseColorScheme'),
-      tw: localStorage.getItem('rhythmPulseTimingWindow'),
-      sd: localStorage.getItem('rhythmPulseScrollDirection'),
-      hm: localStorage.getItem('rhythmPulseHealthMode'),
-      sp: localStorage.getItem('rhythmPulseSpeedPreset'),
-      dw: localStorage.getItem('rhythmPulseDiscordWebhook'),
-      ck: localStorage.getItem('rhythmPulseCustomKeys')
-    }
-  };
-  try {
-    const json = JSON.stringify(data);
-    const code = btoa(unescape(encodeURIComponent(json)));
-    const area = document.getElementById('saveCodeArea');
-    area.value = code;
-    area.select();
-    document.execCommand('copy');
-    document.getElementById('generateCodeBtn').textContent = '✅ Copied!';
-    setTimeout(() => { document.getElementById('generateCodeBtn').textContent = '📋 Copy Code'; }, 2000);
-  } catch (err) {
-    alert('Failed to generate code: ' + err.message);
-  }
-});
-
-document.getElementById('loadCodeBtn').addEventListener('click', () => {
-  const code = document.getElementById('saveCodeArea').value.trim();
-  if (!code) { alert('Paste a save code first!'); return; }
-  try {
-    const json = decodeURIComponent(escape(atob(code)));
-    const data = JSON.parse(json);
-    if (data.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(data.a));
-    if (data.f) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(data.f));
-    if (data.s) {
-      const s = data.s;
-      if (s.ao !== undefined) localStorage.setItem('rhythmPulseAudioOffset', s.ao);
-      if (s.ss !== undefined) localStorage.setItem('rhythmPulseScrollSpeed', s.ss);
-      if (s.ns !== undefined) localStorage.setItem('rhythmPulseNoteSize', s.ns);
-      if (s.vol !== undefined) localStorage.setItem('rhythmPulseVolume', s.vol);
-      if (s.lc !== undefined) localStorage.setItem('rhythmPulseLaneCount', s.lc);
-      if (s.hs !== undefined) localStorage.setItem('rhythmPulseHitSound', s.hs);
-      if (s.fps !== undefined) localStorage.setItem('rhythmPulseShowFPS', s.fps);
-      if (s.vis !== undefined) localStorage.setItem('rhythmPulseVisualizer', s.vis);
-      if (s.nst !== undefined) localStorage.setItem('rhythmPulseNoteStyle', s.nst);
-      if (s.cs !== undefined) localStorage.setItem('rhythmPulseColorScheme', s.cs);
-      if (s.tw !== undefined) localStorage.setItem('rhythmPulseTimingWindow', s.tw);
-      if (s.sd !== undefined) localStorage.setItem('rhythmPulseScrollDirection', s.sd);
-      if (s.hm !== undefined) localStorage.setItem('rhythmPulseHealthMode', s.hm);
-      if (s.sp !== undefined) localStorage.setItem('rhythmPulseSpeedPreset', s.sp);
-      if (s.dw !== undefined) localStorage.setItem('rhythmPulseDiscordWebhook', s.dw);
-      if (s.ck !== undefined) localStorage.setItem('rhythmPulseCustomKeys', s.ck);
-    }
-    location.reload();
-  } catch (err) {
-    alert('Invalid save code!');
-  }
-});
-
+document.getElementById('keybindCancel').addEventListener('click', () => { document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
+document.getElementById('keybindSave').addEventListener('click', () => { saveKeys(); document.getElementById('keybindModal').classList.remove('active'); listeningForLane = null; });
 document.getElementById('keybindReset').addEventListener('click', () => { customKeys = {}; saveKeys(); renderKeybinds(); });
 
 function renderKeybinds() {
@@ -2984,18 +2577,8 @@ async function previewPlay(song) {
   previewStartTime = audioCtx.currentTime - previewPausedAt;
   previewPlaying = true;
   document.getElementById('playerPlayBtn').textContent = '⏸';
-  const titleEl = document.getElementById('playerTitle');
-  const inner = titleEl.querySelector('.player-title-inner');
-  inner.textContent = song.name;
-  requestAnimationFrame(() => {
-    if (inner.scrollWidth > titleEl.clientWidth) {
-      inner.textContent = song.name + '        ' + song.name;
-      titleEl.classList.add('scrolling');
-    } else {
-      titleEl.classList.remove('scrolling');
-    }
-  });
-  document.getElementById('playerBPM').textContent = song.bpm ? `${Math.round(song.bpm)} BPM` : '';
+  document.getElementById('playerTitle').textContent = song.name;
+  document.getElementById('playerBPM').textContent = song.bpm ? `${song.bpm} BPM` : '';
   document.getElementById('miniPlayer').classList.add('active');
   updatePreviewProgress();
 }
@@ -3009,7 +2592,6 @@ function setupVisualizerForPreview() {
 
 let menuCachedVisualizerData = null;
 function drawMenuVisualizer() {
-  if (!visualizerEnabled) return;
   if (!analyser || (!previewPlaying && !menuCachedVisualizerData)) return;
   if (previewPlaying) {
     analyser.getByteFrequencyData(visualizerData);
@@ -3092,27 +2674,22 @@ function previewPause() {
 
 function previewStop() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
+  if (previewGainNode) {
+    try { previewGainNode.disconnect(); } catch(e) {}
+    previewGainNode = null;
+  }
   previewPlaying = false;
   previewPausedAt = 0;
   previewSong = null;
   menuLastBeatIdx = -1;
   menuBeatZoomValue = 0;
   menuBeatZoomTarget = 0;
+  menuBeatZoomStartTime = 0;
   menuCachedVisualizerData = null;
   document.getElementById('playerPlayBtn').textContent = '▶';
   document.getElementById('miniPlayer').classList.remove('active');
-  const titleEl = document.getElementById('playerTitle');
-  titleEl.querySelector('.player-title-inner').textContent = 'No song selected';
-  titleEl.classList.remove('scrolling');
   document.getElementById('playerProgressBar').style.width = '0%';
   document.getElementById('playerTime').textContent = '0:00 / 0:00';
-  document.querySelectorAll('.track-btn.preview').forEach(btn => {
-    if (btn.textContent === '⏹ Stop') {
-      btn.textContent = '▶ Preview';
-      btn.disabled = false;
-      btn.onclick = null;
-    }
-  });
 }
 
 function previewSeek(ratio) {
@@ -3275,7 +2852,7 @@ initIndexedDB().then(() => {
 gameLoop();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
 cleanupIndexedDB();
