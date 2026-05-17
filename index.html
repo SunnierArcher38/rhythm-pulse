@@ -3090,6 +3090,7 @@ function setupVisualizerForPreview() {
 
 let menuCachedVisualizerData = null;
 function drawMenuVisualizer() {
+  if (!visualizerEnabled) return;
   if (!analyser || (!previewPlaying && !menuCachedVisualizerData)) return;
   if (previewPlaying) {
     analyser.getByteFrequencyData(visualizerData);
