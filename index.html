@@ -29,6 +29,8 @@ canvas { display: block; }
 .song-item .song-info { flex: 1; }
 .song-item .song-name { font-size: 1.1rem; font-weight: 600; }
 .song-item .song-meta { font-size: 0.85rem; color: #888; margin-top: 0.25rem; }
+.song-delete-btn { background: rgba(255,77,77,0.15); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; margin-left: 0.5rem; }
+.song-delete-btn:hover { background: rgba(255,77,77,0.4); transform: scale(1.1); }
 .difficulty-select { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .diff-btn { padding: 0.5rem 1.5rem; border: 2px solid; border-radius: 8px; background: transparent; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
 .diff-btn.easy { border-color: #4dff88; color: #4dff88; }
@@ -2217,7 +2219,7 @@ function updateSongList() {
     const favStar = song.isFavorite ? '★' : '☆';
     const charts = song.charts || {};
     const diffIndicators = ['easy', 'normal', 'hard', 'insane'].map(d => charts[d] ? '✓' : '·').join(' ');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm || '?'} BPM • ${formatTime(song.duration || 0)} <span style="color:#666;margin-left:0.5rem;">Charts: ${diffIndicators}</span></div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div>`;
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm || '?'} BPM • ${formatTime(song.duration || 0)} <span style="color:#666;margin-left:0.5rem;">Charts: ${diffIndicators}</span></div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.fav-toggle').forEach(el => {
@@ -2253,6 +2255,41 @@ function updateSongList() {
           song.charts[diff] = generateChart(beats, diff, getAudioDuration());
           song.beats = beats;
         }
+        await startGame(song, diff);
+      } catch (err) {
+        console.error('Failed to start game:', err);
+        btn.textContent = 'Error';
+        setTimeout(() => { btn.textContent = diff.charAt(0).toUpperCase() + diff.slice(1); }, 2000);
+      }
+    });
+  });
+  document.querySelectorAll('.song-delete-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      if (confirm(`Delete "${songs[idx].name}"? This cannot be undone.`)) {
+        deleteSong(idx);
+      }
+    });
+  });
+}
+
+async function deleteSong(idx) {
+  const song = songs[idx];
+  if (dbReady && songDB) {
+    const tx = songDB.transaction('songs', 'readwrite');
+    tx.objectStore('songs').delete(song.id);
+    await new Promise(resolve => { tx.oncomplete = resolve; });
+  }
+  songs.splice(idx, 1);
+  if (previewSong === song) previewStop();
+  if (gameState.song === song) {
+    gameState.mode = 'menu';
+    document.getElementById('song-select').classList.remove('hidden');
+    document.getElementById('songOrganizer').style.display = 'flex';
+  }
+  updateSongList();
+}
         await startGame(song, diff);
       } catch (err) {
         console.error('Failed to load song:', err);
