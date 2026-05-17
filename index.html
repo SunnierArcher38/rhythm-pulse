@@ -1382,11 +1382,11 @@ function setupVisualizer() {
 }
 
 function drawVisualizer() {
-  if (!visualizerEnabled || !analyser) return;
+  if (!visualizerEnabled || !analyser || !visualizerData) return;
   
   let data = visualizerData;
   if (gameState.mode === 'playing' || previewPlaying) {
-    analyser.getByteFrequencyData(visualizerData);
+    try { analyser.getByteFrequencyData(visualizerData); } catch(e) { return; }
     if (!cachedVisualizerData || cachedVisualizerData.length !== visualizerData.length) {
       cachedVisualizerData = new Uint8Array(visualizerData.length);
     }
@@ -4127,8 +4127,10 @@ function gameLoop() {
     drawKeyPressEffects(); drawLaneGlow();
     ctx.restore();
   } else if (gameState.mode === 'paused') {
+    ctx.save();
     drawBackground();
     drawNotes(); drawReceptors(); drawHitEffects(); drawCombo(); drawComboTrails(); drawScore(); drawHealthBar(); drawProgressBar(); drawSongInfo(); drawTouchLaneLabels();
+    ctx.restore();
   }
   drawFPS();
   requestAnimationFrame(gameLoop);
