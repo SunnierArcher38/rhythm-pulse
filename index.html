@@ -1113,14 +1113,6 @@ const ACHIEVEMENT_CATEGORIES = [
   { id: 'songs_6lane', name: '6 Lane Songs', icon: '🎮', thresholds: [1,5,10,25,50,100,250,500], names: ['First 6L Song','5 6L Songs','10 6L Songs','25 6L Songs','50 6L Songs','100 6L Songs','250 6L Songs','500 6L Songs'] },
   { id: 'songs_7lane', name: '7 Lane Songs', icon: '🎮', thresholds: [1,5,10,25,50,100,250,500], names: ['First 7L Song','5 7L Songs','10 7L Songs','25 7L Songs','50 7L Songs','100 7L Songs','250 7L Songs','500 7L Songs'] },
   { id: 'songs_8lane', name: '8 Lane Songs', icon: '🎮', thresholds: [1,5,10,25,50,100,250,500], names: ['First 8L Song','5 8L Songs','10 8L Songs','25 8L Songs','50 8L Songs','100 8L Songs','250 8L Songs','500 8L Songs'] },
-  { id: 'grade_b_easy', name: 'B Grade Easy', icon: '🥉', thresholds: [1,5,10,25,50,100], names: ['First B Easy','B Easy 5','B Easy 10','B Easy 25','B Easy 50','B Easy 100'] },
-  { id: 'grade_b_normal', name: 'B Grade Normal', icon: '🥉', thresholds: [1,5,10,25,50,100], names: ['First B Normal','B Normal 5','B Normal 10','B Normal 25','B Normal 50','B Normal 100'] },
-  { id: 'grade_b_hard', name: 'B Grade Hard', icon: '🥉', thresholds: [1,5,10,25,50,100], names: ['First B Hard','B Hard 5','B Hard 10','B Hard 25','B Hard 50','B Hard 100'] },
-  { id: 'grade_b_insane', name: 'B Grade Insane', icon: '🥉', thresholds: [1,5,10,25,50,100], names: ['First B Insane','B Insane 5','B Insane 10','B Insane 25','B Insane 50','B Insane 100'] },
-  { id: 'grade_c_easy', name: 'C Grade Easy', icon: '📋', thresholds: [1,5,10,25,50], names: ['First C Easy','C Easy 5','C Easy 10','C Easy 25','C Easy 50'] },
-  { id: 'grade_c_normal', name: 'C Grade Normal', icon: '📋', thresholds: [1,5,10,25,50], names: ['First C Normal','C Normal 5','C Normal 10','C Normal 25','C Normal 50'] },
-  { id: 'grade_c_hard', name: 'C Grade Hard', icon: '📋', thresholds: [1,5,10,25,50], names: ['First C Hard','C Hard 5','C Hard 10','C Hard 25','C Hard 50'] },
-  { id: 'grade_c_insane', name: 'C Grade Insane', icon: '📋', thresholds: [1,5,10,25,50], names: ['First C Insane','C Insane 5','C Insane 10','C Insane 25','C Insane 50'] },
   { id: 'mod_double', name: 'Double Mod', icon: '🎯', thresholds: [1,5,10,25,50,100], names: ['First Double','Double 5','Double 10','Double 25','Double 50','Double 100'] },
   { id: 'mod_triple', name: 'Triple Mod', icon: '🎯', thresholds: [1,5,10,25,50], names: ['First Triple','Triple 5','Triple 10','Triple 25','Triple 50'] },
   { id: 'mod_quad', name: 'Quad Mod', icon: '🎯', thresholds: [1,5,10,25,50], names: ['First Quad','Quad 5','Quad 10','Quad 25','Quad 50'] },
@@ -1129,88 +1121,6 @@ const ACHIEVEMENT_CATEGORIES = [
   { id: 'health_normal_clear', name: 'Normal Health Clears', icon: '❤️', thresholds: [1,5,10,25,50,100,250,500], names: ['First Normal H','5 Normal H','10 Normal H','25 Normal H','50 Normal H','100 Normal H','250 Normal H','500 Normal H'] },
   { id: 'practice_clear', name: 'Practice Clears', icon: '🎓', thresholds: [1,5,10,25,50,100], names: ['First Practice C','5 Practice C','10 Practice C','25 Practice C','50 Practice C','100 Practice C'] },
   { id: 'metronome_clear', name: 'Metronome Clears', icon: '🥁', thresholds: [1,5,10,25,50], names: ['First Metro C','5 Metro C','10 Metro C','25 Metro C','50 Metro C'] },
-  { id: 'hold_clear', name: 'Hold Note Clears', icon: '📏', thresholds: [1,5,10,25,50,100,250,500], names: ['First Hold','5 Holds','10 Holds','25 Holds','50 Holds','100 Holds','250 Holds','500 Holds'] },
-  { id: 'tap_clear', name: 'Tap Note Clears', icon: '👆', thresholds: [10,50,100,500,1000,5000,10000], names: ['10 Taps','50 Taps','100 Taps','500 Taps','1K Taps','5K Taps','10K Taps'] },
-  { id: 'avg_accuracy', name: 'Average Accuracy', icon: '📊', thresholds: [70,75,80,85,90,92,95,97,99], names: ['70% Avg','75% Avg','80% Avg','85% Avg','90% Avg','92% Avg','95% Avg','97% Avg','99% Avg'] },
-  { id: 'songs_short', name: 'Short Songs', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Short','5 Short','10 Short','25 Short','50 Short','100 Short'] },
-  { id: 'songs_medium', name: 'Medium Songs', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Medium','5 Medium','10 Medium','25 Medium','50 Medium','100 Medium'] },
-  { id: 'songs_long', name: 'Long Songs', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Long','5 Long','10 Long','25 Long','50 Long','100 Long'] },
-  { id: 'songs_epic', name: 'Epic Songs', icon: '⏱️', thresholds: [1,5,10,25,50], names: ['First Epic','5 Epic','10 Epic','25 Epic','50 Epic'] },
-  { id: 'first_login', name: 'First Launch', icon: '🚀', thresholds: [1], names: ['Welcome!'] },
-  { id: 'ui_hidden', name: 'UI Hidden', icon: '👁', thresholds: [1,5,10,25,50], names: ['First Hide','5 Hides','10 Hides','25 Hides','50 Hides'] },
-  { id: 'settings_changed', name: 'Settings Changed', icon: '⚙️', thresholds: [1,5,10,25,50,100], names: ['First Tweak','5 Tweaks','10 Tweaks','25 Tweaks','50 Tweaks','100 Tweaks'] },
-  { id: 'keybind_changed', name: 'Keybind Changed', icon: '⌨️', thresholds: [1,5,10,25], names: ['First Rebind','5 Rebinds','10 Rebinds','25 Rebinds'] },
-  { id: 'export_song', name: 'Song Exported', icon: '📤', thresholds: [1,5,10,25,50], names: ['First Export','5 Exports','10 Exports','25 Exports','50 Exports'] },
-  { id: 'import_song', name: 'Song Imported', icon: '📥', thresholds: [1,5,10,25,50,100], names: ['First Import','5 Imports','10 Imports','25 Imports','50 Imports','100 Imports'] },
-  { id: 'backup_created', name: 'Backup Created', icon: '💾', thresholds: [1,5,10,25], names: ['First Backup','5 Backups','10 Backups','25 Backups'] },
-  { id: 'backup_loaded', name: 'Backup Loaded', icon: '📂', thresholds: [1,5,10], names: ['First Load','5 Loads','10 Loads'] },
-  { id: 'save_code_generated', name: 'Save Code Generated', icon: '📋', thresholds: [1,5,10,25], names: ['First Code','5 Codes','10 Codes','25 Codes'] },
-  { id: 'save_code_loaded', name: 'Save Code Loaded', icon: '📋', thresholds: [1,5,10], names: ['First Code Load','5 Code Loads','10 Code Loads'] },
-  { id: 'music_search', name: 'Music Searches', icon: '🔍', thresholds: [1,5,10,25,50,100], names: ['First Search','5 Searches','10 Searches','25 Searches','50 Searches','100 Searches'] },
-  { id: 'music_preview', name: 'Music Previews', icon: '🎧', thresholds: [1,5,10,25,50,100], names: ['First Preview','5 Previews','10 Previews','25 Previews','50 Previews','100 Previews'] },
-  { id: 'favorite_added', name: 'Favorites Added', icon: '⭐', thresholds: [1,5,10,25,50,100], names: ['First Fav','5 Favs','10 Favs','25 Favs','50 Favs','100 Favs'] },
-  { id: 'song_deleted', name: 'Songs Deleted', icon: '🗑️', thresholds: [1,5,10,25], names: ['First Delete','5 Deletes','10 Deletes','25 Deletes'] },
-  { id: 'retry_song', name: 'Song Retries', icon: '🔄', thresholds: [1,5,10,25,50,100], names: ['First Retry','5 Retries','10 Retries','25 Retries','50 Retries','100 Retries'] },
-  { id: 'pause_used', name: 'Pauses Used', icon: '⏸️', thresholds: [1,5,10,25,50,100], names: ['First Pause','5 Pauses','10 Pauses','25 Pauses','50 Pauses','100 Pauses'] },
-  { id: 'quit_to_menu', name: 'Quits to Menu', icon: '🏠', thresholds: [1,5,10,25,50], names: ['First Quit','5 Quits','10 Quits','25 Quits','50 Quits'] },
-  { id: 'discord_click', name: 'Discord Clicks', icon: '💬', thresholds: [1,5,10], names: ['First Click','5 Clicks','10 Clicks'] },
-  { id: 'achievement_view', name: 'Achievement Views', icon: '🏆', thresholds: [1,5,10,25,50], names: ['First View','5 Views','10 Views','25 Views','50 Views'] },
-  { id: 'score_copied', name: 'Scores Copied', icon: '📋', thresholds: [1,5,10,25,50], names: ['First Copy','5 Copies','10 Copies','25 Copies','50 Copies'] },
-  { id: 'timing_graph', name: 'Timing Graph Views', icon: '📈', thresholds: [1,5,10,25], names: ['First Graph','5 Graphs','10 Graphs','25 Graphs'] },
-  { id: 'practice_loop', name: 'Practice Loops', icon: '🔁', thresholds: [1,5,10,25,50], names: ['First Loop','5 Loops','10 Loops','25 Loops','50 Loops'] },
-  { id: 'autoplay_used', name: 'Autoplay Uses', icon: '🤖', thresholds: [1,5,10,25,50], names: ['First Auto','5 Autos','10 Autos','25 Autos','50 Autos'] },
-  { id: 'lane_hide_used', name: 'Lane Hide Uses', icon: '🙈', thresholds: [1,5,10,25,50], names: ['First Hide L','5 Hide L','10 Hide L','25 Hide L','50 Hide L'] },
-  { id: 'visualizer_toggle', name: 'Visualizer Toggles', icon: '📊', thresholds: [1,5,10,25], names: ['First Vis Toggle','5 Vis Toggles','10 Vis Toggles','25 Vis Toggles'] },
-  { id: 'beat_zoom_toggle', name: 'Beat Zoom Toggles', icon: '🔍', thresholds: [1,5,10,25], names: ['First Zoom Toggle','5 Zoom Toggles','10 Zoom Toggles','25 Zoom Toggles'] },
-  { id: 'color_changed', name: 'Color Changes', icon: '🎨', thresholds: [1,5,10,25,50,100], names: ['First Color','5 Colors','10 Colors','25 Colors','50 Colors','100 Colors'] },
-  { id: 'note_style_changed', name: 'Note Style Changes', icon: '📐', thresholds: [1,5,10,25,50,100], names: ['First Style','5 Styles','10 Styles','25 Styles','50 Styles','100 Styles'] },
-  { id: 'speed_changed', name: 'Speed Changes', icon: '⚡', thresholds: [1,5,10,25,50,100], names: ['First Speed','5 Speeds','10 Speeds','25 Speeds','50 Speeds','100 Speeds'] },
-  { id: 'lane_changed', name: 'Lane Changes', icon: '🛤️', thresholds: [1,5,10,25,50], names: ['First Lane','5 Lanes','10 Lanes','25 Lanes','50 Lanes'] },
-  { id: 'timing_changed', name: 'Timing Window Changes', icon: '🎯', thresholds: [1,5,10,25], names: ['First Timing','5 Timings','10 Timings','25 Timings'] },
-  { id: 'scroll_changed', name: 'Scroll Changes', icon: '↕️', thresholds: [1,5,10,25], names: ['First Scroll','5 Scrolls','10 Scrolls','25 Scrolls'] },
-  { id: 'health_changed', name: 'Health Mode Changes', icon: '❤️', thresholds: [1,5,10,25], names: ['First Health','5 Healths','10 Healths','25 Healths'] },
-  { id: 'modifier_toggled', name: 'Modifier Toggles', icon: '🎭', thresholds: [1,5,10,25,50,100], names: ['First Mod Toggle','5 Mod Toggles','10 Mod Toggles','25 Mod Toggles','50 Mod Toggles','100 Mod Toggles'] },
-  { id: 'hit_sound_toggle', name: 'Hit Sound Toggles', icon: '🔔', thresholds: [1,5,10,25], names: ['First Hit Sound','5 Hit Sounds','10 Hit Sounds','25 Hit Sounds'] },
-  { id: 'fps_toggle', name: 'FPS Display Toggles', icon: '📈', thresholds: [1,5,10,25], names: ['First FPS','5 FPS','10 FPS','25 FPS'] },
-  { id: 'note_size_changed', name: 'Note Size Changes', icon: '🔍', thresholds: [1,5,10,25,50], names: ['First Size','5 Sizes','10 Sizes','25 Sizes','50 Sizes'] },
-  { id: 'audio_offset_changed', name: 'Audio Offset Changes', icon: '🎚️', thresholds: [1,5,10,25,50], names: ['First Offset','5 Offsets','10 Offsets','25 Offsets','50 Offsets'] },
-  { id: 'volume_changed', name: 'Volume Changes', icon: '🔊', thresholds: [1,5,10,25,50], names: ['First Volume','5 Volumes','10 Volumes','25 Volumes','50 Volumes'] },
-  { id: 'scroll_speed_changed', name: 'Scroll Speed Changes', icon: '⚡', thresholds: [1,5,10,25,50], names: ['First Scroll Spd','5 Scroll Spd','10 Scroll Spd','25 Scroll Spd','50 Scroll Spd'] },
-  { id: 'first_perfect_judgment', name: 'First Perfect Hit', icon: '💎', thresholds: [1], names: ['First Perfect!'] },
-  { id: 'first_great_judgment', name: 'First Great Hit', icon: '🔷', thresholds: [1], names: ['First Great!'] },
-  { id: 'first_good_judgment', name: 'First Good Hit', icon: '🟢', thresholds: [1], names: ['First Good!'] },
-  { id: 'first_miss', name: 'First Miss', icon: '❌', thresholds: [1], names: ['First Miss...'] },
-  { id: 'combo_1', name: 'First Combo', icon: '🔥', thresholds: [1], names: ['First Combo!'] },
-  { id: 'combo_5', name: '5 Combo', icon: '🔥', thresholds: [5], names: ['5 Combo!'] },
-  { id: 'combo_25', name: '25 Combo', icon: '🔥', thresholds: [25], names: ['25 Combo!'] },
-  { id: 'combo_75', name: '75 Combo', icon: '🔥', thresholds: [75], names: ['75 Combo!'] },
-  { id: 'combo_150', name: '150 Combo', icon: '🔥', thresholds: [150], names: ['150 Combo!'] },
-  { id: 'combo_300', name: '300 Combo', icon: '🔥', thresholds: [300], names: ['300 Combo!'] },
-  { id: 'combo_400', name: '400 Combo', icon: '🔥', thresholds: [400], names: ['400 Combo!'] },
-  { id: 'combo_600', name: '600 Combo', icon: '🔥', thresholds: [600], names: ['600 Combo!'] },
-  { id: 'combo_800', name: '800 Combo', icon: '🔥', thresholds: [800], names: ['800 Combo!'] },
-  { id: 'combo_900', name: '900 Combo', icon: '🔥', thresholds: [900], names: ['900 Combo!'] },
-  { id: 'combo_1200', name: '1200 Combo', icon: '🔥', thresholds: [1200], names: ['1200 Combo!'] },
-  { id: 'combo_1500', name: '1500 Combo', icon: '🔥', thresholds: [1500], names: ['1500 Combo!'] },
-  { id: 'combo_2000', name: '2000 Combo', icon: '🔥', thresholds: [2000], names: ['2000 Combo!'] },
-  { id: 'combo_2500', name: '2500 Combo', icon: '🔥', thresholds: [2500], names: ['2500 Combo!'] },
-  { id: 'combo_3000', name: '3000 Combo', icon: '🔥', thresholds: [3000], names: ['3000 Combo!'] },
-  { id: 'combo_5000', name: '5000 Combo', icon: '🔥', thresholds: [5000], names: ['5000 Combo!'] },
-  { id: 'marvelous_streak_3', name: '3 Marvelous Streak', icon: '⚡', thresholds: [3], names: ['Triple M!'] },
-  { id: 'marvelous_streak_15', name: '15 Marvelous Streak', icon: '⚡', thresholds: [15], names: ['15 M Streak!'] },
-  { id: 'marvelous_streak_20', name: '20 Marvelous Streak', icon: '⚡', thresholds: [20], names: ['20 M Streak!'] },
-  { id: 'marvelous_streak_30', name: '30 Marvelous Streak', icon: '⚡', thresholds: [30], names: ['30 M Streak!'] },
-  { id: 'marvelous_streak_40', name: '40 Marvelous Streak', icon: '⚡', thresholds: [40], names: ['40 M Streak!'] },
-  { id: 'marvelous_streak_60', name: '60 Marvelous Streak', icon: '⚡', thresholds: [60], names: ['60 M Streak!'] },
-  { id: 'marvelous_streak_75', name: '75 Marvelous Streak', icon: '⚡', thresholds: [75], names: ['75 M Streak!'] },
-  { id: 'marvelous_streak_100', name: '100 Marvelous Streak', icon: '⚡', thresholds: [100], names: ['100 M Streak!'] },
-  { id: 'marvelous_streak_150', name: '150 Marvelous Streak', icon: '⚡', thresholds: [150], names: ['150 M Streak!'] },
-  { id: 'marvelous_streak_200', name: '200 Marvelous Streak', icon: '⚡', thresholds: [200], names: ['200 M Streak!'] },
-  { id: 'marvelous_streak_300', name: '300 Marvelous Streak', icon: '⚡', thresholds: [300], names: ['300 M Streak!'] },
-  { id: 'marvelous_streak_500', name: '500 Marvelous Streak', icon: '⚡', thresholds: [500], names: ['500 M Streak!'] },
-  { id: 'marvelous_streak_1000', name: '1000 Marvelous Streak', icon: '⚡', thresholds: [1000], names: ['1000 M Streak!'] },
-  { id: 'total_misses', name: 'Total Misses', icon: '❌', thresholds: [10,50,100,500,1000,5000,10000], names: ['10 Misses','50 Misses','100 Misses','500 Misses','1K Misses','5K Misses','10K Misses'] },
-  { id: 'total_goods', name: 'Total Goods', icon: '🟢', thresholds: [10,50,100,500,1000,5000,10000], names: ['10 Goods','50 Goods','100 Goods','500 Goods','1K Goods','5K Goods','10K Goods'] },
   { id: 'survival_low_health', name: 'Low Health Survival', icon: '💔', thresholds: [1,5,10,25,50], names: ['Near Death','5 Near Deaths','10 Near Deaths','25 Near Deaths','50 Near Deaths'] },
   { id: 'songs_per_session', name: 'Songs Per Session', icon: '🎵', thresholds: [5,10,25,50,100], names: ['5 Song Session','10 Session','25 Session','50 Session','100 Session'] },
   { id: 'first_5k_score', name: '5K Single Score', icon: '💰', thresholds: [1,5,10,25,50,100], names: ['First 5K','5 5Ks','10 5Ks','25 5Ks','50 5Ks','100 5Ks'] },
@@ -1466,10 +1376,11 @@ function setupVisualizer() {
   if (!analyser) {
     analyser = audioCtx.createAnalyser();
   }
+  try { analyser.disconnect(); } catch(e) {}
   analyser.fftSize = 512;
   analyser.smoothingTimeConstant = 0.85;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
-  try { analyser.disconnect(); } catch(e) {}
+  smoothData = new Float32Array(analyser.frequencyBinCount);
   gainNode.connect(analyser);
 }
 
@@ -3461,6 +3372,9 @@ function previewAudius(url, name) {
       previewSong = { name: 'Preview: ' + name, audioBuffer: buffer, duration: buffer.duration, bpm: 0, beats: [] };
       previewSource = audioCtx.createBufferSource();
       previewSource.buffer = buffer;
+      if (!analyser) setupVisualizerForPreview();
+      try { previewSource.disconnect(); } catch(e) {}
+      try { analyser.disconnect(); } catch(e) {}
       previewSource.connect(analyser);
       analyser.connect(previewGainNode);
       previewSource.start();
@@ -3929,9 +3843,12 @@ async function previewPlay(song) {
   }
   previewSong = song;
   menuLastBeatIdx = -1;
+  menuCachedVisualizerData = null;
   previewSource = audioCtx.createBufferSource();
   previewSource.buffer = song.audioBuffer;
   if (!analyser) setupVisualizerForPreview();
+  try { previewSource.disconnect(); } catch(e) {}
+  try { analyser.disconnect(); } catch(e) {}
   previewSource.connect(analyser);
   analyser.connect(previewGainNode);
   previewSource.start(0, previewPausedAt);
@@ -3956,10 +3873,12 @@ async function previewPlay(song) {
 }
 
 function setupVisualizerForPreview() {
-  analyser = audioCtx.createAnalyser();
+  if (!analyser) analyser = audioCtx.createAnalyser();
+  try { analyser.disconnect(); } catch(e) {}
   analyser.fftSize = 256;
   analyser.smoothingTimeConstant = 0.8;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
+  smoothData = new Float32Array(analyser.frequencyBinCount);
 }
 
 let menuCachedVisualizerData = null;
@@ -4050,6 +3969,8 @@ function previewPause() {
 
 function previewStop() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
+  try { if (previewSource) previewSource.disconnect(); } catch(e) {}
+  try { if (analyser) analyser.disconnect(); } catch(e) {}
   previewPlaying = false;
   previewPausedAt = 0;
   previewSong = null;
