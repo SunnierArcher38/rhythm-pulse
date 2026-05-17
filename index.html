@@ -2290,15 +2290,6 @@ async function deleteSong(idx) {
   }
   updateSongList();
 }
-        await startGame(song, diff);
-      } catch (err) {
-        console.error('Failed to load song:', err);
-        btn.textContent = 'Failed';
-        setTimeout(() => { btn.textContent = diff.charAt(0).toUpperCase() + diff.slice(1); }, 3000);
-      }
-    });
-  });
-}
 
 const dropZone = document.getElementById('fileDropZone');
 const fileInput = document.getElementById('fileInput');
