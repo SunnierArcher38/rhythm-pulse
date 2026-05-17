@@ -2981,7 +2981,7 @@ document.querySelectorAll('.genre-btn').forEach(btn => {
     console.log('[Music] Genre clicked:', btn.dataset.genre);
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    searchMusic(btn.dataset.genre);
+    console.log("[Music] searchMusic exists:", typeof searchMusic); searchMusic(btn.dataset.genre);
   });
 });
 
