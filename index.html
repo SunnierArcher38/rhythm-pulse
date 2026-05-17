@@ -295,10 +295,10 @@ canvas { display: block; }
         <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#4ade80;">Song Library</span></div>
         <div class="setting-row"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">💾 Save Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#27ae60;">📂 Load Songs</button></div>
-        <input type="file" id="loadAllSongsInput" accept=".rpsongs" multiple style="display:none;">
+        <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
         <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:0.5rem;margin-top:0.5rem;"><span class="setting-label" style="color:#ffd700;">Full Backup</span></div>
         <div class="setting-row"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📦 Save Everything</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.8rem;background:#b8860b;">📂 Load Everything</button></div>
-        <input type="file" id="loadEverythingInput" accept=".rpbackup" multiple style="display:none;">
+        <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
        </div>
       </div>
      <div id="songSelectModal">
@@ -2432,38 +2432,14 @@ async function decompressData(buffer) {
   return JSON.parse(json);
 }
 
-const DISCORD_LIMIT = 10 * 1024 * 1024; // 10MB Discord limit
-
-async function compressWithSongs(metadata, songs) {
-  const metaJson = JSON.stringify(metadata);
-  const metaBytes = new TextEncoder().encode(metaJson);
-  const metaLen = metaBytes.length;
-  
-  // Build binary layout: [4 bytes metaLen][metaBytes][for each song: 8 bytes audioLen + audioBytes]
-  let totalSize = 4 + metaLen;
-  for (const s of songs) totalSize += 8 + s.audio.length;
-  
-  const result = new Uint8Array(totalSize);
-  let offset = 0;
-  
-  result[offset++] = (metaLen >>> 24) & 0xFF;
-  result[offset++] = (metaLen >>> 16) & 0xFF;
-  result[offset++] = (metaLen >>> 8) & 0xFF;
-  result[offset++] = metaLen & 0xFF;
-  
-  result.set(metaBytes, offset);
-  offset += metaLen;
-  
-  for (const s of songs) {
-    const audioLen = s.audio.length;
-    for (let i = 7; i >= 0; i--) {
-      result[offset++] = (audioLen >>> (i * 8)) & 0xFF;
-    }
-    result.set(s.audio, offset);
-    offset += audioLen;
-  }
-  
-  return result.buffer;
+async function downloadFile(data, baseName, ext) {
+  const blob = new Blob([data], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${baseName}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function decompressWithSongs(buffer) {
@@ -2489,18 +2465,6 @@ async function decompressWithSongs(buffer) {
   }
   
   return { metadata, songs };
-}
-
-async function mergeChunkFiles(files) {
-  const buffers = await Promise.all(files.map(f => f.arrayBuffer()));
-  const totalSize = buffers.reduce((sum, b) => sum + b.byteLength, 0);
-  const result = new Uint8Array(totalSize);
-  let offset = 0;
-  for (const buf of buffers) {
-    result.set(new Uint8Array(buf), offset);
-    offset += buf.byteLength;
-  }
-  return result.buffer;
 }
 
 async function exportSongCode(idx, btn) {
@@ -3134,35 +3098,6 @@ document.getElementById('importSongInput').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-async function downloadChunks(data, baseName, ext) {
-  const chunks = [];
-  for (let i = 0; i < data.byteLength; i += DISCORD_LIMIT) {
-    chunks.push(data.slice(i, Math.min(i + DISCORD_LIMIT, data.byteLength)));
-  }
-  if (chunks.length === 1) {
-    const blob = new Blob([data], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${baseName}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } else {
-    for (let i = 0; i < chunks.length; i++) {
-      const blob = new Blob([chunks[i]], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${baseName}.${i + 1}of${chunks.length}.${ext}`;
-      a.click();
-      URL.revokeObjectURL(url);
-      await new Promise(r => setTimeout(r, 300));
-    }
-    alert(`File split into ${chunks.length} parts.\nDownload ALL parts to restore.`);
-  }
-  return chunks.length;
-}
-
 let songExportMode = 'songs';
 
 function showSongSelectModal(mode) {
@@ -3263,8 +3198,8 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
         songs: songData.map(s => s.meta)
       };
       const compressed = await compressWithSongs(metadata, songData);
-      const count = await downloadChunks(compressed, `rhythm-pulse-backup-${Date.now()}`, 'rpbackup');
-      btn.textContent = `✅ Saved! ${count} part(s)`;
+      const count = await downloadFile(compressed, `rhythm-pulse-backup-${Date.now()}`, 'rpbackup');
+      btn.textContent = '✅ Saved!';
       setTimeout(() => { btn.textContent = '📦 Save Everything'; btn.disabled = false; }, 2000);
     } catch (err) {
       console.error('Save everything failed:', err);
@@ -3279,8 +3214,8 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
     try {
       const metadata = { type: 'rpsongs', v: 1, songs: songData.map(s => s.meta) };
       const compressed = await compressWithSongs(metadata, songData);
-      const count = await downloadChunks(compressed, `rhythm-pulse-songs-${Date.now()}`, 'rpsongs');
-      btn.textContent = `✅ Saved! ${count} part(s)`;
+      const count = await downloadFile(compressed, `rhythm-pulse-songs-${Date.now()}`, 'rpsongs');
+      btn.textContent = '✅ Saved!';
       setTimeout(() => { btn.textContent = '💾 Save Songs'; btn.disabled = false; }, 2000);
     } catch (err) {
       console.error('Save songs failed:', err);
@@ -3293,13 +3228,13 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
 
 document.getElementById('loadAllSongsBtn').addEventListener('click', () => { document.getElementById('loadAllSongsInput').click(); });
 document.getElementById('loadAllSongsInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
+  const file = e.target.files[0];
+  if (!file) return;
   const btn = document.getElementById('loadAllSongsBtn');
   btn.textContent = '⏳ Loading...';
   btn.disabled = true;
   try {
-    const buffer = files.length > 1 ? await mergeChunkFiles(files) : await files[0].arrayBuffer();
+    const buffer = await file.arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
     if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load Songs'; btn.disabled = false; return; }
     let loaded = 0;
@@ -3340,13 +3275,13 @@ document.getElementById('loadAllSongsInput').addEventListener('change', async (e
 
 document.getElementById('loadEverythingBtn').addEventListener('click', () => { document.getElementById('loadEverythingInput').click(); });
 document.getElementById('loadEverythingInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
+  const file = e.target.files[0];
+  if (!file) return;
   const btn = document.getElementById('loadEverythingBtn');
   btn.textContent = '⏳ Loading...';
   btn.disabled = true;
   try {
-    const buffer = files.length > 1 ? await mergeChunkFiles(files) : await files[0].arrayBuffer();
+    const buffer = await file.arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
     if (metadata.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
     if (metadata.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(metadata.achievements));
