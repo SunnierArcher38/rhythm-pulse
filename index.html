@@ -3907,7 +3907,9 @@ document.querySelectorAll('.organizer-btn').forEach(btn => {
 });
 
 async function previewPlay(song) {
+  const switchingSong = previewSong !== song;
   if (previewPlaying) previewStop();
+  if (switchingSong) previewPausedAt = 0;
   initAudio();
   if (!previewGainNode) {
     previewGainNode = audioCtx.createGain();
