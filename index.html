@@ -2865,27 +2865,41 @@ async function searchMusic(query) {
 }
 
 function previewAudius(url, name) {
-  stopMusicPreview();
+  previewStop();
   initAudio();
+  if (!previewGainNode) {
+    previewGainNode = audioCtx.createGain();
+    previewGainNode.gain.value = 0.7;
+    previewGainNode.connect(audioCtx.destination);
+  }
+  if (!analyser) setupVisualizerForPreview();
+  
   const btn = document.querySelector(`.track-btn.preview[data-name="${escapeHtml(name)}"]`);
   if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
+  
   fetch(url, { redirect: 'follow' })
     .then(r => {
       if (!r.ok) throw new Error(`Stream error ${r.status}`);
       return r.arrayBuffer();
     })
-    .then(buf => {
-      return audioCtx.decodeAudioData(buf.slice(0));
-    })
+    .then(buf => audioCtx.decodeAudioData(buf.slice(0)))
     .then(buffer => {
-      musicPreviewSource = audioCtx.createBufferSource();
-      musicPreviewSource.buffer = buffer;
-      musicPreviewSource.connect(audioCtx.destination);
-      musicPreviewSource.start();
-      musicPreviewPlaying = name;
-      if (btn) { btn.textContent = '⏹ Stop'; btn.disabled = false; btn.onclick = () => stopMusicPreview(); }
-      document.getElementById('playerTitle').querySelector('.player-title-inner').textContent = 'Preview: ' + name;
+      previewSong = { name: 'Preview: ' + name, audioBuffer: buffer, duration: buffer.duration, bpm: 0, beats: [] };
+      previewSource = audioCtx.createBufferSource();
+      previewSource.buffer = buffer;
+      previewSource.connect(analyser);
+      analyser.connect(previewGainNode);
+      previewSource.start();
+      previewStartTime = audioCtx.currentTime;
+      previewPausedAt = 0;
+      previewPlaying = true;
+      
+      document.getElementById('playerPlayBtn').textContent = '⏸';
+      document.getElementById('playerTitle').querySelector('.player-title-inner').textContent = previewSong.name;
+      document.getElementById('playerBPM').textContent = '';
       document.getElementById('miniPlayer').classList.add('active');
+      if (btn) { btn.textContent = '⏹ Stop'; btn.disabled = false; btn.onclick = () => { previewStop(); if (btn) { btn.textContent = '▶ Preview'; btn.onclick = null; } }; }
+      updatePreviewProgress();
     })
     .catch(err => {
       console.error('[Music] Preview failed:', err);
@@ -2895,15 +2909,7 @@ function previewAudius(url, name) {
 }
 
 function stopMusicPreview() {
-  if (musicPreviewSource) {
-    try { musicPreviewSource.stop(); } catch(e) {}
-    musicPreviewSource = null;
-  }
-  musicPreviewPlaying = null;
-  document.getElementById('miniPlayer').classList.remove('active');
-  const titleEl = document.getElementById('playerTitle');
-  titleEl.querySelector('.player-title-inner').textContent = 'No song selected';
-  titleEl.classList.remove('scrolling');
+  previewStop();
 }
 
 async function downloadAudius(url, name, artist) {
@@ -3166,17 +3172,12 @@ function previewPause() {
 
 function previewStop() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
-  if (previewGainNode) {
-    try { previewGainNode.disconnect(); } catch(e) {}
-    previewGainNode = null;
-  }
   previewPlaying = false;
   previewPausedAt = 0;
   previewSong = null;
   menuLastBeatIdx = -1;
   menuBeatZoomValue = 0;
   menuBeatZoomTarget = 0;
-  menuBeatZoomStartTime = 0;
   menuCachedVisualizerData = null;
   document.getElementById('playerPlayBtn').textContent = '▶';
   document.getElementById('miniPlayer').classList.remove('active');
@@ -3185,6 +3186,13 @@ function previewStop() {
   titleEl.classList.remove('scrolling');
   document.getElementById('playerProgressBar').style.width = '0%';
   document.getElementById('playerTime').textContent = '0:00 / 0:00';
+  document.querySelectorAll('.track-btn.preview').forEach(btn => {
+    if (btn.textContent === '⏹ Stop') {
+      btn.textContent = '▶ Preview';
+      btn.disabled = false;
+      btn.onclick = null;
+    }
+  });
 }
 
 function previewSeek(ratio) {
