@@ -330,7 +330,7 @@ canvas { display: block; position: relative; z-index: 1; }
 .leaderboard-footer button { transition: all 0.3s; }
 .leaderboard-footer button:hover { transform: scale(1.05); }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div id="game-container">
@@ -4261,6 +4261,10 @@ function initSupabase() {
     console.warn('Supabase not configured. Set SUPABASE_URL and SUPABASE_KEY in index.html');
     return false;
   }
+  if (typeof supabase === 'undefined') {
+    console.warn('Supabase JS library not loaded. Check CDN connection.');
+    return false;
+  }
   try {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     return true;
@@ -4316,7 +4320,11 @@ function submitToLeaderboard(data) {
 function fetchLeaderboard(difficulty = 'all', limit = 50) {
   if (!supabaseClient) {
     if (!initSupabase()) {
-      document.getElementById('leaderboardList').innerHTML = '<div class="lb-error">Leaderboard not configured.<br><small>Set up Supabase and edit SUPABASE_URL/SUPABASE_KEY in index.html</small></div>';
+      if (typeof supabase === 'undefined') {
+        document.getElementById('leaderboardList').innerHTML = '<div class="lb-error">Supabase library not loaded.<br><small>Check your internet connection and refresh the page.</small></div>';
+      } else {
+        document.getElementById('leaderboardList').innerHTML = '<div class="lb-error">Leaderboard not configured.<br><small>Set up Supabase and edit SUPABASE_URL/SUPABASE_KEY in index.html</small></div>';
+      }
       return;
     }
   }
