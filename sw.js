@@ -12,9 +12,15 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('api.audius.co') || e.request.url.includes('api.jamendo.com') || e.request.url.includes('api.deezer.com')) return;
+  if (e.request.url.includes('api.audius.co') || e.request.url.includes('api.jamendo.com') || e.request.url.includes('api.deezer.com') || e.request.url.includes('supabase.co')) return;
   
   const url = new URL(e.request.url);
   const isMainPage = url.pathname === '/' || url.pathname.endsWith('index.html');
