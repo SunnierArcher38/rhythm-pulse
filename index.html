@@ -4464,12 +4464,166 @@ const BLOCKED_WORDS = [
   'chink','gook','spic','spook','towelhead','wetback','kike','paki','raghead','jap',
   'homo','dyke','tranny','shemale','femboy','trap','sissy','cuck','pedophile','pedo',
   'incest','rape','kill','suicide','bomb','terrorist','isis','alqaeda','hitler','nazi',
-  'kkk','supremacist','hate','racist','sexist','homophobic','transphobic','misogynist'
+  'kkk','supremacist','hate','racist','sexist','homophobic','transphobic','misogynist',
+  'anal','anus','boob','breast','butt','clit','clitoris','dildo','erection','genital',
+  'groin','horny','jizz','labia','lesbian','masturbate','nipple','orgasm','penis',
+  'porn','prostitute','scrotum','semen','sex','sexual','sperm','testicle','vagina',
+  'vulva','xxx','blowjob','handjob','cum','ejaculate','orgy','gangbang','bestiality',
+  'zoophilia','necrophilia','voyeur','exhibitionist','fetish','bdsm','dominatrix',
+  'submissive','bondage','sadist','masochist','fisting','squirting','creampie',
+  'bukkake','gokkun','rimming','scat','golden','shower','piss','watersports',
+  'crackhead','cokehead','meth','heroin','methamphetamine','cocaine','marijuana',
+  'weed','pot','dope','hash','opium','lsd','acid','ecstasy','mdma','psychedelic',
+  'hallucinogen','depressant','stimulant','amphetamine','barbiturate','benzodiazepine',
+  'xanax','valium','adderall','oxycontin','fentanyl','morphine','codeine','hydrocodone',
+  'tramadol','ketamine','pcp','angel','dust','molly','bath','salts','spice','k2',
+  'synthetic','cannabis','hashish','resin','extract','concentrate','wax','shatter',
+  'bong','pipe','roaching','blunt','joint','spliff','vape','vaping','edible',
+  'overdose','addict','addiction','withdrawal','rehab','detox','recovery',
+  'dealer','trafficking','smuggling','cartel','syndicate','gang','thug','criminal',
+  'murder','homicide','manslaughter','assassinate','execute','lynch','massacre',
+  'genocide','ethnic','cleansing','purge','slaughter','butcher','mutilate',
+  'torture','abuse','molest','harass','stalk','threaten','intimidate','bully',
+  'cyberbully','dox','doxxing','swatting','swat','harassment','stalking',
+  'predator','grooming','exploitation','trafficking','slavery','servitude',
+  'oppression','discrimination','segregation','apartheid','colonialism',
+  'imperialism','fascism','totalitarian','dictator','tyrant','despot','autocrat',
+  'authoritarian','oligarch','plutocrat','kleptocrat','corrupt','bribery',
+  'embezzlement','fraud','scam','phishing','identity','theft','cybercrime',
+  'hacker','cracker','malware','virus','trojan','ransomware','spyware','keylogger',
+  'rootkit','botnet','ddos','exploit','vulnerability','zero','day','backdoor',
+  'inject','sql','xss','csrf','mitm','eavesdrop','wiretap','surveillance',
+  'spy','espionage','treason','sedition','insurrection','rebellion','coup',
+  'revolution','uprising','mutiny','riot','anarchy','chaos','destruction',
+  'vandalism','arson','bombing','shooting','stabbing','beating','punching',
+  'kicking','choking','strangling','drowning','burning','electrocuting',
+  'poisoning','drugging','kidnapping','abduction','ransom','hostage','siege',
+  'warfare','combat','battle','conflict','invasion','occupation','annexation',
+  'annihilation','extermination','eradication','obliteration','devastation',
+  'catastrophe','disaster','tragedy','calamity','apocalypse','armageddon',
+  'doomsday','endtimes','judgment','hell','damnation','curse','hex','jinx',
+  'blackmagic','witchcraft','sorcery','necromancy','demon','devil','satan',
+  'lucifer','beelzebub','mephistopheles','antichrist','false','prophet',
+  'heresy','blasphemy','sacrilege','profanity','obscenity','indecency',
+  'vulgarity','crudeness','coarseness','roughness','harshness','brutality',
+  'savagery','barbarism','primitivism','uncivilized','uncouth','uncultured',
+  'unrefined','uneducated','ignorant','stupid','idiot','moron','imbecile',
+  'fool','dunce','blockhead','numbskull','dumbass','airhead','birdbrain',
+  'scatterbrain','nitwit','simpleton','halfwit','dimwit','slowpoke',
+  'laggard','sluggard','drone','parasite','leech','mooch','freeloader',
+  'cheapskate','miser','scrooge','skinflint','tightwad','penny','pincher',
+  'hoarder','packrat','slob','sloth','lazybones','couch','potato',
+  'couchpotato','neerdowell','goodfornothing','waster','bum','tramp',
+  'hobo','vagrant','drifter','wanderer','nomad','gypsy','bohemian',
+  'hippie','beatnik','punk','rebel','outlaw','renegade','rogue',
+  'villain','villainy','villainous','evil','wicked','sinful','immoral',
+  'unethical','unprincipled','unscrupulous','corrupt','depraved','perverted',
+  'twisted','sick','disturbed','deranged','insane','crazy','mad','lunatic',
+  'psychopath','sociopath','schizophrenic','bipolar','manic','depressive',
+  'neurotic','paranoid','delusional','hallucinating','psychotic','mentally',
+  'ill','unstable','unbalanced','unhinged','unwell','unhealthy','diseased',
+  'infected','contagious','plague','pestilence','epidemic','pandemic',
+  'outbreak','quarantine','isolation','lockdown','curfew','martial','law',
+  'emergency','crisis','disaster','catastrophe','calamity','tragedy',
+  'misfortune','badluck','unlucky','cursed','jinxed','hexed','bewitched',
+  'enchanted','spellbound','hypnotized','mesmerized','enthralled','captivated',
+  'obsessed','addicted','hooked','dependent','reliant','needy','clingy',
+  'desperate','hopeless','helpless','powerless','weak','feeble','frail',
+  'fragile','delicate','vulnerable','exposed','defenseless','unprotected',
+  'unsafe','dangerous','hazardous','risky','perilous','treacherous',
+  'treacherous','deceitful','dishonest','untruthful','lying','deceptive',
+  'misleading','false','fake','counterfeit','forged','fraudulent','phony',
+  'bogus','sham','hoax','scam','con','trick','ruse','ploy','scheme',
+  'plot','conspiracy','intrigue','machination','manipulation','exploitation',
+  'abuse','mistreatment','neglect','abandonment','desertion','betrayal',
+  'treachery','disloyalty','infidelity','unfaithfulness','cheating','adultery',
+  'affair','fling','romance','love','passion','desire','lust','craving',
+  'longing','yearning','hunger','thirst','appetite','greed','avarice',
+  'covetousness','envy','jealousy','resentment','bitterness','anger',
+  'rage','fury','wrath','ire','indignation','outrage','scorn','contempt',
+  'disdain','disgust','revulsion','repulsion','aversion','hatred','loathing',
+  'detestation','abhorrence','animosity','antipathy','enmity','hostility',
+  'aggression','violence','brutality','cruelty','sadism','masochism',
+  'torture','torment','suffering','pain','agony','anguish','distress',
+  'misery','sorrow','grief','mourning','lamentation','weeping','crying',
+  'tears','sobbing','wailing','howling','screaming','shouting','yelling',
+  'bellowing','roaring','thundering','booming','resounding','echoing',
+  'reverberating','vibrating','shaking','trembling','quivering','shivering',
+  'quaking','shuddering','flinching','wincing','cringing','cowering',
+  'crouching','hiding','concealing','covering','masking','disguising',
+  'camouflaging','blending','merging','mixing','combining','uniting',
+  'joining','connecting','linking','attaching','fastening','securing',
+  'binding','tying','knotting','lashing','strapping','chaining','shackling',
+  'handcuffing','restraining','confining','imprisoning','jailing',
+  'incarcerating','detaining','holding','keeping','retaining','maintaining',
+  'preserving','protecting','defending','guarding','shielding','sheltering',
+  'harboring','housing','accommodating','lodging','quartering','billeting',
+  'stationing','posting','placing','positioning','locating','situating',
+  'establishing','founding','creating','forming','making','building',
+  'constructing','erecting','raising','lifting','elevating','hoisting',
+  'heaving','pulling','dragging','hauling','towing','carrying','bearing',
+  'supporting','sustaining','upholding','maintaining','preserving',
+  'conserving','saving','rescuing','delivering','freeing','liberating',
+  'emancipating','releasing','discharging','dismissal','expulsion',
+  'ejection','eviction','removal','extraction','withdrawal','retreat',
+  'flight','escape','fleeing','running','sprinting','dashing','rushing',
+  'hurrying','speeding','racing','galloping','trotting','jogging',
+  'walking','strolling','sauntering','ambling','wandering','roaming',
+  'rambling','meandering','drifting','floating','gliding','sliding',
+  'slipping','skidding','falling','dropping','plummeting','plunging',
+  'diving','sinking','submerging','immersing','dipping','dunking',
+  'soaking','drenching','wetting','moistening','dampening','humidifying',
+  'hydrating','watering','irrigating','sprinkling','spraying','splashing',
+  'spilling','pouring','flowing','streaming','rushing','gushing',
+  'surging','swelling','rising','ascending','climbing','scaling',
+  'mounting','ascending','elevating','lifting','raising','hoisting',
+  'heaving','pulling','dragging','hauling','towing','carrying',
+  'transporting','conveying','transferring','moving','shifting',
+  'relocating','displacing','transplanting','transferring','transmitting',
+  'broadcasting','telecasting','streaming','webcasting','podcasting',
+  'publishing','printing','issuing','releasing','distributing','circulating',
+  'disseminating','spreading','propagating','promulgating','proclaiming',
+  'announcing','declaring','stating','asserting','affirming','confirming',
+  'verifying','validating','authenticating','certifying','accrediting',
+  'endorsing','approving','sanctioning','authorizing','permitting','allowing',
+  'enabling','empowering','facilitating','assisting','helping','aiding',
+  'supporting','backing','championing','advocating','promoting','advancing',
+  'furthering','progressing','developing','growing','expanding','extending',
+  'enlarging','increasing','augmenting','amplifying','magnifying',
+  'intensifying','strengthening','fortifying','reinforcing','bolstering',
+  'buttressing','shoring','propping','sustaining','maintaining','preserving',
+  'conserving','saving','rescuing','delivering','freeing','liberating'
 ];
 
+const LEET_MAP = {
+  '0':'o','1':'i','3':'e','4':'a','5':'s','6':'g','7':'t','8':'b','9':'g',
+  '@':'a','$':'s','!':'i','*':'a','+':'t','<':'c','>':'g','|':'l','()':'o',
+  '[]':'o','{}':'o','_':'','^':'','~':'','`':'','\'':'','"':'',
+  'ph':'f','ck':'k','kk':'k','xx':'x','zz':'z'
+};
+
+function normalizeText(text) {
+  let normalized = text.toLowerCase().trim();
+  normalized = normalized.replace(/[^a-z0-9]/g, '');
+  for (const [key, val] of Object.entries(LEET_MAP)) {
+    if (key.length === 1) {
+      normalized = normalized.split(key).join(val);
+    } else {
+      normalized = normalized.replace(new RegExp(key, 'g'), val);
+    }
+  }
+  return normalized;
+}
+
 function containsBlockedWords(name) {
-  const lower = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return BLOCKED_WORDS.some(word => lower.includes(word));
+  const normalized = normalizeText(name);
+  if (normalized.length < 2) return false;
+  return BLOCKED_WORDS.some(word => {
+    const normalizedWord = normalizeText(word);
+    if (normalized.includes(normalizedWord)) return true;
+    if (normalizedWord.length > 3 && normalized.includes(normalizedWord)) return true;
+    return false;
+  });
 }
 
 const welcomeModal = document.getElementById('welcomeModal');
