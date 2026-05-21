@@ -609,7 +609,19 @@ canvas { display: block; position: relative; z-index: 1; }
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+function resize() {
+  const maxPixels = 1920 * 1080;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  if (w * h > maxPixels) {
+    const scale = Math.sqrt(maxPixels / (w * h));
+    canvas.width = Math.floor(w * scale);
+    canvas.height = Math.floor(h * scale);
+  } else {
+    canvas.width = w;
+    canvas.height = h;
+  }
+}
 resize();
 window.addEventListener('resize', resize);
 
@@ -1777,9 +1789,7 @@ function drawNotes() {
       }
       ctx.globalAlpha = isBroken ? alpha * 0.5 : alpha;
       const bodyColor = isBroken ? '#ff4d4d' : laneColors[note.lane];
-      const bodyGradient = ctx.createLinearGradient(x, bodyTop, x, bodyBottom);
-      bodyGradient.addColorStop(0, bodyColor); bodyGradient.addColorStop(1, bodyColor + '50');
-      ctx.fillStyle = bodyGradient; ctx.fillRect(x + 6, bodyTop, size - 12, holdHeight);
+      ctx.fillStyle = bodyColor + (isBroken ? '80' : '40'); ctx.fillRect(x + 6, bodyTop, size - 12, holdHeight);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fillRect(x + size * 0.35, bodyTop + 2, size * 0.3, Math.max(1, holdHeight - 4));
       ctx.shadowColor = bodyColor; ctx.shadowBlur = isHolding ? 20 : 10;
@@ -3994,7 +4004,6 @@ function drawMenuVisualizer() {
   if (previewPlaying) {
     analyser.getByteFrequencyData(visualizerData);
     menuCachedVisualizerData = new Uint8Array(visualizerData);
-    updateMenuBeatZoom();
   } else {
     visualizerData = menuCachedVisualizerData;
   }
