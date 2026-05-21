@@ -452,8 +452,15 @@ canvas { display: block; position: relative; z-index: 1; }
      <div id="leaderboardModal">
        <div class="leaderboard-panel">
          <h3>🏆 Global Leaderboard</h3>
-         <div class="leaderboard-subtitle" id="lbSubtitle">All Songs</div>
+         <div class="leaderboard-subtitle" id="lbSubtitle">Overall - All Songs Combined</div>
          <div class="leaderboard-filters" id="lbFilters">
+           <button class="lb-filter-btn active" data-scope="overall">Overall</button>
+           <button class="lb-filter-btn" data-scope="per-song">Per Song</button>
+         </div>
+         <div class="leaderboard-filters" id="lbSongSelector" style="display:none;">
+           <select id="lbSongSelect" style="padding:0.3rem 0.8rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;max-width:300px;"></select>
+         </div>
+         <div class="leaderboard-filters" id="lbDiffFilters" style="margin-top:0.5rem;">
            <button class="lb-filter-btn active" data-filter="all">All</button>
            <button class="lb-filter-btn" data-filter="easy">Easy</button>
            <button class="lb-filter-btn" data-filter="normal">Normal</button>
@@ -4306,6 +4313,10 @@ function setPlayerName(name) {
   localStorage.setItem('rhythmPulsePlayerName', name.trim().substring(0, 20));
 }
 
+let leaderboardScope = 'overall';
+let leaderboardSong = 'all';
+let leaderboardDifficulty = 'all';
+
 function submitToLeaderboard(data) {
   if (!autoSubmitScores) return;
   if (!supabaseClient) {
@@ -4341,7 +4352,7 @@ function submitToLeaderboard(data) {
     .catch(err => console.error('Leaderboard submit error:', err));
 }
 
-function fetchLeaderboard(difficulty = 'all', limit = 50) {
+function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', limit = 50) {
   if (!supabaseClient) {
     if (!initSupabase()) {
       if (typeof supabase === 'undefined') {
@@ -4357,100 +4368,245 @@ function fetchLeaderboard(difficulty = 'all', limit = 50) {
   const list = document.getElementById('leaderboardList');
   list.innerHTML = '<div class="lb-loading">Loading scores...</div>';
   
-  let query = supabaseClient
-    .from('scores')
-    .select('*')
-    .order('score', { ascending: false })
-    .limit(limit);
-  
-  if (difficulty !== 'all') {
-    query = query.eq('difficulty', difficulty);
-  }
-  
-  query.then(({ data, error }) => {
-    if (error) {
-      list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
-      return;
+  if (scope === 'overall') {
+    supabaseClient
+      .from('scores')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) {
+          list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
+          return;
+        }
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+          return;
+        }
+        
+        const playerScores = {};
+        data.forEach(entry => {
+          if (difficulty !== 'all' && entry.difficulty !== difficulty) return;
+          
+          const key = entry.player_name.toLowerCase();
+          if (!playerScores[key]) {
+            playerScores[key] = { player_name: entry.player_name, totalScore: 0, songs: new Set(), bestScores: {} };
+          }
+          
+          const songKey = `${entry.song_name}_${entry.difficulty}`;
+          if (!playerScores[key].bestScores[songKey] || entry.score > playerScores[key].bestScores[songKey]) {
+            playerScores[key].bestScores[songKey] = entry.score;
+          }
+          playerScores[key].songs.add(songKey);
+        });
+        
+        const ranked = Object.values(playerScores).map(p => {
+          p.totalScore = Object.values(p.bestScores).reduce((a, b) => a + b, 0);
+          p.songCount = p.songs.size;
+          return p;
+        }).sort((a, b) => b.totalScore - a.totalScore).slice(0, limit);
+        
+        if (ranked.length === 0) {
+          list.innerHTML = '<div class="lb-empty">No scores for this difficulty yet.</div>';
+          return;
+        }
+        
+        const playerName = getPlayerName().toLowerCase();
+        let html = '';
+        ranked.forEach((player, i) => {
+          const rank = i + 1;
+          let rankClass = '';
+          if (rank === 1) rankClass = 'gold';
+          else if (rank === 2) rankClass = 'silver';
+          else if (rank === 3) rankClass = 'bronze';
+          
+          const isYou = player.player_name.toLowerCase() === playerName;
+          
+          html += `<div class="lb-entry${isYou ? ' you' : ''}">
+            <div class="lb-rank ${rankClass}">#${rank}</div>
+            <div class="lb-info">
+              <div class="lb-player">${escapeHtml(player.player_name)}${isYou ? ' (You)' : ''}</div>
+              <div class="lb-song">${player.songCount} songs played</div>
+            </div>
+            <div class="lb-stats">
+              <div class="lb-score">${player.totalScore.toLocaleString()}</div>
+            </div>
+          </div>`;
+        });
+        list.innerHTML = html;
+      }).catch(err => {
+        list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
+      });
+  } else {
+    let query = supabaseClient
+      .from('scores')
+      .select('*')
+      .order('score', { ascending: false })
+      .limit(limit);
+    
+    if (song !== 'all') {
+      query = query.eq('song_name', song);
     }
-    if (!data || data.length === 0) {
-      list.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
-      return;
+    if (difficulty !== 'all') {
+      query = query.eq('difficulty', difficulty);
     }
     
-    const playerName = getPlayerName().toLowerCase();
-    let html = '';
-    data.forEach((entry, i) => {
-      const rank = i + 1;
-      let rankClass = '';
-      if (rank === 1) rankClass = 'gold';
-      else if (rank === 2) rankClass = 'silver';
-      else if (rank === 3) rankClass = 'bronze';
+    query.then(({ data, error }) => {
+      if (error) {
+        list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+        return;
+      }
       
-      const isYou = entry.player_name.toLowerCase() === playerName;
-      const gradeClass = `grade-${entry.grade}`;
-      const judgments = entry.judgments ? JSON.parse(entry.judgments) : {};
-      
-      html += `<div class="lb-entry${isYou ? ' you' : ''}">
-        <div class="lb-rank ${rankClass}">#${rank}</div>
-        <div class="lb-info">
-          <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
-          <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
-        </div>
-        <div class="lb-stats">
-          <div class="lb-grade ${gradeClass}">${entry.grade}</div>
-          <div class="lb-acc">${entry.accuracy}%</div>
-          <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
-        </div>
-      </div>`;
+      const playerName = getPlayerName().toLowerCase();
+      let html = '';
+      data.forEach((entry, i) => {
+        const rank = i + 1;
+        let rankClass = '';
+        if (rank === 1) rankClass = 'gold';
+        else if (rank === 2) rankClass = 'silver';
+        else if (rank === 3) rankClass = 'bronze';
+        
+        const isYou = entry.player_name.toLowerCase() === playerName;
+        const gradeClass = `grade-${entry.grade}`;
+        const judgments = entry.judgments ? JSON.parse(entry.judgments) : {};
+        
+        html += `<div class="lb-entry${isYou ? ' you' : ''}">
+          <div class="lb-rank ${rankClass}">#${rank}</div>
+          <div class="lb-info">
+            <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
+            <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
+          </div>
+          <div class="lb-stats">
+            <div class="lb-grade ${gradeClass}">${entry.grade}</div>
+            <div class="lb-acc">${entry.accuracy}%</div>
+            <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
+          </div>
+        </div>`;
+      });
+      list.innerHTML = html;
+    }).catch(err => {
+      list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
     });
-    list.innerHTML = html;
-  }).catch(err => {
-    list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
-  });
+  }
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+function populateSongSelector() {
+  const select = document.getElementById('lbSongSelect');
+  const songs = new Set();
+  songs.add('all');
+  
+  if (typeof songList !== 'undefined' && songList) {
+    songList.forEach(song => songs.add(song.name));
+  }
+  
+  supabaseClient
+    .from('scores')
+    .select('song_name')
+    .then(({ data }) => {
+      if (data) {
+        data.forEach(entry => songs.add(entry.song_name));
+      }
+      
+      let html = '<option value="all">All Songs</option>';
+      const sorted = Array.from(songs).filter(s => s !== 'all').sort();
+      sorted.forEach(song => {
+        html += `<option value="${escapeHtml(song)}">${escapeHtml(song)}</option>`;
+      });
+      select.innerHTML = html;
+    });
 }
 
-function showLeaderboard(difficulty = 'all') {
+function showLeaderboard(scope = 'overall', song = 'all', difficulty = 'all') {
   document.getElementById('leaderboardModal').classList.add('active');
-  document.getElementById('lbSubtitle').textContent = difficulty === 'all' ? 'All Songs' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1) + ' Difficulty';
-  fetchLeaderboard(difficulty);
-  document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+  leaderboardScope = scope;
+  leaderboardSong = song;
+  leaderboardDifficulty = difficulty;
+  
+  document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.scope === scope);
+  });
+  
+  document.getElementById('lbSongSelector').style.display = scope === 'per-song' ? 'flex' : 'none';
+  
+  if (scope === 'overall') {
+    document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+  } else {
+    document.getElementById('lbSubtitle').textContent = song === 'all' ? 'Per Song - All Songs' : `Per Song - ${song}`;
+  }
+  
+  document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === difficulty);
   });
+  
+  populateSongSelector();
+  if (song !== 'all') {
+    setTimeout(() => {
+      document.getElementById('lbSongSelect').value = song;
+    }, 100);
+  }
+  
+  fetchLeaderboard(scope, song, difficulty);
 }
 
 function hideLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('active');
 }
 
-document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.lb-filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const filter = btn.dataset.filter;
-    document.getElementById('lbSubtitle').textContent = filter === 'all' ? 'All Songs' : filter.charAt(0).toUpperCase() + filter.slice(1) + ' Difficulty';
-    fetchLeaderboard(filter);
+    leaderboardScope = btn.dataset.scope;
+    document.getElementById('lbSongSelector').style.display = leaderboardScope === 'per-song' ? 'flex' : 'none';
+    
+    if (leaderboardScope === 'overall') {
+      document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+    } else {
+      leaderboardSong = document.getElementById('lbSongSelect').value;
+      document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`;
+    }
+    
+    fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
   });
 });
 
+document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    leaderboardDifficulty = btn.dataset.filter;
+    
+    if (leaderboardScope === 'overall') {
+      document.getElementById('lbSubtitle').textContent = `Overall - ${leaderboardDifficulty === 'all' ? 'All Difficulties' : leaderboardDifficulty.charAt(0).toUpperCase() + leaderboardDifficulty.slice(1)}`;
+    } else {
+      document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? `Per Song - All Songs - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}` : `Per Song - ${leaderboardSong} - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}`;
+    }
+    
+    fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
+  });
+});
+
+document.getElementById('lbSongSelect').addEventListener('change', (e) => {
+  leaderboardSong = e.target.value;
+  document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`;
+  fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
+});
+
 document.getElementById('viewLeaderboardBtn').addEventListener('click', () => {
-  showLeaderboard('all');
+  showLeaderboard('overall', 'all', 'all');
 });
 
 document.getElementById('viewResultsLeaderboardBtn').addEventListener('click', () => {
+  const songName = gameState.song ? gameState.song.name : 'all';
   const diff = gameState.difficulty || 'all';
-  showLeaderboard(diff);
+  showLeaderboard('per-song', songName, diff);
 });
 
 document.getElementById('closeLeaderboard').addEventListener('click', hideLeaderboard);
 document.getElementById('refreshLeaderboard').addEventListener('click', () => {
-  const activeFilter = document.querySelector('.lb-filter-btn.active');
-  fetchLeaderboard(activeFilter ? activeFilter.dataset.filter : 'all');
+  fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
 });
 
 document.getElementById('leaderboardModal').addEventListener('click', (e) => {
