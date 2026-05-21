@@ -1077,17 +1077,26 @@ let currentNoteStyle = 'circles';
 let currentColorScheme = 'neon';
 
 function getLaneKeys() {
-  const saved = localStorage.getItem('rhythmPulseKeys');
-  if (saved) customKeys = JSON.parse(saved);
-  return customKeys[currentLaneCount] || DEFAULT_KEYS[currentLaneCount];
+  if (cachedKeysData.laneCount !== currentLaneCount) {
+    const saved = localStorage.getItem('rhythmPulseKeys');
+    if (saved) customKeys = JSON.parse(saved);
+    cachedKeysData.laneCount = currentLaneCount;
+    cachedKeysData.keys = customKeys[currentLaneCount] || DEFAULT_KEYS[currentLaneCount];
+  }
+  return cachedKeysData.keys;
 }
 
 function getLaneColors() {
-  const scheme = COLOR_SCHEMES[currentColorScheme] || COLOR_SCHEMES.default;
-  return scheme[currentLaneCount] || scheme[4] || COLOR_SCHEMES.default[4];
+  if (cachedColorsData.scheme !== currentColorScheme || cachedColorsData.laneCount !== currentLaneCount) {
+    const scheme = COLOR_SCHEMES[currentColorScheme] || COLOR_SCHEMES.default;
+    cachedColorsData.scheme = currentColorScheme;
+    cachedColorsData.laneCount = currentLaneCount;
+    cachedColorsData.colors = scheme[currentLaneCount] || scheme[4] || COLOR_SCHEMES.default[4];
+  }
+  return cachedColorsData.colors;
 }
 
-function saveKeys() { localStorage.setItem('rhythmPulseKeys', JSON.stringify(customKeys)); }
+function saveKeys() { localStorage.setItem('rhythmPulseKeys', JSON.stringify(customKeys)); cachedKeysData.laneCount = null; }
 function getHighScores() { const saved = localStorage.getItem('rhythmPulseScores'); return saved ? JSON.parse(saved) : {}; }
 function saveHighScore(songName, difficulty, score, accuracy, maxCombo, grade) {
   const scores = getHighScores();
@@ -1123,6 +1132,8 @@ let comboZoomValue = 0, comboZoomTarget = 0, lastComboZoomTime = 0, lastComboMil
 let activeModifiers = [];
 let laneMapping = [];
 let timingWindow = 'normal', scrollDirection = 'downscroll', healthMode = 'normal';
+let cachedKeysData = { laneCount: null, keys: null };
+let cachedColorsData = { scheme: null, laneCount: null, colors: null };
 let currentSort = 'name', favorites = JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]');
 let achievements = JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}');
 let songDB = null, dbReady = false;
