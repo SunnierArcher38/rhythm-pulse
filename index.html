@@ -1064,18 +1064,28 @@ let customKeys = {};
 let currentNoteStyle = 'circles';
 let currentColorScheme = 'neon';
 
+let cachedLaneKeys = null, cachedLaneKeysStamp = 0, cachedLaneColors = null, cachedLaneColorsStamp = 0, laneConfigStamp = 0;
 function getLaneKeys() {
-  const saved = localStorage.getItem('rhythmPulseKeys');
-  if (saved) customKeys = JSON.parse(saved);
-  return customKeys[currentLaneCount] || DEFAULT_KEYS[currentLaneCount];
+  if (cachedLaneKeysStamp !== laneConfigStamp) {
+    const saved = localStorage.getItem('rhythmPulseKeys');
+    if (saved) customKeys = JSON.parse(saved);
+    cachedLaneKeys = customKeys[currentLaneCount] || DEFAULT_KEYS[currentLaneCount];
+    cachedLaneKeysStamp = laneConfigStamp;
+  }
+  return cachedLaneKeys;
 }
+function invalidateLaneCache() { laneConfigStamp++; cachedLaneKeys = null; cachedLaneColors = null; }
 
 function getLaneColors() {
-  const scheme = COLOR_SCHEMES[currentColorScheme] || COLOR_SCHEMES.default;
-  return scheme[currentLaneCount] || scheme[4] || COLOR_SCHEMES.default[4];
+  if (cachedLaneColorsStamp !== laneConfigStamp) {
+    const scheme = COLOR_SCHEMES[currentColorScheme] || COLOR_SCHEMES.default;
+    cachedLaneColors = scheme[currentLaneCount] || scheme[4] || COLOR_SCHEMES.default[4];
+    cachedLaneColorsStamp = laneConfigStamp;
+  }
+  return cachedLaneColors;
 }
 
-function saveKeys() { localStorage.setItem('rhythmPulseKeys', JSON.stringify(customKeys)); }
+function saveKeys() { localStorage.setItem('rhythmPulseKeys', JSON.stringify(customKeys)); invalidateLaneCache(); }
 function getHighScores() { const saved = localStorage.getItem('rhythmPulseScores'); return saved ? JSON.parse(saved) : {}; }
 function saveHighScore(songName, difficulty, score, accuracy, maxCombo, grade) {
   const scores = getHighScores();
@@ -2617,7 +2627,7 @@ function startCountdown() {
 
 async function startGame(song, difficulty) {
   previewStop();
-  currentLaneCount = parseInt(document.getElementById('laneCount').value) || 4;
+  currentLaneCount = parseInt(document.getElementById('laneCount').value) || 4; invalidateLaneCache();
   gameState.song = song; gameState.difficulty = difficulty;
   
   try {
@@ -3191,7 +3201,7 @@ document.getElementById('audioOffset').addEventListener('input', (e) => { gameSt
 document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); document.getElementById('scrollSpeedVal').textContent = e.target.value; addStat('scroll_speed_changed', 1); checkProgressiveAchievements('scroll_speed_changed', getStat('scroll_speed_changed')); });
 document.getElementById('noteSize').addEventListener('input', (e) => { gameState.noteSize = parseInt(e.target.value); localStorage.setItem('rhythmPulseNoteSize', e.target.value); document.getElementById('noteSizeVal').textContent = e.target.value; addStat('note_size_changed', 1); checkProgressiveAchievements('note_size_changed', getStat('note_size_changed')); });
 document.getElementById('volume').addEventListener('input', (e) => { currentVolume = parseInt(e.target.value) / 100; if (gainNode) gainNode.gain.value = currentVolume; localStorage.setItem('rhythmPulseVolume', e.target.value); document.getElementById('volumeVal').textContent = e.target.value; addStat('volume_changed', 1); checkProgressiveAchievements('volume_changed', getStat('volume_changed')); });
-document.getElementById('laneCount').addEventListener('input', (e) => { currentLaneCount = parseInt(e.target.value); localStorage.setItem('rhythmPulseLaneCount', e.target.value); document.getElementById('laneCountVal').textContent = e.target.value; addStat('lane_changed', 1); checkProgressiveAchievements('lane_changed', getStat('lane_changed')); });
+document.getElementById('laneCount').addEventListener('input', (e) => { currentLaneCount = parseInt(e.target.value); invalidateLaneCache(); localStorage.setItem('rhythmPulseLaneCount', e.target.value); document.getElementById('laneCountVal').textContent = e.target.value; addStat('lane_changed', 1); checkProgressiveAchievements('lane_changed', getStat('lane_changed')); });
 
 document.getElementById('hitSoundToggle').addEventListener('click', (e) => {
   hitSoundEnabled = !hitSoundEnabled; addStat('hit_sound_toggle', 1); checkProgressiveAchievements('hit_sound_toggle', getStat('hit_sound_toggle'));
@@ -3214,7 +3224,7 @@ document.getElementById('noteStyle').addEventListener('change', (e) => {
 });
 document.getElementById('colorScheme').addEventListener('change', (e) => {
   addStat('color_changed', 1); checkProgressiveAchievements('color_changed', getStat('color_changed'));
-  currentColorScheme = e.target.value; localStorage.setItem('rhythmPulseColorScheme', currentColorScheme);
+  currentColorScheme = e.target.value; invalidateLaneCache(); localStorage.setItem('rhythmPulseColorScheme', currentColorScheme);
 });
 document.getElementById('timingWindow').addEventListener('change', (e) => {
   addStat('timing_changed', 1); checkProgressiveAchievements('timing_changed', getStat('timing_changed'));
@@ -3345,7 +3355,7 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   const ns = localStorage.getItem('rhythmPulseNoteStyle');
   if (ns) { currentNoteStyle = ns; document.getElementById('noteStyle').value = ns; }
   const cs = localStorage.getItem('rhythmPulseColorScheme');
-  if (cs) { currentColorScheme = cs; document.getElementById('colorScheme').value = cs; }
+  if (cs) { currentColorScheme = cs; invalidateLaneCache(); document.getElementById('colorScheme').value = cs; }
   const ao = localStorage.getItem('rhythmPulseAudioOffset');
   if (ao) { gameState.audioOffset = parseInt(ao); document.getElementById('audioOffset').value = ao; document.getElementById('audioOffsetVal').textContent = ao; }
   const ss = localStorage.getItem('rhythmPulseScrollSpeed');
@@ -3355,7 +3365,7 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   const vol = localStorage.getItem('rhythmPulseVolume');
   if (vol) { currentVolume = parseInt(vol) / 100; document.getElementById('volume').value = vol; document.getElementById('volumeVal').textContent = vol; if (gainNode) gainNode.gain.value = currentVolume; }
   const lc = localStorage.getItem('rhythmPulseLaneCount');
-  if (lc) { currentLaneCount = parseInt(lc); document.getElementById('laneCount').value = lc; document.getElementById('laneCountVal').textContent = lc; }
+  if (lc) { currentLaneCount = parseInt(lc); invalidateLaneCache(); document.getElementById('laneCount').value = lc; document.getElementById('laneCountVal').textContent = lc; }
   const tw = localStorage.getItem('rhythmPulseTimingWindow');
   if (tw) { timingWindow = tw; document.getElementById('timingWindow').value = tw; }
   const sd = localStorage.getItem('rhythmPulseScrollDirection');
@@ -3994,7 +4004,6 @@ function drawMenuVisualizer() {
   if (previewPlaying) {
     analyser.getByteFrequencyData(visualizerData);
     menuCachedVisualizerData = new Uint8Array(visualizerData);
-    updateMenuBeatZoom();
   } else {
     visualizerData = menuCachedVisualizerData;
   }
