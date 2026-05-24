@@ -504,6 +504,29 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .leaderboard-footer { display: flex; gap: 0.5rem; justify-content: center; }
 .leaderboard-footer button { transition: all 0.3s; }
 .leaderboard-footer button:hover { transform: scale(1.05); }
+#saveLoadModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#saveLoadModal.active { display: flex !important; }
+.saveload-panel { background: rgba(20,20,35,0.98); backdrop-filter: blur(20px); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; padding: 1.5rem; width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(74,222,128,0.1); }
+.saveload-panel h3 { text-align: center; margin-bottom: 0.75rem; background: linear-gradient(135deg, #4ade80, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.3rem; }
+.saveload-status { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 10px; }
+.saveload-section { margin-bottom: 0.75rem; }
+.saveload-section-title { font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
+.saveload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.saveload-grid .full { grid-column: 1 / -1; }
+.saveload-btn { padding: 0.7rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; text-align: center; }
+.saveload-btn:hover { transform: scale(1.03); box-shadow: 0 4px 15px rgba(74,222,128,0.2); }
+.saveload-btn.green { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.3); }
+.saveload-btn.green:hover { background: rgba(74,222,128,0.3); border-color: #4ade80; }
+.saveload-btn.gold { background: rgba(255,215,0,0.15); border-color: rgba(255,215,0,0.3); }
+.saveload-btn.gold:hover { background: rgba(255,215,0,0.3); border-color: #ffd700; }
+.saveload-btn.purple { background: rgba(196,77,255,0.15); border-color: rgba(196,77,255,0.3); }
+.saveload-btn.purple:hover { background: rgba(196,77,255,0.3); border-color: #c44dff; }
+.saveload-btn.blue { background: rgba(107,157,255,0.15); border-color: rgba(107,157,255,0.3); }
+.saveload-btn.blue:hover { background: rgba(107,157,255,0.3); border-color: #6b9dff; }
+.saveload-btn .label { font-weight: 600; display: block; margin-bottom: 0.15rem; }
+.saveload-btn .hint { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+#closeSaveLoad { display: block; width: 100%; margin-top: 0.5rem; padding: 0.6rem; border: none; border-radius: 10px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+#closeSaveLoad:hover { background: rgba(255,255,255,0.12); }
 </style>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -531,6 +554,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
       <button class="settings-btn" id="browseMusicBtn" title="Browse Free Music" style="background:rgba(108,52,131,0.5);">🎵</button>
       <button class="settings-btn" id="achievementsToggle" title="Achievements">🏆</button>
       <button class="settings-btn" id="leaderboardToggle" title="Leaderboard" style="background:rgba(196,77,255,0.25);">📊</button>
+      <button class="settings-btn" id="saveLoadBtn" title="Save / Load" style="background:rgba(74,222,128,0.2);">💾</button>
       <button class="settings-btn" id="discordBtn" title="Join GENIMPACT" style="background:rgba(88,101,242,0.3);">💬</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
@@ -597,8 +621,37 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
            <button id="confirmSongExport" style="padding:0.5rem 1.5rem;background:linear-gradient(135deg,#27ae60,#2ecc71);border:none;border-radius:8px;color:#fff;cursor:pointer;font-weight:600;">Export Selected</button>
          </div>
        </div>
-     </div>
-       <div class="achievements-dropdown" id="achievementsDropdown">
+      </div>
+      <div id="saveLoadModal">
+        <div class="saveload-panel">
+          <h3>💾 Save & Load</h3>
+          <div class="saveload-status" id="saveLoadStatus">Checking your data...</div>
+          <div class="saveload-section">
+            <div class="saveload-section-title">📋 Save Codes (settings + achievements)</div>
+            <div class="saveload-grid">
+              <button class="saveload-btn green" id="slGenerateCode"><span class="label">📋 Copy</span><span class="hint">Copy save code to clipboard</span></button>
+              <button class="saveload-btn blue" id="slLoadCode"><span class="label">💾 Load</span><span class="hint">Restore from clipboard</span></button>
+            </div>
+          </div>
+          <div class="saveload-section">
+            <div class="saveload-section-title">🎵 Songs</div>
+            <div class="saveload-grid">
+              <button class="saveload-btn green" id="slSaveSongs"><span class="label">💾 Save Songs</span><span class="hint">Export songs as .rpsongs</span></button>
+              <button class="saveload-btn blue" id="slLoadSongs"><span class="label">📂 Load Songs</span><span class="hint">Import songs from .rpsongs</span></button>
+              <button class="saveload-btn purple" id="slImportSong"><span class="label">🎵 Import Song</span><span class="hint">Import .rpsong file</span></button>
+            </div>
+          </div>
+          <div class="saveload-section">
+            <div class="saveload-section-title">📦 Full Backup (everything)</div>
+            <div class="saveload-grid">
+              <button class="saveload-btn gold" id="slSaveAll"><span class="label">📦 Save All</span><span class="hint">Songs + settings + achievements</span></button>
+              <button class="saveload-btn gold" id="slLoadAll"><span class="label">📂 Load All</span><span class="hint">Restore full backup from .rpbackup</span></button>
+            </div>
+          </div>
+          <button id="closeSaveLoad">Close</button>
+        </div>
+      </div>
+        <div class="achievements-dropdown" id="achievementsDropdown">
        <div class="ach-header">🏆 Achievements</div>
        <div class="ach-list" id="achievementsList"></div>
      </div>
@@ -3435,6 +3488,17 @@ document.getElementById('uiToggle').addEventListener('click', () => { addStat('u
 document.getElementById('settingsToggle').addEventListener('click', () => { addStat('settings_changed', 1); checkProgressiveAchievements('settings_changed', getStat('settings_changed')); document.getElementById('settingsDropdown').classList.toggle('active'); });
 document.getElementById('achievementsToggle').addEventListener('click', () => { addStat('achievement_view', 1); checkProgressiveAchievements('achievement_view', getStat('achievement_view')); document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); });
 document.getElementById('leaderboardToggle').addEventListener('click', () => { addStat('leaderboard_view', 1); showLeaderboard('overall', 'all', 'all'); });
+document.getElementById('saveLoadBtn').addEventListener('click', () => {
+  const modal = document.getElementById('saveLoadModal');
+  const status = document.getElementById('saveLoadStatus');
+  const songCount = songs.length;
+  const achCount = Object.keys(achievements).filter(k => achievements[k]).length;
+  const scoreKeys = Object.keys(JSON.parse(localStorage.getItem('rhythmPulseScores') || '{}')).length;
+  status.textContent = `📊 ${songCount} song${songCount !== 1 ? 's' : ''}  •  🏆 ${achCount} achievement${achCount !== 1 ? 's' : ''}  •  ⭐ ${scoreKeys} high score${scoreKeys !== 1 ? 's' : ''}`;
+  if (songCount === 0 && achCount === 0 && scoreKeys === 0)
+    status.textContent = '📭 No saved data yet. Play some songs to get started!';
+  modal.classList.add('active');
+});
 document.getElementById('discordBtn').addEventListener('click', () => { addStat('discord_click', 1); checkProgressiveAchievements('discord_click', getStat('discord_click')); window.open('https://discord.gg/aa83vhpC4v', '_blank'); });
 document.getElementById('audioOffset').addEventListener('input', (e) => { gameState.audioOffset = parseInt(e.target.value); localStorage.setItem('rhythmPulseAudioOffset', e.target.value); document.getElementById('audioOffsetVal').textContent = e.target.value; addStat('audio_offset_changed', 1); checkProgressiveAchievements('audio_offset_changed', getStat('audio_offset_changed')); });
 document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); document.getElementById('scrollSpeedVal').textContent = e.target.value; addStat('scroll_speed_changed', 1); checkProgressiveAchievements('scroll_speed_changed', getStat('scroll_speed_changed')); });
@@ -4983,6 +5047,41 @@ document.getElementById('refreshLeaderboard').addEventListener('click', () => {
 
 document.getElementById('leaderboardModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('leaderboardModal')) hideLeaderboard();
+});
+
+document.getElementById('closeSaveLoad').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+});
+document.getElementById('saveLoadModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('saveLoadModal')) document.getElementById('saveLoadModal').classList.remove('active');
+});
+document.getElementById('slGenerateCode').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  document.getElementById('generateCodeBtn').click();
+});
+document.getElementById('slLoadCode').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  document.getElementById('loadCodeBtn').click();
+});
+document.getElementById('slImportSong').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  document.getElementById('importSongInput').click();
+});
+document.getElementById('slSaveSongs').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  showSongSelectModal('songs');
+});
+document.getElementById('slLoadSongs').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  document.getElementById('loadAllSongsInput').click();
+});
+document.getElementById('slSaveAll').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  showSongSelectModal('backup');
+});
+document.getElementById('slLoadAll').addEventListener('click', () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  document.getElementById('loadEverythingInput').click();
 });
 
 const BLOCKED_WORDS = [
