@@ -627,10 +627,11 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
           <h3>💾 Save & Load</h3>
           <div class="saveload-status" id="saveLoadStatus">Checking your data...</div>
           <div class="saveload-section">
-            <div class="saveload-section-title">📋 Save Codes (settings + achievements)</div>
+            <div class="saveload-section-title">📋 Save Code (settings + achievements)</div>
+            <textarea id="slSaveCodeArea" placeholder="Paste save code here..." style="width:100%;height:50px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:0.75rem;resize:none;padding:0.5rem;font-family:monospace;margin-bottom:0.5rem;"></textarea>
             <div class="saveload-grid">
-              <button class="saveload-btn green" id="slGenerateCode"><span class="label">📋 Copy</span><span class="hint">Copy save code to clipboard</span></button>
-              <button class="saveload-btn blue" id="slLoadCode"><span class="label">💾 Load</span><span class="hint">Restore from clipboard</span></button>
+              <button class="saveload-btn green" id="slGenerateCode"><span class="label">📋 Copy</span><span class="hint">Generate & copy code</span></button>
+              <button class="saveload-btn blue" id="slLoadCode"><span class="label">💾 Load</span><span class="hint">Restore from code above</span></button>
             </div>
           </div>
           <div class="saveload-section">
@@ -5056,12 +5057,65 @@ document.getElementById('saveLoadModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('saveLoadModal')) document.getElementById('saveLoadModal').classList.remove('active');
 });
 document.getElementById('slGenerateCode').addEventListener('click', () => {
-  document.getElementById('saveLoadModal').classList.remove('active');
-  document.getElementById('generateCodeBtn').click();
+  addStat('save_code_generated', 1); checkProgressiveAchievements('save_code_generated', getStat('save_code_generated'));
+  const data = {
+    v: SAVE_VERSION,
+    a: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
+    f: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
+    s: {
+      ao: localStorage.getItem('rhythmPulseAudioOffset'),
+      ss: localStorage.getItem('rhythmPulseScrollSpeed'),
+      ns: localStorage.getItem('rhythmPulseNoteSize'),
+      vol: localStorage.getItem('rhythmPulseVolume'),
+      lc: localStorage.getItem('rhythmPulseLaneCount'),
+      hs: localStorage.getItem('rhythmPulseHitSound'),
+      fps: localStorage.getItem('rhythmPulseShowFPS'),
+      vis: localStorage.getItem('rhythmPulseVisualizer'),
+      bz: localStorage.getItem('rhythmPulseBeatZoom'),
+      nst: localStorage.getItem('rhythmPulseNoteStyle'),
+      cs: localStorage.getItem('rhythmPulseColorScheme'),
+      tw: localStorage.getItem('rhythmPulseTimingWindow'),
+      sd: localStorage.getItem('rhythmPulseScrollDirection'),
+      hm: localStorage.getItem('rhythmPulseHealthMode'),
+      sp: localStorage.getItem('rhythmPulseSpeedPreset'),
+      ck: localStorage.getItem('rhythmPulseCustomKeys')
+    }
+  };
+  try {
+    const json = JSON.stringify(data);
+    const code = btoa(unescape(encodeURIComponent(json)));
+    const area = document.getElementById('slSaveCodeArea');
+    area.value = code;
+    area.select();
+    document.execCommand('copy');
+    area.style.borderColor = '#4ade80';
+    setTimeout(() => area.style.borderColor = '', 2000);
+  } catch (err) {
+    alert('Failed to generate code: ' + err.message);
+  }
 });
 document.getElementById('slLoadCode').addEventListener('click', () => {
-  document.getElementById('saveLoadModal').classList.remove('active');
-  document.getElementById('loadCodeBtn').click();
+  addStat('save_code_loaded', 1); checkProgressiveAchievements('save_code_loaded', getStat('save_code_loaded'));
+  const code = document.getElementById('slSaveCodeArea').value.trim();
+  if (!code) { alert('Paste a save code first!'); return; }
+  try {
+    const json = decodeURIComponent(escape(atob(code)));
+    const data = JSON.parse(json);
+    const migrated = migrateSaveData(data);
+    localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a || {}));
+    localStorage.setItem('rhythmPulseFavorites', JSON.stringify(migrated.f || []));
+    const s = migrated.s || {};
+    Object.entries(s).forEach(([k, v]) => {
+      const map = { ao: 'rhythmPulseAudioOffset', ss: 'rhythmPulseScrollSpeed', ns: 'rhythmPulseNoteSize', vol: 'rhythmPulseVolume', lc: 'rhythmPulseLaneCount', hs: 'rhythmPulseHitSound', fps: 'rhythmPulseShowFPS', vis: 'rhythmPulseVisualizer', bz: 'rhythmPulseBeatZoom', nst: 'rhythmPulseNoteStyle', cs: 'rhythmPulseColorScheme', tw: 'rhythmPulseTimingWindow', sd: 'rhythmPulseScrollDirection', hm: 'rhythmPulseHealthMode', sp: 'rhythmPulseSpeedPreset', ck: 'rhythmPulseCustomKeys' };
+      if (v !== null && v !== undefined) localStorage.setItem(map[k] || k, v);
+    });
+    document.getElementById('slSaveCodeArea').style.borderColor = '#4ade80';
+    setTimeout(() => document.getElementById('slSaveCodeArea').style.borderColor = '', 2000);
+    alert('Save code loaded successfully! Page will reload to apply settings.');
+    location.reload();
+  } catch (err) {
+    alert('Invalid save code: ' + err.message);
+  }
 });
 document.getElementById('slImportSong').addEventListener('click', () => {
   document.getElementById('saveLoadModal').classList.remove('active');
