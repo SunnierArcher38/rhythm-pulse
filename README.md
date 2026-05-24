@@ -53,9 +53,12 @@
       </ul>
     </td>
     <td valign="top" width="50%">
-      <h3>🏆 Progression & Transfer</h3>
+      <h3>🏆 Progression & Online</h3>
       <ul>
-        <li><strong>19 achievements</strong> to unlock</li>
+        <li><strong>1087 achievements</strong> to unlock with sound effects & queued popups</li>
+        <li><strong>Online leaderboards</strong> with Overall & Per-Song views</li>
+        <li><strong>Song sharing</strong> via Supabase Storage — auto-upload on play, download from leaderboard</li>
+        <li><strong>Free music source links</strong> (NCS, Incompetech, Pixabay, etc.) right in the music browser</li>
         <li><strong>Grades</strong> with timing graph</li>
         <li><strong>Score sharing</strong> via clipboard</li>
         <li><strong>Favorites</strong> & song sorting (name, BPM, length)</li>
@@ -86,7 +89,7 @@
 | **5K** | `D` `F` `Space` `J` `K` |
 | **6K** | `S` `D` `F` `J` `K` `L` |
 | **7K** | `S` `D` `F` `Space` `J` `K` `L` |
-| **8K** | `S` `D` `F` `Space` `Space` `J` `K` `L` |
+| **8K** | `S` `D` `F` `Space` `J` `K` `L` `;` |
 
 > Hold notes require sustained key press — judgment awarded on release.
 
@@ -146,7 +149,6 @@ Got ideas? Here's what's on the radar — feel free to suggest more on [Discord]
 
 - [ ] Chart editor for manual note placement
 - [ ] Replay system (save, load, watch past gameplay)
-- [ ] Online leaderboards
 - [ ] Custom skin/theme support
 - [ ] Multiplayer / co-op mode
 - [ ] Story mode with progression
@@ -168,6 +170,7 @@ Got ideas? Here's what's on the radar — feel free to suggest more on [Discord]
 - **Service Worker** — offline support
 - **CompressionStream API** — compressed song backups
 - **Audius API** — free music browser
+- **Supabase** — online leaderboards & song sharing
 
 ## 🤖 Note
 
