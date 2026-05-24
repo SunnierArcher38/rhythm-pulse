@@ -6,7 +6,6 @@
   <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/%F0%9F%8E%AE%20Play%20Now-7c3aed?style=for-the-badge&logoColor=white" alt="Play Now"></a>
   <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/GENIMPACT-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="GENIMPACT"></a>
   <img src="https://img.shields.io/github/last-commit/SunnierArcher38/rhythm-pulse?color=c44dff&style=for-the-badge" alt="Last Commit">
-  <img src="https://img.shields.io/badge/dynamic/json?color=6b9dff&style=for-the-badge&label=achievements&query=%24.length&url=https%3A%2F%2Fraw.githubusercontent.com%2FSunnierArcher38%2Frhythm-pulse%2Fmaster%2Findex.html&suffix=%2B" alt="Achievements">
   <img src="https://img.shields.io/badge/single--file-purple?style=for-the-badge&color=c44dff" alt="Single File">
 </p>
 
