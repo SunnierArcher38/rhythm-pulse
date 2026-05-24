@@ -155,6 +155,7 @@ canvas { display: block; position: relative; z-index: 1; }
 .style-select { padding: 0.3rem 0.5rem; border: 1px solid rgba(196,77,255,0.4); border-radius: 8px; background: rgba(20,20,30,0.8); color: #c44dff; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; transition: all 0.2s; }
 .style-select:hover { border-color: #c44dff; box-shadow: 0 0 10px rgba(196,77,255,0.3); }
 .style-select option { background: #1a1a2a; color: #fff; }
+#lbSongSelect option { background: #1a1a2a; color: #fff; }
 .key-hints { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 105; }
 .key-hint { padding: 0.5rem 1rem; background: rgba(255,255,255,0.06); border-radius: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.5); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.08); }
 .key-hint kbd { background: rgba(255,255,255,0.1); padding: 0.2rem 0.5rem; border-radius: 6px; font-family: monospace; color: #fff; border: 1px solid rgba(255,255,255,0.15); }
@@ -464,7 +465,7 @@ canvas { display: block; position: relative; z-index: 1; }
            <button class="lb-filter-btn" data-scope="per-song">Per Song</button>
          </div>
          <div class="leaderboard-filters" id="lbSongSelector" style="display:none;">
-           <select id="lbSongSelect" style="padding:0.3rem 0.8rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;max-width:300px;"></select>
+            <select id="lbSongSelect" style="padding:0.3rem 0.8rem;background:rgba(20,20,30,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;max-width:300px;"></select>
          </div>
          <div class="leaderboard-filters" id="lbDiffFilters" style="margin-top:0.5rem;">
            <button class="lb-filter-btn active" data-filter="all">All</button>
