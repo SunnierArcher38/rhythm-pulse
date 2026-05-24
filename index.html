@@ -4595,9 +4595,26 @@ function submitToLeaderboard(data) {
     .insert([entry])
     .then(({ error }) => {
       if (error) console.error('Leaderboard submit failed:', error);
-      else console.log('Score submitted to leaderboard!');
+      else {
+        console.log('Score submitted to leaderboard!');
+        uploadSongAudio(data.songName);
+      }
     })
     .catch(err => console.error('Leaderboard submit error:', err));
+}
+
+async function uploadSongAudio(songName) {
+  const song = songs.find(s => s.name === songName);
+  if (!song || !song.rawData) return;
+  const key = encodeURIComponent(songName);
+  try {
+    const mimeType = song.file?.type || 'audio/mpeg';
+    const blob = new Blob([song.rawData], { type: mimeType });
+    await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: mimeType });
+    console.log('[Storage] Uploaded:', songName);
+  } catch (e) {
+    console.warn('[Storage] Upload failed:', e.message);
+  }
 }
 
 function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', limit = 50) {
@@ -4793,6 +4810,20 @@ function downloadLeaderboardSong(btn) {
   
   (async () => {
     if (songUrl && await doDownload(songUrl)) return;
+    if (supabaseClient || initSupabase()) {
+      try {
+        const key = encodeURIComponent(songName);
+        const { data, error } = await supabaseClient.storage.from('song-files').download(key);
+        if (!error && data) {
+          const file = new File([data], songName + '.mp3', { type: 'audio/mpeg' });
+          await addSong(file);
+          btn.textContent = '✅';
+          btn.className = 'lb-download-btn owned';
+          btn.title = 'Added to your library!';
+          return;
+        }
+      } catch {}
+    }
     btn.textContent = '📥';
     btn.disabled = false;
     fallbackAudiusSearch(songName);
