@@ -746,7 +746,7 @@ canvas { display: block; position: relative; z-index: 1; }
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; if (window.updateTouchLanes) updateTouchLanes(); }
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 resize();
 window.addEventListener('resize', resize);
 
@@ -1247,6 +1247,8 @@ let gameState = {
   keyPressEffects: [], currentAccuracy: 100,
   marvelousStreak: 0
 };
+
+updateTouchLanes();
 
 let hitSoundEnabled = false;
 let soundCtx = null;
@@ -3379,6 +3381,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.updateTouchLanes = updateTouchLanes;
+window.addEventListener('resize', updateTouchLanes);
 
 document.getElementById('resumeBtn').addEventListener('click', () => { addStat('pause_used', 1); checkProgressiveAchievements('pause_used', getStat('pause_used')); hidePause(); gameState.mode = 'playing'; resumeAudio(); updateTouchLanes(); });
 document.getElementById('restartBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
