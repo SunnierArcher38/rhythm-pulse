@@ -1423,16 +1423,7 @@ function processAchievementQueue() {
 }
 
 function showAchievementPopup(name, icon) {
-  if (gameState.mode === 'playing') {
-    queueAchievementPopup(name, icon);
-  } else {
-    const popup = document.getElementById('achievementPopup');
-    popup.querySelector('.ach-title').textContent = `★ ${icon || '🏆'} ACHIEVEMENT UNLOCKED`;
-    document.getElementById('achievementName').textContent = name;
-    popup.classList.add('show');
-    clearTimeout(popup._hideTimer);
-    popup._hideTimer = setTimeout(() => popup.classList.remove('show'), 3500);
-  }
+  queueAchievementPopup(name, icon);
 }
 
 function formatTime(seconds) {
