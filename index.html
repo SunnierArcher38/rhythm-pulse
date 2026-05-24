@@ -2979,6 +2979,27 @@ async function downloadFile(data, baseName, ext) {
   URL.revokeObjectURL(url);
 }
 
+async function compressWithSongs(metadata, songs) {
+  const metaBytes = new TextEncoder().encode(JSON.stringify(metadata));
+  const totalSize = 4 + metaBytes.length + songs.reduce((sum, s) => sum + 8 + s.audio.length, 0);
+  const buf = new ArrayBuffer(totalSize);
+  const raw = new Uint8Array(buf);
+  let offset = 0;
+  raw[offset++] = (metaBytes.length >> 24) & 0xFF;
+  raw[offset++] = (metaBytes.length >> 16) & 0xFF;
+  raw[offset++] = (metaBytes.length >> 8) & 0xFF;
+  raw[offset++] = metaBytes.length & 0xFF;
+  raw.set(metaBytes, offset);
+  offset += metaBytes.length;
+  for (const s of songs) {
+    const audioLen = s.audio.length;
+    for (let i = 7; i >= 0; i--) raw[offset++] = (audioLen >> (i * 8)) & 0xFF;
+    raw.set(s.audio, offset);
+    offset += audioLen;
+  }
+  return new Uint8Array(buf);
+}
+
 async function decompressWithSongs(buffer) {
   const raw = new Uint8Array(buffer);
   
