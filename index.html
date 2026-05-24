@@ -4372,8 +4372,9 @@ async function uploadSongAudio(songName) {
   if (!song || !song.rawData) return;
   const storageKey = encodeURIComponent(songName);
   try {
-    const blob = new Blob([song.rawData], { type: 'audio/mpeg' });
-    await supabaseClient.storage.from('song-files').upload(storageKey, blob, { upsert: true, contentType: 'audio/mpeg' });
+    const mimeType = song.file?.type || 'audio/mpeg';
+    const blob = new Blob([song.rawData], { type: mimeType });
+    await supabaseClient.storage.from('song-files').upload(storageKey, blob, { upsert: true, contentType: mimeType });
     console.log(`[Storage] Uploaded: ${songName}`);
   } catch (e) {
     console.warn('[Storage] Upload failed:', e.message);
