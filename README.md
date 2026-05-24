@@ -55,7 +55,7 @@
     <td valign="top" width="50%">
       <h3>🏆 Progression & Online</h3>
       <ul>
-        <li><strong>1087 achievements</strong> to unlock with sound effects & queued popups</li>
+        <li><strong>760 achievements</strong> to unlock with sound effects & queued popups</li>
         <li><strong>Online leaderboards</strong> with Overall & Per-Song views</li>
         <li><strong>Song sharing</strong> via Supabase Storage — auto-upload on play, download from leaderboard</li>
         <li><strong>Free music source links</strong> (NCS, Incompetech, Pixabay, etc.) right in the music browser</li>
