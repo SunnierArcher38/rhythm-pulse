@@ -2875,9 +2875,9 @@ function setLoadingProgress(pct, text) {
   if (text) document.getElementById('loadingText').textContent = text;
 }
 
-async function addSong(file) {
+async function addSong(file, extraProps) {
   const existing = songs.find(s => s.file?.name === file.name && s.file?.size === file.size);
-  if (existing) return;
+  if (existing) { if (extraProps) Object.assign(existing, extraProps); return; }
   
   showLoading(`Loading: ${file.name}`);
   setLoadingProgress(10, 'Reading file...');
@@ -2899,7 +2899,8 @@ async function addSong(file) {
       file, name: file.name.replace(/\.[^/.]+$/, ''), size: file.size, 
       charts: {}, beats, duration, bpm,
       rawData: arrayBuffer,
-      isFavorite: favorites.includes(file.name + file.size)
+      isFavorite: favorites.includes(file.name + file.size),
+      ...extraProps
     };
     songs.push(song);
     
@@ -3763,7 +3764,7 @@ async function downloadAudius(url, name, artist) {
     if (!res.ok) throw new Error(`Download error ${res.status}`);
     const blob = await res.blob();
     const file = new File([blob], `${artist} - ${name}.mp3`, { type: 'audio/mpeg' });
-    await addSong(file);
+    await addSong(file, { audiusUrl: url });
     addStat('songs_downloaded', 1);
     checkProgressiveAchievements('songs_downloaded', getStat('songs_downloaded'));
     btn.textContent = '✅ Added!';
@@ -4567,88 +4568,36 @@ function submitToLeaderboard(data) {
   }
   if (!supabaseClient) return;
   
-  (async () => {
-    const catboxUrl = await uploadToCatbox(data.songName);
-    const judgments = { ...data.judgments };
-    if (catboxUrl) judgments.song_url = catboxUrl;
-    
-    const entry = {
-      player_name: getPlayerName(),
-      song_name: data.songName,
-      difficulty: data.difficulty,
-      score: data.score,
-      accuracy: data.accuracy,
-      max_combo: data.maxCombo,
-      grade: data.grade,
-      judgments: JSON.stringify(judgments),
-      modifiers: data.modifiers.join(','),
-      timing_window: data.timingWindow,
-      lane_count: data.laneCount,
-      scroll_speed: data.scrollSpeed,
-      health_mode: data.healthMode,
-      total_notes: data.totalNotes,
-      created_at: new Date().toISOString()
-    };
-    
-    supabaseClient
-      .from('scores')
-      .insert([entry])
-      .then(({ error }) => {
-        if (error) console.error('Leaderboard submit failed:', error);
-        else {
-          console.log('Score submitted to leaderboard!');
-          uploadSongAudio(data.songName);
-        }
-      })
-      .catch(err => console.error('Leaderboard submit error:', err));
-  })();
-}
-
-async function uploadToCatbox(songName) {
-  const song = songs.find(s => s.name === songName);
-  if (!song || !song.rawData) return null;
-  try {
-    const blob = new Blob([song.rawData], { type: 'audio/mpeg' });
-    const fd = new FormData();
-    fd.append('reqtype', 'fileupload');
-    fd.append('fileToUpload', blob, songName + '.mp3');
-    const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd });
-    const url = (await res.text()).trim();
-    if (url.startsWith('http')) {
-      console.log('[Catbox] Uploaded:', url);
-      localStorage.setItem('catbox_' + songName, url);
-      return url;
-    }
-  } catch (e) {
-    console.warn('[Catbox] Upload failed:', e.message);
-  }
-  return null;
-}
-
-async function uploadSongAudio(songName) {
-  try {
-    const url = await uploadToCatbox(songName);
-    if (url) {
-      supabaseClient.from('scores').update({
-        judgments: JSON.stringify({ song_url: url })
-      }).eq('song_name', songName).then(({ error }) => {
-        if (error) console.warn('[Catbox] Update scores failed:', error.message);
-      });
-    }
-  } catch (e) {
-    console.warn('[Catbox] Upload error:', e.message);
-  }
-  const song = songs.find(s => s.name === songName);
-  if (!song || !song.rawData) return;
-  const storageKey = encodeURIComponent(songName);
-  try {
-    const mimeType = song.file?.type || 'audio/mpeg';
-    const blob = new Blob([song.rawData], { type: mimeType });
-    await supabaseClient.storage.from('song-files').upload(storageKey, blob, { upsert: true, contentType: mimeType });
-    console.log(`[Storage] Uploaded to Supabase: ${songName}`);
-  } catch (e) {
-    console.warn('[Storage] Supabase upload failed:', e.message);
-  }
+  const song = songs.find(s => s.name === data.songName);
+  const audiusUrl = song && song.audiusUrl ? song.audiusUrl : null;
+  const judgmentsWithUrl = audiusUrl ? { ...data.judgments, download_url: audiusUrl } : { ...data.judgments };
+  
+  const entry = {
+    player_name: getPlayerName(),
+    song_name: data.songName,
+    difficulty: data.difficulty,
+    score: data.score,
+    accuracy: data.accuracy,
+    max_combo: data.maxCombo,
+    grade: data.grade,
+    judgments: JSON.stringify(judgmentsWithUrl),
+    modifiers: data.modifiers.join(','),
+    timing_window: data.timingWindow,
+    lane_count: data.laneCount,
+    scroll_speed: data.scrollSpeed,
+    health_mode: data.healthMode,
+    total_notes: data.totalNotes,
+    created_at: new Date().toISOString()
+  };
+  
+  supabaseClient
+    .from('scores')
+    .insert([entry])
+    .then(({ error }) => {
+      if (error) console.error('Leaderboard submit failed:', error);
+      else console.log('Score submitted to leaderboard!');
+    })
+    .catch(err => console.error('Leaderboard submit error:', err));
 }
 
 function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', limit = 50) {
@@ -4770,7 +4719,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
         const isYou = entry.player_name.toLowerCase() === playerName;
         const gradeClass = `grade-${entry.grade}`;
         const judgments = entry.judgments ? JSON.parse(entry.judgments) : {};
-        const songUrl = judgments.song_url || localStorage.getItem('catbox_' + entry.song_name) || '';
+        const songUrl = judgments.download_url || '';
         
         const owned = songs.some(s => s.name === entry.song_name);
         html += `<div class="lb-entry${isYou ? ' you' : ''}">
@@ -4828,7 +4777,7 @@ function downloadLeaderboardSong(btn) {
     btn.textContent = '⏳';
     btn.disabled = true;
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: 'follow' });
       if (!res.ok) throw new Error('Fetch failed');
       const blob = await res.blob();
       const file = new File([blob], songName + '.mp3', { type: 'audio/mpeg' });
@@ -4843,22 +4792,7 @@ function downloadLeaderboardSong(btn) {
   };
   
   (async () => {
-    if (songUrl) {
-      if (await doDownload(songUrl)) return;
-    }
-    if (supabaseClient || initSupabase()) {
-      const storageKey = encodeURIComponent(songName);
-      try {
-        const { data, error } = await supabaseClient.storage.from('song-files').download(storageKey);
-        if (error || !data) throw new Error(error?.message || 'Not in storage');
-        const file = new File([data], songName + '.mp3', { type: 'audio/mpeg' });
-        await addSong(file);
-        btn.textContent = '✅';
-        btn.className = 'lb-download-btn owned';
-        btn.title = 'Added to your library!';
-        return;
-      } catch {}
-    }
+    if (songUrl && await doDownload(songUrl)) return;
     btn.textContent = '📥';
     btn.disabled = false;
     fallbackAudiusSearch(songName);
