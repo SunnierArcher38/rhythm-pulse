@@ -8,79 +8,62 @@
   <img src="https://img.shields.io/github/last-commit/SunnierArcher38/rhythm-pulse?color=c44dff&style=for-the-badge" alt="Last Commit">
 </p>
 
+Drop any music file and start playing in seconds. No install, no signup, no setup.
+
 ---
 
-## ✨ Features
+## 🎮 What is Rhythm Pulse?
 
-<table>
-  <tr>
-    <td valign="top" width="50%">
-      <h3>🎮 Gameplay</h3>
-      <ul>
-        <li><strong>Downscroll & Upscroll</strong> with adjustable hit line</li>
-        <li><strong>4K–8K</strong> lane support</li>
-        <li><strong>Hold notes</strong> with sustained press & single judgment</li>
-        <li><strong>4 difficulties</strong>: Easy → Insane</li>
-        <li><strong>Modifiers</strong>: Mirror, Random, Hidden, Sudden</li>
-        <li><strong>Practice mode</strong> with loop, speed & minimap</li>
-        <li><strong>Autoplay & Metronome</strong></li>
-      </ul>
-    </td>
-    <td valign="top" width="50%">
-      <h3>🎨 Visuals</h3>
-      <ul>
-        <li><strong>Beat-reactive zoom</strong> (FNF-style pulse)</li>
-        <li><strong>Radial visualizer</strong> with 4-way mirroring & side dimming</li>
-        <li><strong>Purple universe</strong> gradient background</li>
-        <li><strong>Combo milestone</strong> zoom effects</li>
-        <li><strong>Hit effects</strong>, lane glow & particle trails</li>
-        <li><strong>Cached visualizer</strong> during pause</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <h3>🎵 Music</h3>
-      <ul>
-        <li><strong>Drag & drop</strong> or browse for local files</li>
-        <li><strong>Built-in music browser</strong> powered by Audius API</li>
-        <li><strong>Improved BPM detection</strong> with autocorrelation</li>
-        <li><strong>Auto-chart generation</strong> from beat detection</li>
-        <li><strong>Media player</strong> with prev/next, loop, shuffle, seek & volume</li>
-        <li><strong>Auto-advance</strong> to next song on end</li>
-        <li><strong>Offline support</strong> via IndexedDB + Service Worker</li>
-      </ul>
-    </td>
-    <td valign="top" width="50%">
-      <h3>🏆 Progression & Online</h3>
-      <ul>
-        <li><strong>760 achievements</strong> to unlock with sound effects & queued popups</li>
-        <li><strong>Online leaderboards</strong> with Overall & Per-Song views</li>
-        <li><strong>Song sharing</strong> via Supabase Storage — auto-upload on play, download from leaderboard</li>
-        <li><strong>Free music source links</strong> (NCS, Incompetech, Pixabay, etc.) right in the music browser</li>
-        <li><strong>Grades</strong> with timing graph</li>
-        <li><strong>Score sharing</strong> via clipboard</li>
-        <li><strong>Favorites</strong> & song sorting (name, BPM, length)</li>
-        <li><strong>Save Codes</strong> — transfer settings anywhere</li>
-        <li><strong>Full Backup</strong> — save/load everything including songs</li>
-        <li><strong>Song Library</strong> — export/import individual or all songs</li>
-        <li><strong>Regenerate Charts</strong> — re-detect BPM and rebuild charts</li>
-        <li><strong>Rolling FPS</strong> counter (60-frame avg)</li>
-      </ul>
-    </td>
-  </tr>
-</table>
+A browser-based rhythm game that auto-generates beat-matched charts from your own music. Drag in an MP3, and it detects the BPM, generates 4 difficulties, and throws you into gameplay instantly — like osu!mania meets FNF, but with your songs.
 
-## 🎯 How to Play
+## Why it's cool
 
-```
-1. Open index.html in a modern browser
-2. Load music files via drag & drop, file browser, or the built-in Audius music browser
-3. Select a song and choose difficulty
-4. Hit notes as they reach the receptors!
-```
+- **Your music, your charts** — drop any song, get instant beat-synced gameplay
+- **760 achievements** with sound effects and in-game popups
+- **Online leaderboards** — compete globally and claim your rank
+- **Share songs** — play others' songs directly from the leaderboard
+- **Works offline** — songs save forever in your browser
+- **Single HTML file** — zero dependencies, runs anywhere
+- **Mobile touch support** — play on your phone with on-screen lanes
 
-### Key Bindings
+## 🔥 Features at a glance
+
+### 🎮 Gameplay
+- **4K–8K lanes** — customize your layout
+- **Downscroll or Upscroll** — your preference
+- **4 difficulties** per song (Easy → Insane)
+- **Modifiers** — Mirror, Random, Hidden, Sudden
+- **Practice mode** with speed control, loop, and minimap
+- **Autoplay & Metronome** for learning
+- **Hold notes** with press-and-release judgment
+
+### 🎨 Visuals
+- **Beat-reactive zoom** — the screen pulses with the music (FNF-style)
+- **Radial visualizer** — 4-way mirrored spectrum with side dimming
+- **Combo effects** — screen shakes, particle trails, lane glow
+- **Multiple color schemes & note styles** — make it yours
+- **Key press FX** — satisfying visual feedback on every hit
+
+### 🎵 Your Music Library
+- **Drag & drop** any audio file
+- **Built-in music browser** — search and download from Audius (free & legal)
+- **Free music sources** — links to NCS, Pixabay, Incompetech, and more
+- **Auto BPM detection** with autocorrelation for accurate charts
+- **Smart chart generation** — 4 difficulty levels from one detection
+- **Media player** — prev/next, loop, shuffle, seek, volume
+- **Favorites & sorting** — organize by name, BPM, or length
+- **Regenerate charts** — re-detect BPM and rebuild on demand
+- **Export/Import** individual songs or full library backups
+
+### 🏆 Progression & Community
+- **760 achievements** — progressive unlocks with cumulative stats
+- **Global leaderboards** — Overall (combined best) and Per-Song views
+- **Song sharing** — auto-upload your songs to cloud, download others'
+- **Grades** (S/A/B/C/D/F) with detailed timing graph
+- **Copy score to clipboard** — flex on your friends
+- **Save codes** — transfer settings between devices
+
+## ⌨ Controls
 
 | Mode | Keys |
 |------|------|
@@ -90,9 +73,9 @@
 | **7K** | `S` `D` `F` `Space` `J` `K` `L` |
 | **8K** | `S` `D` `F` `Space` `J` `K` `L` `;` |
 
-> Hold notes require sustained key press — judgment awarded on release.
+> Hold notes require sustained key press — judgment on release.
 
-## 📊 Scoring
+## 📊 Judgments & Scoring
 
 | Judgment | Window | Points |
 |----------|--------|--------|
@@ -102,91 +85,46 @@
 | 🔵 **Good** | ±135ms | 100 |
 | 🔴 **Miss** | ±180ms | 0 |
 
-### Combo Multiplier
-
-| Combo Range | Multiplier |
-|-------------|------------|
-| 0–9 | ×1 |
-| 10–19 | ×2 |
-| 20–49 | ×3 |
-| 50+ | ×4 |
-
-## 🚀 Deployment
-
-The game is a static single-page app — deploy anywhere:
-
-- **GitHub Pages** — push to `main` branch
-- **Netlify** — drag `index.html` to deploy
-- **Vercel** — connect repo
-- **Any web server** — just serve the files
+Combo multiplier ramps up to **×4** at 50+ combo.
 
 ## 🎵 Free Music Sources
 
-Grab some tracks to play with! All of these are copyright-free or have permissive licenses:
+All copyright-free or permissive license:
 
-| Source | License | Notes |
-|--------|---------|-------|
-| [**NCS (NoCopyrightSounds)**](https://ncs.io) | Free to use | Electronic/dance — huge library, just credit the artist |
-| [**Incompetech**](https://incompetech.com/) | CC BY | Kevin MacLeod's massive library, attribution required |
-| [**Pixabay Music**](https://pixabay.com/music/) | Royalty-free | No attribution needed, broad genres |
-| [**OpenGameArt**](https://opengameart.org) | Mixed (CC/CC0) | Game-focused tracks, check individual licenses |
-| [**Free Music Archive**](https://freemusicarchive.org) | Mixed | Curated free music, filter by license type |
-| [**YouTube Audio Library**](https://www.youtube.com/audiolibrary) | Free | Filter "No attribution required" |
+| Source | License | Best for |
+|--------|---------|----------|
+| [**NCS**](https://ncs.io) | Free (credit) | Electronic, strong beats for rhythm games |
+| [**Pixabay Music**](https://pixabay.com/music/) | No attribution | Broad genres, safe pick |
+| [**Incompetech**](https://incompetech.com/) | CC BY | Kevin MacLeod's massive collection |
+| [**OpenGameArt**](https://opengameart.org) | CC / CC0 | Game-focused tracks |
+| [**Free Music Archive**](https://freemusicarchive.org) | Mixed | Curated, filterable |
+| [**YouTube Audio Library**](https://www.youtube.com/audiolibrary) | Free | No-attribution filter available |
 
-> 💡 **Tip:** NCS tracks are great for rhythm games — strong beats, consistent BPM, and built for content creators.
+## 📁 What's in the box
 
-## 📁 Files
+- **`index.html`** — the entire game (open and play)
+- **`sw.js`** — service worker for offline caching
+- **`banner.svg`** — the repo banner you see above
 
-| File | Description |
-|------|-------------|
-| `index.html` | Complete game (HTML + CSS + JS) |
-| `sw.js` | Service worker for offline caching |
+## 💡 Coming soon
 
-## 💡 Suggestions
-
-Got ideas? Here's what's on the radar — feel free to suggest more on [Discord](https://discord.gg/aa83vhpC4v)!
+Ideas on the horizon — hop on [Discord](https://discord.gg/aa83vhpC4v) to vote or suggest:
 
 - [ ] Chart editor for manual note placement
-- [ ] Replay system (save, load, watch past gameplay)
-- [ ] Custom skin/theme support
-- [ ] Multiplayer / co-op mode
+- [ ] Replay system (watch past gameplay)
+- [ ] Custom skins & themes
+- [ ] Multiplayer / co-op
 - [ ] Story mode with progression
 
-## 🐛 Known Issues & Fixes
+## 🛠 Built with
 
-| Issue | Status | Notes |
-|-------|--------|-------|
-| — | ✅ All clear | Report issues on Discord! |
-
----
-
-## 🛠️ Tech Stack
-
-- **Vanilla JavaScript** — no frameworks, no build step
-- **Web Audio API** — beat detection & audio decoding
-- **Canvas API** — rendering & visualizer
-- **IndexedDB** — persistent song storage
-- **Service Worker** — offline support
-- **CompressionStream API** — compressed song backups
-- **Audius API** — free music browser
-- **Supabase** — online leaderboards & song sharing
-
-## 🤖 Note
-
-This project was built with the help of AI (opencode). The concept, design decisions, and creative direction are all human-made — the AI handled the implementation.
+Vanilla JS, Web Audio API, Canvas API, IndexedDB, Service Workers, Audius API, Supabase — **zero frameworks, zero build step**.
 
 ## 📜 License
 
-MIT — do whatever you want with it.
-
-## 💬 Community
-
-Join the Discord server for updates, feedback, and support:
-
-[![Join GENIMPACT](https://img.shields.io/badge/GENIMPACT-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/aa83vhpC4v)
-
----
+MIT — go wild.
 
 <p align="center">
-  <em>Built with ❤️, rhythm, and AI assistance</em>
+  <a href="https://sunnierarcher38.github.io/rhythm-pulse/"><img src="https://img.shields.io/badge/%F0%9F%8E%AE%20Play%20Now-7c3aed?style=for-the-badge&logoColor=white" alt="Play Now"></a>
+  <a href="https://discord.gg/aa83vhpC4v"><img src="https://img.shields.io/badge/GENIMPACT-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="GENIMPACT"></a>
 </p>
