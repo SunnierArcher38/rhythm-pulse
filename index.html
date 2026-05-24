@@ -368,6 +368,7 @@ canvas { display: block; position: relative; z-index: 1; }
       <button class="settings-btn" id="uiToggle" title="Toggle UI">👁</button>
       <button class="settings-btn" id="browseMusicBtn" title="Browse Free Music" style="background:rgba(108,52,131,0.5);">🎵</button>
       <button class="settings-btn" id="achievementsToggle" title="Achievements">🏆</button>
+      <button class="settings-btn" id="leaderboardToggle" title="Leaderboard" style="background:rgba(196,77,255,0.25);">📊</button>
       <button class="settings-btn" id="discordBtn" title="Join GENIMPACT" style="background:rgba(88,101,242,0.3);">💬</button>
       <button class="settings-btn" id="settingsToggle">⚙</button>
       <div class="settings-dropdown" id="settingsDropdown">
@@ -3187,6 +3188,7 @@ document.getElementById('uiToggle').addEventListener('click', () => { addStat('u
 
 document.getElementById('settingsToggle').addEventListener('click', () => { addStat('settings_changed', 1); checkProgressiveAchievements('settings_changed', getStat('settings_changed')); document.getElementById('settingsDropdown').classList.toggle('active'); });
 document.getElementById('achievementsToggle').addEventListener('click', () => { addStat('achievement_view', 1); checkProgressiveAchievements('achievement_view', getStat('achievement_view')); document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); });
+document.getElementById('leaderboardToggle').addEventListener('click', () => { addStat('leaderboard_view', 1); showLeaderboard('overall', 'all', 'all'); });
 document.getElementById('discordBtn').addEventListener('click', () => { addStat('discord_click', 1); checkProgressiveAchievements('discord_click', getStat('discord_click')); window.open('https://discord.gg/aa83vhpC4v', '_blank'); });
 document.getElementById('audioOffset').addEventListener('input', (e) => { gameState.audioOffset = parseInt(e.target.value); localStorage.setItem('rhythmPulseAudioOffset', e.target.value); document.getElementById('audioOffsetVal').textContent = e.target.value; addStat('audio_offset_changed', 1); checkProgressiveAchievements('audio_offset_changed', getStat('audio_offset_changed')); });
 document.getElementById('scrollSpeed').addEventListener('input', (e) => { gameState.scrollSpeed = parseInt(e.target.value); localStorage.setItem('rhythmPulseScrollSpeed', e.target.value); document.getElementById('scrollSpeedVal').textContent = e.target.value; addStat('scroll_speed_changed', 1); checkProgressiveAchievements('scroll_speed_changed', getStat('scroll_speed_changed')); });
