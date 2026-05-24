@@ -108,6 +108,75 @@ canvas { display: block; position: relative; z-index: 1; }
 #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 #pause-overlay.active { opacity: 1; pointer-events: all; }
 .pause-title { font-size: 4rem; font-weight: 900; margin-bottom: 2rem; background: linear-gradient(135deg, #c44dff, #6b9dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 20px rgba(196,77,255,0.5)); }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .select-title { font-size: 1.8rem; }
+  .select-subtitle { font-size: 0.7rem; }
+  .settings-panel { top: 0.5rem; right: 0.5rem; gap: 0.3rem; flex-wrap: wrap; max-width: calc(100vw - 1rem); justify-content: flex-end; }
+  .settings-btn { width: 36px; height: 36px; font-size: 1rem; border-radius: 8px; }
+  .settings-dropdown { position: fixed; top: auto; bottom: 0; left: 0; right: 0; max-width: 100%; min-width: unset; border-radius: 16px 16px 0 0; max-height: 70vh; }
+  .song-list { width: 95%; max-width: unset; max-height: 40vh; padding: 0.75rem; }
+  .song-item { flex-wrap: wrap; gap: 0.3rem; padding: 0.5rem; }
+  .song-info { min-width: 0; flex: 1; }
+  .song-name { font-size: 0.85rem; }
+  .song-meta { font-size: 0.7rem; }
+  .difficulty-select { gap: 0.2rem; }
+  .diff-btn { padding: 0.2rem 0.5rem; font-size: 0.7rem; }
+  .results-stats { grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; padding: 1rem; margin: 1rem 0; }
+  .results-title { font-size: 2rem; }
+  .results-grade { font-size: 4rem; }
+  .results-btn { padding: 0.75rem 1.5rem; font-size: 0.95rem; }
+  .results-buttons { flex-wrap: wrap; justify-content: center; }
+  .pause-title { font-size: 2.5rem; }
+  .pause-btn { padding: 0.75rem 2rem; font-size: 1rem; }
+  .stat-item { font-size: 0.8rem; }
+  .stat-value { font-size: 1.1rem; }
+  .key-hints { display: none; }
+  .file-drop-zone { padding: 1rem; }
+  .file-drop-zone .icon { font-size: 2rem; }
+  .file-drop-zone .text { font-size: 0.9rem; }
+  #touch-lanes { display: flex; }
+  .music-browser-panel { width: 95%; padding: 1rem; }
+  .music-results { max-height: 30vh; }
+  .music-track { flex-wrap: wrap; gap: 0.3rem; }
+  .leaderboard-panel { width: 95%; padding: 1rem; }
+  .leaderboard-filters { flex-wrap: wrap; justify-content: center; }
+  .welcome-panel { width: 90%; padding: 1.5rem; }
+  .welcome-title { font-size: 2rem; }
+  .achievement-popup { max-width: 90%; padding: 0.5rem 1rem; }
+  .achievement-popup .ach-name { font-size: 0.85rem; }
+  #modifierIndicator { font-size: 0.7rem !important; padding: 0.2rem 0.5rem !important; }
+  .mini-player { padding: 0.3rem 0.5rem; }
+  .mini-player .player-title-inner { font-size: 0.7rem; }
+  .player-btn { width: 28px; height: 28px; font-size: 0.75rem; }
+  #timingGraph { width: 95% !important; }
+  .keybind-panel { width: 95%; padding: 1rem; }
+  .song-select-panel { width: 95%; }
+  .lb-entry { flex-wrap: wrap; gap: 0.3rem; }
+  .lb-info { min-width: 0; flex: 1; }
+  .lb-song { font-size: 0.7rem; }
+  .lb-stats { gap: 0.3rem; }
+  .lb-play-btn, .lb-download-btn { padding: 0.15rem 0.4rem; font-size: 0.8rem; }
+}
+
+@media (max-width: 480px) {
+  .select-title { font-size: 1.4rem; }
+  .settings-btn { width: 32px; height: 32px; font-size: 0.85rem; }
+  .results-stats { grid-template-columns: 1fr 1fr; gap: 0.3rem 0.5rem; padding: 0.75rem; }
+  .results-title { font-size: 1.5rem; }
+  .results-grade { font-size: 3rem; }
+  .pause-title { font-size: 2rem; }
+  .pause-btn { padding: 0.6rem 1.5rem; font-size: 0.9rem; }
+  .settings-dropdown { max-height: 60vh; }
+  .song-list { max-height: 35vh; padding: 0.5rem; }
+  .ach-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+
+/* Touch lane buttons for mobile */
+#touch-lanes { position: absolute; bottom: 0; left: 0; width: 100%; display: none; justify-content: center; gap: 2px; padding: 4px; z-index: 50; pointer-events: none; }
+#touch-lanes .touch-lane { flex: 1; max-width: 80px; height: 140px; background: rgba(196,77,255,0.12); border: 1px solid rgba(196,77,255,0.2); border-radius: 8px 8px 0 0; pointer-events: all; touch-action: none; transition: background 0.1s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 0.6rem; color: rgba(255,255,255,0.25); }
+#touch-lanes .touch-lane.active { background: rgba(196,77,255,0.4); border-color: #c44dff; }
 .pause-btn { padding: 1rem 3rem; margin: 0.5rem; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.08); color: #fff; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
 .pause-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); box-shadow: 0 0 20px rgba(196,77,255,0.3); }
 .settings-panel { position: absolute; top: 1rem; right: 1rem; z-index: 150; display: flex; gap: 0.5rem; }
@@ -359,6 +428,7 @@ canvas { display: block; position: relative; z-index: 1; }
 <body>
 <div id="game-container">
   <canvas id="gameCanvas"></canvas>
+  <div id="touch-lanes"></div>
   <div id="countdown"><span class="count-text"></span></div>
   <div id="song-select">
     <div class="select-title">RHYTHM PULSE</div>
@@ -629,7 +699,7 @@ canvas { display: block; position: relative; z-index: 1; }
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; if (window.updateTouchLanes) updateTouchLanes(); }
 resize();
 window.addEventListener('resize', resize);
 
@@ -2354,8 +2424,8 @@ function drawTimingGraph() {
   }
 }
 
-function endGame() { gameState.mode = 'results'; stopAudio(); showResults(); }
-function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); }
+function endGame() { gameState.mode = 'results'; stopAudio(); showResults(); updateTouchLanes(); }
+function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); updateTouchLanes(); }
 
 function showResults() {
   const results = document.getElementById('results'); results.classList.add('active');
@@ -2603,9 +2673,9 @@ function copyScoreToClipboard() {
   }
 }
 
-function hideResults() { document.getElementById('results').classList.remove('active'); }
-function showPause() { gameState.mode = 'paused'; pauseAudio(); document.getElementById('pause-overlay').classList.add('active'); }
-function hidePause() { document.getElementById('pause-overlay').classList.remove('active'); }
+function hideResults() { document.getElementById('results').classList.remove('active'); updateTouchLanes(); }
+function showPause() { gameState.mode = 'paused'; pauseAudio(); document.getElementById('pause-overlay').classList.add('active'); updateTouchLanes(); }
+function hidePause() { document.getElementById('pause-overlay').classList.remove('active'); updateTouchLanes(); }
 
 function startCountdown() {
   gameState.mode = 'countdown'; gameState.countdownValue = 3; gameState.countdownTimer = performance.now();
@@ -2705,6 +2775,7 @@ async function startGame(song, difficulty) {
   
   const countdownEl = document.getElementById('countdown');
   countdownEl.classList.remove('active'); countdownEl.querySelector('.count-text').textContent = '3';
+  updateTouchLanes();
   startCountdown();
 }
 
@@ -3217,12 +3288,57 @@ canvas.addEventListener('touchmove', (e) => {
   e.preventDefault();
 }, { passive: false });
 
-document.getElementById('resumeBtn').addEventListener('click', () => { addStat('pause_used', 1); checkProgressiveAchievements('pause_used', getStat('pause_used')); hidePause(); gameState.mode = 'playing'; resumeAudio(); });
+function updateTouchLanes() {
+  const container = document.getElementById('touch-lanes');
+  const isMobile = window.innerWidth <= 768 && 'ontouchstart' in window;
+  container.style.display = (isMobile && (gameState.mode === 'playing' || gameState.mode === 'countdown')) ? 'flex' : 'none';
+  if (!isMobile || (gameState.mode !== 'playing' && gameState.mode !== 'countdown')) return;
+  const keys = getLaneKeys();
+  container.innerHTML = '';
+  for (let i = 0; i < currentLaneCount; i++) {
+    const div = document.createElement('div');
+    div.className = 'touch-lane';
+    div.dataset.lane = i;
+    const label = document.createElement('span');
+    label.className = 'key-label';
+    label.textContent = keys[i] || '';
+    div.appendChild(label);
+    const startTouch = (e) => {
+      e.preventDefault();
+      const lane = parseInt(div.dataset.lane);
+      if (!gameState.activeKeys[lane]) {
+        handleKeyPress(lane);
+        gameState.activeKeys[lane] = true;
+        div.classList.add('active');
+      }
+    };
+    const endTouch = (e) => {
+      e.preventDefault();
+      const lane = parseInt(div.dataset.lane);
+      handleKeyRelease(lane);
+      div.classList.remove('active');
+    };
+    div.addEventListener('touchstart', startTouch, { passive: false });
+    div.addEventListener('touchend', endTouch, { passive: false });
+    div.addEventListener('touchcancel', endTouch, { passive: false });
+    container.appendChild(div);
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    document.querySelectorAll('#touch-lanes .touch-lane').forEach(el => el.classList.remove('active'));
+  }
+});
+
+window.updateTouchLanes = updateTouchLanes;
+
+document.getElementById('resumeBtn').addEventListener('click', () => { addStat('pause_used', 1); checkProgressiveAchievements('pause_used', getStat('pause_used')); hidePause(); gameState.mode = 'playing'; resumeAudio(); updateTouchLanes(); });
 document.getElementById('restartBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
-document.getElementById('quitBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; });
+document.getElementById('quitBtn').addEventListener('click', () => { hidePause(); stopAudio(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; updateTouchLanes(); });
 document.getElementById('retryBtn').addEventListener('click', () => { addStat('retry_song', 1); checkProgressiveAchievements('retry_song', getStat('retry_song')); hideResults(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
 document.getElementById('copyScoreBtn').addEventListener('click', () => { addStat('score_copied', 1); checkProgressiveAchievements('score_copied', getStat('score_copied')); copyScoreToClipboard(); });
-document.getElementById('backBtn').addEventListener('click', () => { addStat('quit_to_menu', 1); checkProgressiveAchievements('quit_to_menu', getStat('quit_to_menu')); localStorage.setItem('rhythmPulseSessionSongs', '0'); hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; });
+document.getElementById('backBtn').addEventListener('click', () => { addStat('quit_to_menu', 1); checkProgressiveAchievements('quit_to_menu', getStat('quit_to_menu')); localStorage.setItem('rhythmPulseSessionSongs', '0'); hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; updateTouchLanes(); });
 
 document.getElementById('uiToggle').addEventListener('click', () => { addStat('ui_hidden', 1); checkProgressiveAchievements('ui_hidden', getStat('ui_hidden')); document.getElementById('song-select').classList.toggle('ui-hidden'); });
 
