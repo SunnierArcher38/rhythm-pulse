@@ -518,7 +518,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
     <div class="file-drop-zone" id="fileDropZone">
       <div class="icon">📂</div>
       <div class="text">Click to browse music files</div>
-      <div class="hint">Supports MP3, OGG, WAV, FLAC, WEBM, M4A</div>
+      <div class="hint">Supports MP3, OGG, WAV, FLAC, WEBM, M4A — max 30 MB</div>
     </div>
     <input type="file" id="fileInput" multiple accept=".mp3,.ogg,.wav,.flac,.webm,.m4a,.aac,.wma,.opus,.mp4,.aiff" style="display:none">
     <div class="song-list" id="songList"></div>
@@ -2876,6 +2876,10 @@ function setLoadingProgress(pct, text) {
 }
 
 async function addSong(file, extraProps) {
+  if (file.size > 30 * 1024 * 1024) {
+    alert(`"${file.name}" is too large (max 30 MB)`);
+    return;
+  }
   const existing = songs.find(s => s.file?.name === file.name && s.file?.size === file.size);
   if (existing) { if (extraProps) Object.assign(existing, extraProps); return; }
   
@@ -4606,6 +4610,7 @@ function submitToLeaderboard(data) {
 async function uploadSongAudio(songName) {
   const song = songs.find(s => s.name === songName);
   if (!song || !song.rawData) return;
+  if (song.size > 30 * 1024 * 1024) { console.warn('[Storage] Song too large, skipping upload'); return; }
   const key = encodeURIComponent(songName);
   try {
     const mimeType = song.file?.type || 'audio/mpeg';
