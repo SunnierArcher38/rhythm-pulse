@@ -4738,7 +4738,8 @@ async function cloudSave() {
       }
     };
     const json = JSON.stringify(data);
-    const blob = new Blob([json], { type: 'application/json' });
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    const blob = new Blob([encoded], { type: 'text/plain' });
     const key = `saves/${encodeURIComponent(playerName)}.json`;
     const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'text/plain' });
     if (error) throw error;
@@ -4765,7 +4766,8 @@ async function cloudLoad() {
     const { data, error } = await supabaseClient.storage.from('song-files').download(key);
     if (error) throw error;
     if (!data) throw new Error('No cloud save found for this player');
-    const json = await data.text();
+    const text = await data.text();
+    const json = decodeURIComponent(escape(atob(text)));
     const parsed = JSON.parse(json);
     const migrated = migrateSaveData(parsed);
     if (migrated.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a));
