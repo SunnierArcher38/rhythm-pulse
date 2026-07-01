@@ -3157,13 +3157,11 @@ function calculateMaxPossible(chart) {
       total += Math.floor(350 * cm * modMult);
     } else if (note.type === 'hold') {
       combo++;
-      const cm = 1 + Math.floor(combo / 10) * 0.1;
-      total += Math.floor(100 * cm * modMult);
+      total += 100;
       const ticks = Math.max(0, Math.floor((note.endTime - note.time) / 0.1));
       total += ticks * 5;
       combo++;
-      const cm2 = 1 + Math.floor(combo / 10) * 0.1;
-      total += Math.floor(200 * cm2 * modMult);
+      total += 200;
     }
   }
   return total;
