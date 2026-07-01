@@ -71,11 +71,6 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .difficulty-select { display: flex; gap: 0.4rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .diff-btn { padding: 0.3rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text-dim); font-weight: 600; cursor: pointer; transition: all 0.2s var(--ease); font-size: 0.85rem; min-height: 36px; }
 .diff-btn:hover { border-color: var(--text); color: var(--text); }
-.bpm-ctrl { display: inline-flex; align-items: center; gap: 2px; }
-.bpm-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 3px; padding: 0 4px; cursor: pointer; font-size: 0.7rem; line-height: 1.4; min-height: 20px; min-width: 20px; }
-.bpm-btn:hover { border-color: var(--pink); color: var(--pink); }
-.bpm-val { display: inline-block; min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; cursor: pointer; }
-.bpm-val:hover { color: var(--pink); }
 .diff-btn.easy { border-color: #50fa7b; color: #50fa7b; }
 .diff-btn.easy:hover { background: rgba(80,250,123,0.1); }
 .diff-btn.normal { border-color: var(--blue); color: var(--blue); }
@@ -910,81 +905,74 @@ function stopAudio() { if (audioSource) { try { audioSource.stop(); } catch(e) {
 function getCurrentTime() { if (!isPlaying) return audioPausedAt; return audioCtx.currentTime - audioStartTime; }
 function getAudioDuration() { return audioBuffer ? audioBuffer.duration : 0; }
 
-function detectBeats(buffer, threshold = 0.5) {
-  const sampleRate = buffer.sampleRate;
-  const numChannels = buffer.numberOfChannels;
-  const length = buffer.length;
+function detectBeats(buffer, threshold = 0.4) {
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
   
-  // Mix down and apply low-pass filter to focus on bass/kick
-  const mixed = new Float32Array(length);
-  for (let ch = 0; ch < numChannels; ch++) {
-    const data = buffer.getChannelData(ch);
-    for (let i = 0; i < length; i++) {
-      mixed[i] += data[i] / numChannels;
-    }
+  // Mix to mono
+  const mono = new Float32Array(len);
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const d = buffer.getChannelData(ch);
+    for (let i = 0; i < len; i++) mono[i] += d[i] / buffer.numberOfChannels;
   }
   
-  // Simple low-pass filter (moving average) to emphasize bass
-  const lpWindow = Math.floor(sampleRate * 0.01); // 10ms smoothing
-  const filtered = new Float32Array(length);
-  let sum = 0;
-  for (let i = 0; i < length; i++) {
-    sum += mixed[i] * mixed[i];
-    if (i >= lpWindow) sum -= mixed[i - lpWindow] * mixed[i - lpWindow];
-    filtered[i] = sum / Math.min(i + 1, lpWindow);
-  }
+  // Compute onset envelope using short-term vs long-term energy ratio
+  const hop = Math.floor(sr * 0.004);
+  const frameCount = Math.floor(len / hop);
+  const onsetFn = new Float32Array(frameCount);
   
-  // Compute spectral flux (onset strength) using frame differences
-  const frameSize = Math.floor(sampleRate * 0.02); // 20ms frames
-  const hopSize = Math.floor(sampleRate * 0.005); // 5ms hop
-  const frameCount = Math.floor((length - frameSize) / hopSize);
+  // Running RMS energies at two resolutions
+  const shortLen = Math.floor(sr * 0.01 / hop);
+  const longLen = Math.floor(sr * 0.13 / hop);
   
-  const flux = [];
+  const energies = new Float32Array(frameCount);
   for (let f = 0; f < frameCount; f++) {
-    const offset = f * hopSize;
-    let energy = 0;
-    for (let i = 0; i < frameSize; i++) {
-      energy += filtered[offset + i];
-    }
-    flux.push(energy / frameSize);
+    const off = f * hop;
+    let sum = 0, n = 0;
+    for (let i = 0; i < hop && off + i < len; i++, n++) sum += mono[off + i] * mono[off + i];
+    energies[f] = Math.log1p(Math.sqrt(sum / n) * 50);
   }
   
-  // Compute onset strength (difference of energy)
-  const onsetStrength = [];
-  for (let i = 1; i < flux.length; i++) {
-    const diff = flux[i] - flux[i - 1];
-    onsetStrength.push(diff > 0 ? diff : 0);
+  for (let f = 0; f < frameCount; f++) {
+    const sLo = Math.max(0, f - shortLen), sHi = Math.min(frameCount, f + shortLen);
+    let sSum = 0;
+    for (let j = sLo; j < sHi; j++) sSum += energies[j];
+    const shortAvg = sSum / (sHi - sLo);
+    
+    const lLo = Math.max(0, f - longLen), lHi = Math.min(frameCount, f + longLen);
+    let lSum = 0;
+    for (let j = lLo; j < lHi; j++) lSum += energies[j];
+    const longAvg = lSum / (lHi - lLo);
+    
+    onsetFn[f] = Math.max(0, shortAvg - longAvg);
   }
   
-  if (onsetStrength.length === 0) return [];
+  if (frameCount < 10) return [];
   
-  // Adaptive threshold using local mean
-  const windowFrames = Math.floor(sampleRate * 0.5 / (hopSize)); // 0.5s window
+  // Normalize
+  let mx = 0;
+  for (let i = 0; i < frameCount; i++) if (onsetFn[i] > mx) mx = onsetFn[i];
+  if (mx > 0) for (let i = 0; i < frameCount; i++) onsetFn[i] /= mx;
+  
+  // Peak picking with adaptive threshold (local median)
+  const win = Math.floor(sr * 0.25 / hop);
+  const minGap = Math.floor(sr * 0.1 / hop);
   const beats = [];
-  const minBeatFrames = Math.floor(sampleRate * 0.15 / (hopSize)); // 150ms min
   
-  for (let i = 0; i < onsetStrength.length; i++) {
-    // Local mean
-    const start = Math.max(0, i - windowFrames);
-    const end = Math.min(onsetStrength.length, i + windowFrames);
-    let localSum = 0;
-    for (let j = start; j < end; j++) localSum += onsetStrength[j];
-    const localMean = localSum / (end - start);
+  for (let i = 0; i < frameCount; i++) {
+    const lo = Math.max(0, i - win), hi = Math.min(frameCount, i + win);
+    const window = onsetFn.slice(lo, hi).sort((a, b) => a - b);
+    const median = window[Math.floor(window.length / 2)];
+    const thr = median + (1 - median) * threshold;
     
-    const adaptiveThreshold = localMean * (1 + threshold);
-    
-    if (onsetStrength[i] > adaptiveThreshold && onsetStrength[i] > 0.001) {
-      // Check minimum distance
-      if (beats.length === 0 || (i - beats[beats.length - 1].frame) >= minBeatFrames) {
-        // Check local peak
-        let isPeak = true;
-        const peakRange = Math.max(1, Math.floor(minBeatFrames / 2));
-        for (let j = Math.max(0, i - peakRange); j <= Math.min(onsetStrength.length - 1, i + peakRange); j++) {
-          if (j !== i && onsetStrength[j] > onsetStrength[i]) { isPeak = false; break; }
+    if (onsetFn[i] > thr && onsetFn[i] > 0.06) {
+      if (beats.length === 0 || (i - beats[beats.length - 1].frame) >= minGap) {
+        let peak = true;
+        const r = Math.max(2, Math.floor(minGap / 2));
+        for (let j = Math.max(0, i - r); j <= Math.min(frameCount - 1, i + r); j++) {
+          if (j !== i && onsetFn[j] > onsetFn[i]) { peak = false; break; }
         }
-        if (isPeak) {
-          beats.push({ frame: i, time: i * hopSize / sampleRate, strength: onsetStrength[i] });
-        }
+        if (peak) beats.push({ frame: i, time: i * hop / sr, strength: onsetFn[i] });
       }
     }
   }
@@ -995,51 +983,123 @@ function detectBeats(buffer, threshold = 0.5) {
 function estimateBPM(beats) {
   if (beats.length < 4) return 140;
   
-  // Build inter-onset interval histogram
-  const intervals = [];
-  for (let i = 1; i < beats.length; i++) {
-    const diff = beats[i] - beats[i - 1];
-    if (diff > 0.2 && diff < 2.0) intervals.push(diff);
+  // Build autocorrelation of beat times
+  const resolution = 0.005;
+  const maxTime = beats[beats.length - 1];
+  const envLength = Math.min(Math.floor(maxTime / resolution), 20000);
+  const envelope = new Float32Array(envLength);
+  
+  for (const beat of beats) {
+    const idx = Math.floor(beat / resolution);
+    if (idx < envLength) envelope[idx] = 1;
   }
   
-  if (intervals.length < 3) return 140;
-  
-  // Score each BPM candidate by how many intervals it explains
-  const score = {};
-  for (const interval of intervals) {
-    const bpm = Math.round(60 / interval);
-    for (const candidate of [bpm, bpm * 2, Math.round(bpm / 2)]) {
-      if (candidate >= 60 && candidate <= 250) {
-        score[candidate] = (score[candidate] || 0) + 1;
+  // Apply Gaussian smoothing to envelope
+  const sigma = 2;
+  const smoothed = new Float32Array(envLength);
+  for (let i = 0; i < envLength; i++) {
+    if (envelope[i] === 0) continue;
+    for (let j = -sigma * 3; j <= sigma * 3; j++) {
+      const idx = i + j;
+      if (idx >= 0 && idx < envLength) {
+        smoothed[idx] += envelope[i] * Math.exp(-(j * j) / (2 * sigma * sigma));
       }
     }
   }
   
-  let bestBpm = 140, bestScore = 0;
-  for (const [bpm, s] of Object.entries(score)) {
-    if (s > bestScore) { bestScore = s; bestBpm = parseInt(bpm); }
+  // Autocorrelation with multiple candidates
+  const minLag = Math.floor(60 / 240 / resolution);
+  const maxLag = Math.floor(60 / 55 / resolution);
+  const candidates = [];
+  
+  for (let lag = minLag; lag <= maxLag && lag < envLength / 2; lag++) {
+    let corr = 0, count = 0;
+    for (let i = 0; i < envLength - lag; i++) {
+      corr += smoothed[i] * smoothed[i + lag];
+      count++;
+    }
+    corr = count > 0 ? corr / count : 0;
+    candidates.push({ lag, corr });
   }
   
-  // Refine: check if half/double explains more beats
-  const countIntervalsAt = (bpm) => {
-    const period = 60 / bpm;
-    let count = 0;
-    for (const interval of intervals) {
-      const ratio = interval / period;
-      const nearest = Math.round(ratio);
-      if (Math.abs(ratio - nearest) < 0.15 && nearest >= 1 && nearest <= 4) count++;
+  if (candidates.length === 0) return 140;
+  
+  // Find peaks in autocorrelation
+  const peaks = [];
+  for (let i = 2; i < candidates.length - 2; i++) {
+    if (candidates[i].corr > candidates[i-1].corr &&
+        candidates[i].corr > candidates[i-2].corr &&
+        candidates[i].corr > candidates[i+1].corr &&
+        candidates[i].corr > candidates[i+2].corr &&
+        candidates[i].corr > 0.01) {
+      peaks.push(candidates[i]);
     }
-    return count;
+  }
+  
+  if (peaks.length === 0) {
+    const best = candidates.reduce((a, b) => a.corr > b.corr ? a : b);
+    const bpm = Math.round(60 / (best.lag * resolution));
+    return Math.max(55, Math.min(240, bpm));
+  }
+  
+  // Sort peaks by correlation
+  peaks.sort((a, b) => b.corr - a.corr);
+  
+  // Score each peak by how many beats it explains
+  const scorePeak = (lag) => {
+    const period = lag * resolution;
+    let score = 0;
+    for (let i = 1; i < beats.length; i++) {
+      const diff = beats[i] - beats[i - 1];
+      const ratio = diff / period;
+      const nearest = Math.round(ratio);
+      if (Math.abs(ratio - nearest) < 0.2 && nearest >= 1 && nearest <= 8) {
+        score += 1 + 1 / (1 + Math.abs(ratio - nearest) * 10);
+      }
+    }
+    return score / Math.max(1, beats.length);
   };
   
-  const base = countIntervalsAt(bestBpm);
-  const half = bestBpm >= 120 ? countIntervalsAt(bestBpm / 2) : 0;
-  const doubled = bestBpm <= 120 ? countIntervalsAt(bestBpm * 2) : 0;
+  // Score top candidates
+  const topN = Math.min(5, peaks.length);
+  const scored = [];
+  for (let i = 0; i < topN; i++) {
+    const bpm = 60 / (peaks[i].lag * resolution);
+    const beatScore = scorePeak(peaks[i].lag);
+    const combinedScore = peaks[i].corr * 0.3 + beatScore * 0.7;
+    scored.push({ bpm, score: combinedScore, corr: peaks[i].corr, lag: peaks[i].lag });
+  }
   
-  if (half > base * 1.3) return Math.round(bestBpm / 2);
-  if (doubled >= base * 1.3) return Math.round(bestBpm * 2);
+  scored.sort((a, b) => b.score - a.score);
+  let bestBpm = Math.round(scored[0].bpm);
   
-  return bestBpm;
+  // Clamp and refine
+  bestBpm = Math.max(55, Math.min(240, bestBpm));
+  
+  // Check octave errors: prefer BPM in 100-180 range for dance music
+  const candidates_octave = [bestBpm];
+  if (bestBpm < 100) candidates_octave.push(bestBpm * 2);
+  if (bestBpm > 80 && bestBpm < 120) candidates_octave.push(bestBpm * 2);
+  if (bestBpm > 140) candidates_octave.push(Math.round(bestBpm / 2));
+  if (bestBpm > 200) candidates_octave.push(Math.round(bestBpm / 2));
+  
+  let finalBpm = bestBpm;
+  let finalScore = -1;
+  for (const bpm of candidates_octave) {
+    if (bpm < 55 || bpm > 240) continue;
+    const period = 60 / bpm;
+    let s = 0;
+    for (let i = 1; i < beats.length; i++) {
+      const ratio = (beats[i] - beats[i-1]) / period;
+      const nearest = Math.round(ratio);
+      if (Math.abs(ratio - nearest) < 0.2 && nearest >= 1 && nearest <= 8) {
+        s++;
+      }
+    }
+    if (s > finalScore) { finalScore = s; finalBpm = bpm; }
+  }
+  
+  return finalBpm;
 }
 
 function findFirstStrongBeat(beats, bpm) {
@@ -3152,8 +3212,7 @@ function updateSongList() {
       const ready = charts[d];
       return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
     }).join('');
-    const bpmVal = song.bpm ? Math.round(song.bpm) : '?';
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • <span class="bpm-ctrl"><button class="bpm-btn" data-idx="${originalIndex}" data-delta="-10">−10</button><button class="bpm-btn" data-idx="${originalIndex}" data-delta="-1">−</button><span class="bpm-val" data-idx="${originalIndex}">${bpmVal}</span><button class="bpm-btn" data-idx="${originalIndex}" data-delta="1">+</button><button class="bpm-btn" data-idx="${originalIndex}" data-delta="10">+10</button> BPM</span> • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.fav-toggle').forEach(el => {
@@ -3227,28 +3286,7 @@ function updateSongList() {
       regenerateCharts(idx, btn);
     });
   });
-  document.querySelectorAll('.bpm-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx);
-      const delta = parseInt(btn.dataset.delta);
-      const song = songs[idx];
-      song.bpm = Math.max(30, Math.min(300, (song.bpm || 140) + delta));
-      song.beats = null;
-      song.charts = {};
-      try {
-        const buf = await decodeSong(song);
-        song.beats = detectBeats(buf, 0.5);
-        for (const diff of ['easy', 'normal', 'hard', 'insane']) {
-          song.charts[diff] = generateChart(song.beats, diff, song.duration);
-        }
-        saveSongToDB(song);
-      } catch (err) {
-        console.error('BPM regen failed:', err);
-      }
-      updateSongList();
-    });
-  });
+
 }
 
 async function deleteSong(idx) {
