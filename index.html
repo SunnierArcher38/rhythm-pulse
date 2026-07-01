@@ -2825,6 +2825,9 @@ function endGame() { gameState.mode = 'results'; stopAudio(); showResults(); upd
 function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); updateTouchLanes(); }
 
 function showResults() {
+  if (gameState.maxPossibleScore > 0) {
+    gameState.score = Math.round((gameState.score / gameState.maxPossibleScore) * 1000000);
+  }
   const results = document.getElementById('results'); results.classList.add('active');
   const totalNotes = gameState.chart.length;
   const accuracy = totalNotes > 0 ? ((gameState.judgments.marvelous * 100 + gameState.judgments.perfect * 80 + gameState.judgments.great * 60 + gameState.judgments.good * 40) / totalNotes).toFixed(2) : 0;
@@ -3104,6 +3107,30 @@ function startCountdown() {
   updateCountdown();
 }
 
+function calculateMaxPossible(chart) {
+  const sorted = [...chart].sort((a, b) => a.time - b.time);
+  let combo = 0;
+  let total = 0;
+  const modMult = activeModifiers.length > 0 ? 1 + activeModifiers.length * 0.1 : 1;
+  for (const note of sorted) {
+    if (note.type === 'tap') {
+      combo++;
+      const cm = 1 + Math.floor(combo / 10) * 0.1;
+      total += Math.floor(350 * cm * modMult);
+    } else if (note.type === 'hold') {
+      combo++;
+      const cm = 1 + Math.floor(combo / 10) * 0.1;
+      total += Math.floor(100 * cm * modMult);
+      const ticks = Math.max(0, Math.floor((note.endTime - note.time) / 0.1));
+      total += ticks * 5;
+      combo++;
+      const cm2 = 1 + Math.floor(combo / 10) * 0.1;
+      total += Math.floor(200 * cm2 * modMult);
+    }
+  }
+  return total;
+}
+
 async function startGame(song, difficulty) {
   previewStop();
   currentLaneCount = parseInt(document.getElementById('laneCount').value) || 4; invalidateLaneCache();
@@ -3143,6 +3170,7 @@ async function startGame(song, difficulty) {
   }
   
   gameState.score = 0; gameState.combo = 0; gameState.maxCombo = 0; gameState.health = 100;
+  gameState.maxPossibleScore = calculateMaxPossible(gameState.chart);
   gameState.judgments = { marvelous: 0, perfect: 0, great: 0, good: 0, miss: 0 };
   gameState.hitEffects = []; gameState.laneFlash = new Array(currentLaneCount).fill(0);
   gameState.laneGlow = new Array(currentLaneCount).fill(0);
