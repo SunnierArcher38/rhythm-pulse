@@ -5115,8 +5115,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       .from('scores')
       .select('*')
       .neq('song_name', '__CLOUD_SAVE__')
-      .order('score', { ascending: false })
-      .limit(limit);
+      .order('score', { ascending: false });
     
     if (song !== 'all') {
       query = query.eq('song_name', song);
@@ -5125,7 +5124,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       query = query.eq('difficulty', difficulty);
     }
     
-    query.then(({ data, error }) => {
+    query.limit(500).then(({ data, error }) => {
       if (error) {
         list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
         return;
@@ -5137,34 +5136,80 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       
       const playerName = getPlayerName().toLowerCase();
       let html = '';
-      data.forEach((entry, i) => {
-        const rank = i + 1;
-        let rankClass = '';
-        if (rank === 1) rankClass = 'gold';
-        else if (rank === 2) rankClass = 'silver';
-        else if (rank === 3) rankClass = 'bronze';
-        
-        const isYou = entry.player_name.toLowerCase() === playerName;
-        const gradeClass = `grade-${entry.grade}`;
-        let songUrl = '';
-        try { const judgments = entry.judgments ? JSON.parse(entry.judgments) : {}; songUrl = judgments.download_url || ''; } catch {}
-        
-        const owned = songs.some(s => s.name === entry.song_name);
-        html += `<div class="lb-entry${isYou ? ' you' : ''}">
-          <div class="lb-rank ${rankClass}">#${rank}</div>
-          <div class="lb-info">
-            <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
-            <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
-          </div>
-          <div class="lb-stats">
-            <div class="lb-grade ${gradeClass}">${entry.grade}</div>
-            <div class="lb-acc">${entry.accuracy}%</div>
-            <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
-            <button class="lb-play-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(entry.song_name)}" onclick="addLeaderboardSong(this)">▶</button>
-            <button class="lb-download-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(entry.song_name)}" data-url="${escapeHtml(songUrl)}" onclick="downloadLeaderboardSong(this)" title="${owned ? 'Already in library' : 'Search & download this song'}">📥</button>
-          </div>
-        </div>`;
-      });
+      
+      if (song === 'all') {
+        const bestPerSong = {};
+        data.forEach(entry => {
+          const s = entry.song_name;
+          if (!bestPerSong[s] || entry.score > bestPerSong[s].score) {
+            bestPerSong[s] = entry;
+          }
+        });
+        const sorted = Object.values(bestPerSong).sort((a, b) => b.score - a.score).slice(0, limit);
+        sorted.forEach((entry, i) => {
+          const rank = i + 1;
+          let rankClass = '';
+          if (rank === 1) rankClass = 'gold';
+          else if (rank === 2) rankClass = 'silver';
+          else if (rank === 3) rankClass = 'bronze';
+          const isYou = entry.player_name.toLowerCase() === playerName;
+          const gradeClass = `grade-${entry.grade}`;
+          const owned = songs.some(s => s.name === entry.song_name);
+          html += `<div class="lb-entry${isYou ? ' you' : ''}">
+            <div class="lb-rank ${rankClass}">#${rank}</div>
+            <div class="lb-info">
+              <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
+              <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
+            </div>
+            <div class="lb-stats">
+              <div class="lb-grade ${gradeClass}">${entry.grade}</div>
+              <div class="lb-acc">${entry.accuracy}%</div>
+              <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
+              <button class="lb-play-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(entry.song_name)}" onclick="addLeaderboardSong(this)">▶</button>
+            </div>
+          </div>`;
+        });
+      } else {
+        const perPlayer = {};
+        data.forEach(entry => {
+          const key = entry.player_name.toLowerCase();
+          if (!perPlayer[key] || entry.score > perPlayer[key].score) {
+            perPlayer[key] = entry;
+          }
+        });
+        const sorted = Object.values(perPlayer).sort((a, b) => b.score - a.score).slice(0, limit);
+        sorted.forEach((entry, i) => {
+          const rank = i + 1;
+          let rankClass = '';
+          if (rank === 1) rankClass = 'gold';
+          else if (rank === 2) rankClass = 'silver';
+          else if (rank === 3) rankClass = 'bronze';
+          const isYou = entry.player_name.toLowerCase() === playerName;
+          const gradeClass = `grade-${entry.grade}`;
+          let songUrl = '';
+          try { const judgments = entry.judgments ? JSON.parse(entry.judgments) : {}; songUrl = judgments.download_url || ''; } catch {}
+          const owned = songs.some(s => s.name === entry.song_name);
+          html += `<div class="lb-entry${isYou ? ' you' : ''}">
+            <div class="lb-rank ${rankClass}">#${rank}</div>
+            <div class="lb-info">
+              <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
+              <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
+            </div>
+            <div class="lb-stats">
+              <div class="lb-grade ${gradeClass}">${entry.grade}</div>
+              <div class="lb-acc">${entry.accuracy}%</div>
+              <div class="lb-score">${Number(entry.score).toLocaleString()}</div>
+              <button class="lb-play-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(entry.song_name)}" onclick="addLeaderboardSong(this)">▶</button>
+              <button class="lb-download-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(entry.song_name)}" data-url="${escapeHtml(songUrl)}" onclick="downloadLeaderboardSong(this)" title="${owned ? 'Already in library' : 'Search & download this song'}">📥</button>
+            </div>
+          </div>`;
+        });
+      }
+      
+      if (!html) {
+        list.innerHTML = '<div class="lb-empty">No scores for this filter.</div>';
+        return;
+      }
       list.innerHTML = html;
     }).catch(err => {
       list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
