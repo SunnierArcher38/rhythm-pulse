@@ -5521,11 +5521,20 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       list.innerHTML = '<div class="lb-error">Storage not available</div>';
       return;
     }
-    supabaseClient.storage.from('song-files').list().then(r => {
-      const { data, error } = r || {};
-      if (error) { list.innerHTML = `<div class="lb-error">${escapeHtml(error.message)}</div>`; return; }
-      if (!data) { list.innerHTML = '<div class="lb-error">No response from storage server (null)</div>'; return; }
-      if (!Array.isArray(data)) { list.innerHTML = `<div class="lb-error">Unexpected response type: ${typeof data} — ${escapeHtml(JSON.stringify(data).slice(0, 200))}</div>`; return; }
+    // Direct REST API call to list files (avoids potential JS client issues)
+    fetch(`${SUPABASE_URL}/storage/v1/object/list/song-files`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix: '', limit: 200, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+    }).then(res => res.json().catch(() => null)).then(data => {
+      console.log('[Browse] REST list response:', JSON.stringify(data).slice(0, 500));
+      if (!data) { list.innerHTML = '<div class="lb-error">Failed to parse storage response</div>'; return; }
+      if (data.error) { list.innerHTML = `<div class="lb-error">${escapeHtml(data.error.message || data.error)}</div>`; return; }
+      if (!Array.isArray(data)) {
+        // Supabase returns object with error key or metadata
+        if (data.length !== undefined) { list.innerHTML = '<div class="lb-empty">No songs in storage yet. <button class="lb-filter-btn" onclick="fetchLeaderboard(\'browse\')" style="display:inline;margin-left:0.5rem;">↻ Retry</button></div>'; return; }
+        list.innerHTML = `<div class="lb-error">Unexpected: ${escapeHtml(JSON.stringify(data).slice(0, 300))}</div>`; return;
+      }
       if (data.length === 0) {
         list.innerHTML = '<div class="lb-empty">No songs in storage yet. Upload yours by submitting a score! <button class="lb-filter-btn" onclick="fetchLeaderboard(\'browse\')" style="display:inline;margin-left:0.5rem;">↻ Retry</button></div>';
         return;
