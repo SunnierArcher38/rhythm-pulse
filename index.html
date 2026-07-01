@@ -687,10 +687,11 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
        <div class="leaderboard-panel">
          <h3>🏆 Global Leaderboard</h3>
          <div class="leaderboard-subtitle" id="lbSubtitle">Overall - All Songs Combined</div>
-         <div class="leaderboard-filters" id="lbFilters">
-           <button class="lb-filter-btn active" data-scope="overall">Overall</button>
-           <button class="lb-filter-btn" data-scope="per-song">Per Song</button>
-         </div>
+          <div class="leaderboard-filters" id="lbFilters">
+            <button class="lb-filter-btn active" data-scope="overall">Overall</button>
+            <button class="lb-filter-btn" data-scope="per-song">Per Song</button>
+            <button class="lb-filter-btn" data-scope="players">Players</button>
+          </div>
          <div class="leaderboard-filters" id="lbSongSelector" style="display:none;">
             <select id="lbSongSelect" style="padding:0.3rem 0.8rem;background:rgba(20,20,30,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;max-width:300px;"></select>
          </div>
@@ -5005,6 +5006,33 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
     }).catch(err => {
       list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
     });
+    return;
+  }
+  
+  if (scope === 'players') {
+    supabaseClient
+      .from('scores')
+      .select('player_name')
+      .then(({ data, error }) => {
+        if (error) { list.innerHTML = `<div class="lb-error">${error.message}</div>`; return; }
+        const names = [...new Set((data || []).map(e => e.player_name))].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        if (names.length === 0) { list.innerHTML = '<div class="lb-empty">No players yet</div>'; return; }
+        const playerName = getPlayerName().toLowerCase();
+        let html = '';
+        names.forEach((name, i) => {
+          const isYou = name.toLowerCase() === playerName;
+          html += `<div class="lb-entry${isYou ? ' you' : ''}">
+            <div class="lb-rank">#${i + 1}</div>
+            <div class="lb-info">
+              <div class="lb-player">${escapeHtml(name)}${isYou ? ' (You)' : ''}</div>
+            </div>
+          </div>`;
+        });
+        list.innerHTML = html;
+      }).catch(err => {
+        list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
+      });
+    return;
   }
 }
 
@@ -5147,6 +5175,8 @@ function showLeaderboard(scope = 'overall', song = 'all', difficulty = 'all') {
   
   if (scope === 'overall') {
     document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+  } else if (scope === 'players') {
+    document.getElementById('lbSubtitle').textContent = 'Players';
   } else {
     document.getElementById('lbSubtitle').textContent = song === 'all' ? 'Per Song - All Songs' : `Per Song - ${song}`;
   }
@@ -5178,6 +5208,8 @@ document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
     
     if (leaderboardScope === 'overall') {
       document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+    } else if (leaderboardScope === 'players') {
+      document.getElementById('lbSubtitle').textContent = 'Players';
     } else {
       leaderboardSong = document.getElementById('lbSongSelect').value;
       document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`;
@@ -5195,6 +5227,8 @@ document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
     
     if (leaderboardScope === 'overall') {
       document.getElementById('lbSubtitle').textContent = `Overall - ${leaderboardDifficulty === 'all' ? 'All Difficulties' : leaderboardDifficulty.charAt(0).toUpperCase() + leaderboardDifficulty.slice(1)}`;
+    } else if (leaderboardScope === 'players') {
+      document.getElementById('lbSubtitle').textContent = 'Players';
     } else {
       document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? `Per Song - All Songs - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}` : `Per Song - ${leaderboardSong} - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}`;
     }
