@@ -1681,7 +1681,11 @@ function checkProgressiveAchievements(categoryId, value) {
   }
 }
 
+let lastAchievementSound = 0;
 function playAchievementSound() {
+  const minGap = performance.now() - lastAchievementSound;
+  if (minGap < 500) return;
+  lastAchievementSound = performance.now();
   try {
     initAudio();
     const now = audioCtx.currentTime;
