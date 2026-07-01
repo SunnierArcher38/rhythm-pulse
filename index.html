@@ -657,9 +657,13 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
           <div class="saveload-section">
             <div class="saveload-section-title">☁️ Cloud Save</div>
             <div class="saveload-status" id="cloudSaveStatus"></div>
+            <div class="setting-row" style="margin-bottom:0.5rem;padding:0;">
+              <input type="password" id="cloudPassword" placeholder="Encryption password..." style="flex:1;padding:0.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;margin-right:0.4rem;">
+              <button class="toggle-btn" id="cloudPwToggle" style="padding:0.3rem 0.5rem;font-size:0.75rem;white-space:nowrap;">Show</button>
+            </div>
             <div class="saveload-grid">
-              <button class="saveload-btn cyan" id="slCloudSave"><span class="label">☁️ Save to Cloud</span><span class="hint">Upload settings + achievements + scores</span></button>
-              <button class="saveload-btn cyan" id="slCloudLoad"><span class="label">☁️ Load from Cloud</span><span class="hint">Download and restore from cloud</span></button>
+              <button class="saveload-btn cyan" id="slCloudSave"><span class="label">☁️ Save to Cloud</span><span class="hint">Encrypt &amp; upload with password</span></button>
+              <button class="saveload-btn cyan" id="slCloudLoad"><span class="label">☁️ Load from Cloud</span><span class="hint">Download &amp; decrypt with password</span></button>
             </div>
           </div>
           <button id="closeSaveLoad">Close</button>
@@ -4704,12 +4708,56 @@ async function uploadSongAudio(songName) {
   }
 }
 
+function getCloudPassword() {
+  return document.getElementById('cloudPassword').value;
+}
+
+async function encryptSaveData(plaintext, password) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptSaveData(encoded, password) {
+  const enc = new TextEncoder();
+  const combined = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const ciphertext = combined.slice(28);
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+  return new TextDecoder().decode(decrypted);
+}
+
 async function cloudSave() {
   if (!supabaseClient && !initSupabase()) { return { error: 'Supabase not configured' }; }
   const playerName = getPlayerName();
   if (playerName === 'Anonymous') { return { error: 'Set a player name in settings first' }; }
+  const password = getCloudPassword();
+  if (!password) { return { error: 'Enter an encryption password' }; }
   const statusEl = document.getElementById('cloudSaveStatus');
-  statusEl.textContent = '⏳ Uploading...';
+  statusEl.textContent = '⏳ Encrypting & uploading...';
   statusEl.style.color = 'rgba(255,255,255,0.5)';
   try {
     const data = {
@@ -4738,8 +4786,8 @@ async function cloudSave() {
       }
     };
     const json = JSON.stringify(data);
-    const encoded = btoa(unescape(encodeURIComponent(json)));
-    const blob = new Blob([encoded], { type: 'text/plain' });
+    const encrypted = await encryptSaveData(json, password);
+    const blob = new Blob([encrypted], { type: 'text/plain' });
     const key = `saves/${encodeURIComponent(playerName)}.json`;
     const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'text/plain' });
     if (error) throw error;
@@ -4758,6 +4806,8 @@ async function cloudLoad() {
   if (!supabaseClient && !initSupabase()) { return { error: 'Supabase not configured' }; }
   const playerName = getPlayerName();
   if (playerName === 'Anonymous') { return { error: 'Set a player name in settings first' }; }
+  const password = getCloudPassword();
+  if (!password) { return { error: 'Enter the encryption password' }; }
   const statusEl = document.getElementById('cloudSaveStatus');
   statusEl.textContent = '⏳ Downloading...';
   statusEl.style.color = 'rgba(255,255,255,0.5)';
@@ -4767,7 +4817,8 @@ async function cloudLoad() {
     if (error) throw error;
     if (!data) throw new Error('No cloud save found for this player');
     const text = await data.text();
-    const json = decodeURIComponent(escape(atob(text)));
+    statusEl.textContent = '⏳ Decrypting...';
+    const json = await decryptSaveData(text, password);
     const parsed = JSON.parse(json);
     const migrated = migrateSaveData(parsed);
     if (migrated.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a));
@@ -5245,6 +5296,12 @@ document.getElementById('slLoadAll').addEventListener('click', () => {
 
 document.getElementById('slCloudSave').addEventListener('click', () => { cloudSave(); });
 document.getElementById('slCloudLoad').addEventListener('click', () => { cloudLoad(); });
+document.getElementById('cloudPwToggle').addEventListener('click', () => {
+  const input = document.getElementById('cloudPassword');
+  const btn = document.getElementById('cloudPwToggle');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+  else { input.type = 'password'; btn.textContent = 'Show'; }
+});
 
 const BLOCKED_WORDS = [
   'fuck','shit','ass','bitch','damn','dick','pussy','cock','cunt','nigger','nigga',
