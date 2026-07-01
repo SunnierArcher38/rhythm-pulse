@@ -5130,6 +5130,7 @@ function submitToLeaderboard(data) {
     scroll_speed: data.scrollSpeed,
     health_mode: data.healthMode,
     total_notes: data.totalNotes,
+    score_version: 2,
     created_at: new Date().toISOString()
   };
   
@@ -5698,11 +5699,11 @@ function showLeaderboard(scope = 'overall', song = 'all', difficulty = 'all') {
   document.getElementById('lbDiffFilters').style.display = scope === 'browse' ? 'none' : '';
   
   if (scope === 'overall') {
-    document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+    document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined | Scores normalized to 1,000,000 max';
   } else if (scope === 'browse') {
     document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
   } else {
-    document.getElementById('lbSubtitle').textContent = song === 'all' ? 'Per Song - All Songs' : `Per Song - ${song}`;
+    document.getElementById('lbSubtitle').textContent = (song === 'all' ? 'Per Song - All Songs' : `Per Song - ${song}`) + ' | Scores normalized to 1,000,000 max';
   }
   
   document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
@@ -5732,12 +5733,12 @@ document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
     document.getElementById('lbDiffFilters').style.display = leaderboardScope === 'browse' ? 'none' : '';
     
     if (leaderboardScope === 'overall') {
-      document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
+      document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined | Scores normalized to 1,000,000 max';
     } else if (leaderboardScope === 'browse') {
       document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
     } else {
       leaderboardSong = document.getElementById('lbSongSelect').value;
-      document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`;
+      document.getElementById('lbSubtitle').textContent = (leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`) + ' | Scores normalized to 1,000,000 max';
     }
     
     fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
@@ -5751,11 +5752,11 @@ document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
     leaderboardDifficulty = btn.dataset.filter;
     
     if (leaderboardScope === 'overall') {
-      document.getElementById('lbSubtitle').textContent = `Overall - ${leaderboardDifficulty === 'all' ? 'All Difficulties' : leaderboardDifficulty.charAt(0).toUpperCase() + leaderboardDifficulty.slice(1)}`;
+      document.getElementById('lbSubtitle').textContent = `Overall - ${leaderboardDifficulty === 'all' ? 'All Difficulties' : leaderboardDifficulty.charAt(0).toUpperCase() + leaderboardDifficulty.slice(1)} | Scores normalized to 1,000,000 max`;
     } else if (leaderboardScope === 'browse') {
       document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
     } else {
-      document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? `Per Song - All Songs - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}` : `Per Song - ${leaderboardSong} - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}`;
+      document.getElementById('lbSubtitle').textContent = (leaderboardSong === 'all' ? `Per Song - All Songs` : `Per Song - ${leaderboardSong}`) + ` - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty} | Scores normalized to 1,000,000 max`;
     }
     
     fetchLeaderboard(leaderboardScope, leaderboardSong, leaderboardDifficulty);
