@@ -5527,7 +5527,6 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ prefix: '', limit: 200, offset: 0, sortBy: { column: 'name', order: 'asc' } })
     }).then(res => res.json().catch(() => null)).then(data => {
-      console.log('[Browse] REST list response:', JSON.stringify(data).slice(0, 500));
       if (!data) { list.innerHTML = '<div class="lb-error">Failed to parse storage response</div>'; return; }
       if (data.error) { list.innerHTML = `<div class="lb-error">${escapeHtml(data.error.message || data.error)}</div>`; return; }
       if (!Array.isArray(data)) {
