@@ -5493,9 +5493,10 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       return;
     }
     supabaseClient.storage.from('song-files').list('', { limit: 200 }).then(({ data, error }) => {
-      if (error) { list.innerHTML = `<div class="lb-error">${error.message}</div>`; return; }
-      if (!data || data.length === 0) {
-        list.innerHTML = '<div class="lb-empty">No songs shared yet. Upload yours by submitting a score!</div>';
+      if (error) { list.innerHTML = `<div class="lb-error">${escapeHtml(error.message)}</div>`; return; }
+      if (!data) { list.innerHTML = '<div class="lb-error">No response from storage server</div>'; return; }
+      if (data.length === 0) {
+        list.innerHTML = '<div class="lb-empty">No songs in storage yet. Upload yours by submitting a score! <button class="lb-filter-btn" onclick="fetchLeaderboard(\'browse\')" style="display:inline;margin-left:0.5rem;">↻ Retry</button></div>';
         return;
       }
       const playerName = getPlayerName().toLowerCase();
@@ -5666,6 +5667,7 @@ function showLeaderboard(scope = 'overall', song = 'all', difficulty = 'all') {
   });
   
   document.getElementById('lbSongSelector').style.display = scope === 'per-song' ? 'flex' : 'none';
+  document.getElementById('lbDiffFilters').style.display = scope === 'browse' ? 'none' : '';
   
   if (scope === 'overall') {
     document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
@@ -5699,6 +5701,7 @@ document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
     btn.classList.add('active');
     leaderboardScope = btn.dataset.scope;
     document.getElementById('lbSongSelector').style.display = leaderboardScope === 'per-song' ? 'flex' : 'none';
+    document.getElementById('lbDiffFilters').style.display = leaderboardScope === 'browse' ? 'none' : '';
     
     if (leaderboardScope === 'overall') {
       document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
