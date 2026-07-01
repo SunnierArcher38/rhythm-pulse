@@ -5501,7 +5501,11 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       const playerName = getPlayerName().toLowerCase();
       let html = '';
       data.filter(f => f.name).sort((a, b) => a.name.localeCompare(b.name)).forEach((f, i) => {
-        const name = decodeURIComponent(f.name);
+        const rawName = decodeURIComponent(f.name);
+        const audioExt = /\.(mp3|wav|ogg|flac|m4a|wma|aac)$/i;
+        const hasExt = audioExt.test(rawName);
+        const name = hasExt ? rawName.replace(audioExt, '') : rawName;
+        const storageKey = hasExt ? f.name : '';
         const owned = songs.some(s => s.name === name);
         const isYours = false;
         html += `<div class="lb-entry">
@@ -5511,7 +5515,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
           </div>
           <div class="lb-stats">
             <button class="lb-play-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(name)}" onclick="addLeaderboardSong(this)">▶</button>
-            <button class="lb-download-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(name)}" data-url="" onclick="downloadLeaderboardSong(this)" title="${owned ? 'Already in library' : 'Download this song'}">📥</button>
+            <button class="lb-download-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(name)}" data-key="${escapeHtml(storageKey)}" onclick="downloadLeaderboardSong(this)" title="${owned ? 'Already in library' : 'Download this song'}">📥</button>
           </div>
         </div>`;
       });
@@ -5545,7 +5549,7 @@ function addLeaderboardSong(btn) {
 
 function downloadLeaderboardSong(btn) {
   const songName = btn.dataset.song;
-  const songUrl = btn.dataset.url;
+  const storageKey = btn.dataset.key;
   const found = songs.find(s => s.name === songName);
   if (found) {
     btn.textContent = '✅';
@@ -5572,18 +5576,20 @@ function downloadLeaderboardSong(btn) {
   };
   
   (async () => {
-    if (songUrl && await doDownload(songUrl)) return;
     if (supabaseClient || initSupabase()) {
       try {
-        const key = encodeURIComponent(songName);
-        const { data, error } = await supabaseClient.storage.from('song-files').download(key);
-        if (!error && data) {
-          const file = new File([data], songName + '.mp3', { type: 'audio/mpeg' });
-          await addSong(file);
-          btn.textContent = '✅';
-          btn.className = 'lb-download-btn owned';
-          btn.title = 'Added to your library!';
-          return;
+        const keys = storageKey ? [storageKey, encodeURIComponent(songName)] : [encodeURIComponent(songName)];
+        for (const key of keys) {
+          const { data, error } = await supabaseClient.storage.from('song-files').download(key);
+          if (!error && data) {
+            const ext = key.includes('.') ? key.substring(key.lastIndexOf('.')) : '.mp3';
+            const file = new File([data], songName + ext, { type: 'audio/mpeg' });
+            await addSong(file);
+            btn.textContent = '✅';
+            btn.className = 'lb-download-btn owned';
+            btn.title = 'Added to your library!';
+            return;
+          }
         }
       } catch {}
     }
