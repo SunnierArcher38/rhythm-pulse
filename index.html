@@ -4967,6 +4967,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
     let query = supabaseClient
       .from('scores')
       .select('*')
+      .neq('song_name', '__CLOUD_SAVE__')
       .order('score', { ascending: false })
       .limit(limit);
     
@@ -4998,8 +4999,8 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
         
         const isYou = entry.player_name.toLowerCase() === playerName;
         const gradeClass = `grade-${entry.grade}`;
-        const judgments = entry.judgments ? JSON.parse(entry.judgments) : {};
-        const songUrl = judgments.download_url || '';
+        let songUrl = '';
+        try { const judgments = entry.judgments ? JSON.parse(entry.judgments) : {}; songUrl = judgments.download_url || ''; } catch {}
         
         const owned = songs.some(s => s.name === entry.song_name);
         html += `<div class="lb-entry${isYou ? ' you' : ''}">
