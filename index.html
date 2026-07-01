@@ -5148,7 +5148,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       }).catch(err => {
         list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
       });
-  } else {
+  } else if (scope === 'per-song') {
     let query = supabaseClient
       .from('scores')
       .select('*')
@@ -5253,9 +5253,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
     });
     return;
-  }
-  
-  if (scope === 'browse') {
+  } else if (scope === 'browse') {
     const list = document.getElementById('leaderboardList');
     list.innerHTML = '<div class="lb-loading">Loading shared songs...</div>';
     if (!supabaseClient && !initSupabase()) {
