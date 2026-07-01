@@ -5188,7 +5188,12 @@ async function uploadSongAudio(songName) {
   if (!supabaseClient && !initSupabase()) return;
   const key = encodeURIComponent(songName);
   try {
-    const { data: existing } = await supabaseClient.storage.from('song-files').list();
+    const res = await fetch('https://xpzovtwbjeapkovzcizp.supabase.co/storage/v1/object/list/song-files', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhwem92dHdiamVhcGtvdnpjaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzg2MzQsImV4cCI6MjA5NDYxNDYzNH0.AtdubQQYUmd3FGtqYFBEGxin3Rc_Pe9AwIJvrObLyac', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhwem92dHdiamVhcGtvdnpjaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzg2MzQsImV4cCI6MjA5NDYxNDYzNH0.AtdubQQYUmd3FGtqYFBEGxin3Rc_Pe9AwIJvrObLyac' },
+      body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+    });
+    const existing = await res.json().catch(() => null);
     if (existing && Array.isArray(existing) && existing.some(f => f.name === key)) {
       console.log('[Storage] Song already uploaded:', songName);
       return;
