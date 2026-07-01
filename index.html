@@ -544,6 +544,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 }
 </style>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div id="game-container">
@@ -655,6 +656,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
               <button class="saveload-btn green" id="slSaveSongs"><span class="label">💾 Save Songs</span><span class="hint">Export songs as .rpsongs</span></button>
               <button class="saveload-btn blue" id="slLoadSongs"><span class="label">📂 Load Songs</span><span class="hint">Import songs from .rpsongs</span></button>
               <button class="saveload-btn purple" id="slImportSong"><span class="label">🎵 Import Song</span><span class="hint">Import .rpsong file</span></button>
+              <button class="saveload-btn gold" id="slExportMP3s"><span class="label">📦 Export All MP3s</span><span class="hint">Download all songs as .mp3 files</span></button>
             </div>
           </div>
           <div class="saveload-section">
@@ -5876,6 +5878,34 @@ document.getElementById('slSaveSongs').addEventListener('click', () => {
 document.getElementById('slLoadSongs').addEventListener('click', () => {
   document.getElementById('saveLoadModal').classList.remove('active');
   document.getElementById('loadAllSongsInput').click();
+});
+document.getElementById('slExportMP3s').addEventListener('click', async () => {
+  document.getElementById('saveLoadModal').classList.remove('active');
+  const hasData = songs.some(s => s.rawData);
+  if (!hasData) { showToast('No songs with audio data to export', 'error'); return; }
+  const zip = new JSZip();
+  let exported = 0;
+  for (const song of songs) {
+    let rawData = song.rawData;
+    if (!rawData) {
+      const dbSongs = await loadSongsFromDB().catch(() => []);
+      const dbSong = dbSongs.find(s => s.id === song.id);
+      if (dbSong) rawData = dbSong.rawData;
+    }
+    if (rawData) {
+      zip.file(song.name + '.mp3', rawData);
+      exported++;
+    }
+  }
+  if (exported === 0) { showToast('No song data available to export', 'error'); return; }
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rhythm-pulse-songs.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${exported} songs as ZIP`);
 });
 document.getElementById('slSaveAll').addEventListener('click', () => {
   document.getElementById('saveLoadModal').classList.remove('active');
