@@ -4883,6 +4883,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
     supabaseClient
       .from('scores')
       .select('*')
+      .neq('song_name', '__CLOUD_SAVE__')
       .then(({ data, error }) => {
         if (error) {
           list.innerHTML = `<div class="lb-error">Failed to load: ${error.message}</div>`;
@@ -5107,6 +5108,7 @@ function populateSongSelector() {
     supabaseClient
       .from('scores')
       .select('song_name')
+      .neq('song_name', '__CLOUD_SAVE__')
       .then(({ data }) => {
         if (data) {
           data.forEach(entry => songSet.add(entry.song_name));
