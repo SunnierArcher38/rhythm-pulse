@@ -4788,7 +4788,7 @@ async function cloudSave() {
     const json = JSON.stringify(data);
     const encrypted = await encryptSaveData(json, password);
     const blob = new Blob([encrypted], { type: 'audio/mpeg' });
-    const key = `saves/${encodeURIComponent(playerName)}.json`;
+    const key = `save_${encodeURIComponent(playerName)}.mp3`;
     const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'audio/mpeg' });
     if (error) throw error;
     statusEl.textContent = '✅ Cloud save complete!';
@@ -4812,7 +4812,7 @@ async function cloudLoad() {
   statusEl.textContent = '⏳ Downloading...';
   statusEl.style.color = 'rgba(255,255,255,0.5)';
   try {
-    const key = `saves/${encodeURIComponent(playerName)}.json`;
+    const key = `save_${encodeURIComponent(playerName)}.mp3`;
     const { data, error } = await supabaseClient.storage.from('song-files').download(key);
     if (error) throw error;
     if (!data) throw new Error('No cloud save found for this player');
