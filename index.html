@@ -130,6 +130,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .settings-dropdown { position: absolute; top: 55px; right: 0; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; min-width: 280px; max-width: 320px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
 .settings-dropdown.active { display: block; animation: slideDown 0.25s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .settings-dropdown::-webkit-scrollbar { width: 5px; }
 .settings-dropdown::-webkit-scrollbar-track { background: transparent; }
 .settings-dropdown::-webkit-scrollbar-thumb { background: var(--text-dimmer); border-radius: 3px; }
@@ -4651,6 +4652,19 @@ let leaderboardScope = 'overall';
 let leaderboardSong = 'all';
 let leaderboardDifficulty = 'all';
 
+function showToast(msg, type) {
+  const existing = document.getElementById('toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'toast';
+  el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;background:var(--bg-secondary);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:0.5rem 1rem;font-size:0.85rem;box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:slideUp 0.3s ease-out;pointer-events:none;max-width:90vw';
+  el.textContent = msg;
+  if (type === 'error') el.style.borderColor = '#ff5555';
+  else el.style.borderColor = '#50fa7b';
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
 function submitToLeaderboard(data) {
   if (!autoSubmitScores) return;
   if (!supabaseClient) {
@@ -4695,7 +4709,7 @@ function submitToLeaderboard(data) {
 
 async function uploadSongAudio(songName) {
   const song = songs.find(s => s.name === songName);
-  if (!song || !song.rawData) return;
+  if (!song || !song.rawData) { console.warn('[Storage] No song data for:', songName); return; }
   if (song.size > 30 * 1024 * 1024) { console.warn('[Storage] Song too large, skipping upload'); return; }
   const key = encodeURIComponent(songName);
   try {
@@ -4703,8 +4717,10 @@ async function uploadSongAudio(songName) {
     const blob = new Blob([song.rawData], { type: mimeType });
     await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: mimeType });
     console.log('[Storage] Uploaded:', songName);
+    showToast('Song uploaded to leaderboard!');
   } catch (e) {
-    console.warn('[Storage] Upload failed:', e.message);
+    console.warn('[Storage] Upload failed:', songName, e.message);
+    showToast('Song upload failed: ' + e.message, 'error');
   }
 }
 
