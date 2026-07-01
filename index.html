@@ -3811,11 +3811,19 @@ document.getElementById('copyScoreBtn').addEventListener('click', () => { addSta
 document.getElementById('backBtn').addEventListener('click', () => { addStat('quit_to_menu', 1); checkProgressiveAchievements('quit_to_menu', getStat('quit_to_menu')); localStorage.setItem('rhythmPulseSessionSongs', '0'); hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; updateTouchLanes(); });
 
 
+function closeAllModals() {
+  document.getElementById('settingsModal')?.classList.remove('active');
+  document.getElementById('achievementsDropdown')?.classList.remove('active');
+  document.getElementById('leaderboardModal')?.classList.remove('active');
+  document.getElementById('saveLoadModal')?.classList.remove('active');
+}
 document.getElementById('menuPlay').addEventListener('click', () => {
+  closeAllModals();
   document.getElementById('main-menu').classList.add('hidden');
   document.getElementById('song-select').classList.remove('hidden');
 });
 document.getElementById('backToMenu').addEventListener('click', () => {
+  closeAllModals();
   document.getElementById('song-select').classList.add('hidden');
   document.getElementById('main-menu').classList.remove('hidden');
 });
