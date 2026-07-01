@@ -71,6 +71,11 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .difficulty-select { display: flex; gap: 0.4rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .diff-btn { padding: 0.3rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text-dim); font-weight: 600; cursor: pointer; transition: all 0.2s var(--ease); font-size: 0.85rem; min-height: 36px; }
 .diff-btn:hover { border-color: var(--text); color: var(--text); }
+.bpm-ctrl { display: inline-flex; align-items: center; gap: 2px; }
+.bpm-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); border-radius: 3px; padding: 0 4px; cursor: pointer; font-size: 0.7rem; line-height: 1.4; min-height: 20px; min-width: 20px; }
+.bpm-btn:hover { border-color: var(--pink); color: var(--pink); }
+.bpm-val { display: inline-block; min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; cursor: pointer; }
+.bpm-val:hover { color: var(--pink); }
 .diff-btn.easy { border-color: #50fa7b; color: #50fa7b; }
 .diff-btn.easy:hover { background: rgba(80,250,123,0.1); }
 .diff-btn.normal { border-color: var(--blue); color: var(--blue); }
@@ -1959,6 +1964,7 @@ function drawReceptors() {
 
 function drawNotes() {
   const currentTime = getCurrentTime() + gameState.audioOffset / 1000;
+  const now = performance.now();
   const size = gameState.noteSize; const hitY = getHitY();
   const visibleRange = (canvas.height / (gameState.scrollSpeed * 60)) + 2;
   const laneColors = getLaneColors();
@@ -2035,6 +2041,21 @@ function drawNotes() {
         const progressY = bodyTop + holdHeight * (1 - hProgress);
         ctx.fillStyle = '#ffffff22';
         ctx.fillRect(x + 4, progressY, size - 8, Math.max(4, holdHeight * hProgress));
+        const ballY = headY + (tailY - headY) * hProgress;
+        const ballSize = size * 0.25;
+        const ballGlow = 8 + Math.sin(now * 0.01) * 4;
+        ctx.shadowColor = bodyColor; ctx.shadowBlur = ballGlow;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(x + size / 2, ballY, ballSize, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath(); ctx.arc(x + size / 2, ballY, ballSize * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        if (note.tickFlash > 0.05) {
+          const r = ballSize * (1 + (1 - note.tickFlash) * 2);
+          ctx.strokeStyle = `rgba(255,255,255,${note.tickFlash * 0.8})`;
+          ctx.lineWidth = 3 * note.tickFlash;
+          ctx.beginPath(); ctx.arc(x + size / 2, ballY, r, 0, Math.PI * 2); ctx.stroke();
+        }
       }
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fillRect(x + size * 0.4, bodyTop + 3, size * 0.2, Math.max(1, holdHeight - 6));
@@ -2410,6 +2431,7 @@ function updateHoldingNotes() {
         note.graceExpiry = 0;
         note.holdStartTime = currentTime;
         note.lastTickTime = currentTime;
+        note.tickFlash = 0;
         gameState.combo++;
         if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
         gameState.score += 100;
@@ -2435,9 +2457,11 @@ function updateHoldingNotes() {
       // Tick scoring every 100ms
       if (currentTime - note.lastTickTime >= 0.1) {
         note.lastTickTime += 0.1;
+        note.tickFlash = 1;
         gameState.score += 5;
         gameState.laneGlow[note.lane] = Math.min(1, gameState.laneGlow[note.lane] + 0.3);
       }
+      if (note.tickFlash) note.tickFlash *= 0.9;
       
       const nearEnd = note.endTime - currentTime <= 0.05;
       
@@ -3010,7 +3034,7 @@ async function startGame(song, difficulty) {
   lastBeatZoomIdx = -1; metronomeDots = null; lastTrailSpawn = 0;
   for (const note of gameState.chart) {
     note.hit = false; note.missed = false; note.holding = false;
-    note.released = false; note.activated = false; note.completed = false; note.broken = false;
+    note.released = false; note.activated = false; note.completed = false; note.broken = false; note.tickFlash = 0;
   }
   hideResults(); hidePause(); document.getElementById('song-select').classList.add('hidden');
   document.getElementById('timingGraph').classList.remove('active');
@@ -3128,7 +3152,8 @@ function updateSongList() {
       const ready = charts[d];
       return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
     }).join('');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    const bpmVal = song.bpm ? Math.round(song.bpm) : '?';
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • <span class="bpm-ctrl"><button class="bpm-btn" data-idx="${originalIndex}" data-delta="-10">−10</button><button class="bpm-btn" data-idx="${originalIndex}" data-delta="-1">−</button><span class="bpm-val" data-idx="${originalIndex}">${bpmVal}</span><button class="bpm-btn" data-idx="${originalIndex}" data-delta="1">+</button><button class="bpm-btn" data-idx="${originalIndex}" data-delta="10">+10</button> BPM</span> • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.fav-toggle').forEach(el => {
@@ -3200,6 +3225,28 @@ function updateSongList() {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.idx);
       regenerateCharts(idx, btn);
+    });
+  });
+  document.querySelectorAll('.bpm-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      const delta = parseInt(btn.dataset.delta);
+      const song = songs[idx];
+      song.bpm = Math.max(30, Math.min(300, (song.bpm || 140) + delta));
+      song.beats = null;
+      song.charts = {};
+      try {
+        const buf = await decodeSong(song);
+        song.beats = detectBeats(buf, 0.5);
+        for (const diff of ['easy', 'normal', 'hard', 'insane']) {
+          song.charts[diff] = generateChart(song.beats, diff, song.duration);
+        }
+        saveSongToDB(song);
+      } catch (err) {
+        console.error('BPM regen failed:', err);
+      }
+      updateSongList();
     });
   });
 }

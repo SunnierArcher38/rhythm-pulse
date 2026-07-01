@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhythm-pulse-v10';
+const CACHE_NAME = 'rhythm-pulse-v11';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
