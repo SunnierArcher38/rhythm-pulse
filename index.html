@@ -992,59 +992,49 @@ function estimateBPM(beats) {
   
   // Build inter-onset interval histogram
   const intervals = [];
-  for (let i = 1; i < Math.min(beats.length, 200); i++) {
+  for (let i = 1; i < beats.length; i++) {
     const diff = beats[i] - beats[i - 1];
-    if (diff > 0.15 && diff < 2.0) intervals.push(diff);
+    if (diff > 0.2 && diff < 2.0) intervals.push(diff);
   }
   
   if (intervals.length < 3) return 140;
   
-  // Use autocorrelation for more robust BPM detection
-  // Build onset strength envelope at 10ms resolution
-  const resolution = 0.01; // 10ms
-  const maxTime = beats[beats.length - 1];
-  const envLength = Math.floor(maxTime / resolution);
-  const envelope = new Float32Array(envLength);
-  
-  // Place beats into envelope
-  for (const beat of beats) {
-    const idx = Math.floor(beat / resolution);
-    if (idx < envLength) envelope[idx] = 1;
+  // Score each BPM candidate by how many intervals it explains
+  const score = {};
+  for (const interval of intervals) {
+    const bpm = Math.round(60 / interval);
+    for (const candidate of [bpm, bpm * 2, Math.round(bpm / 2)]) {
+      if (candidate >= 60 && candidate <= 250) {
+        score[candidate] = (score[candidate] || 0) + 1;
+      }
+    }
   }
   
-  // Autocorrelation
-  let bestLag = 0;
-  let bestCorr = -1;
-  const minLag = Math.floor(60 / 200 / resolution); // 200 BPM max
-  const maxLag = Math.floor(60 / 60 / resolution);  // 60 BPM min
+  let bestBpm = 140, bestScore = 0;
+  for (const [bpm, s] of Object.entries(score)) {
+    if (s > bestScore) { bestScore = s; bestBpm = parseInt(bpm); }
+  }
   
-  for (let lag = minLag; lag <= maxLag && lag < envLength; lag++) {
-    let corr = 0;
+  // Refine: check if half/double explains more beats
+  const countIntervalsAt = (bpm) => {
+    const period = 60 / bpm;
     let count = 0;
-    for (let i = 0; i < envLength - lag; i++) {
-      corr += envelope[i] * envelope[i + lag];
-      count++;
+    for (const interval of intervals) {
+      const ratio = interval / period;
+      const nearest = Math.round(ratio);
+      if (Math.abs(ratio - nearest) < 0.15 && nearest >= 1 && nearest <= 4) count++;
     }
-    corr /= count;
-    if (corr > bestCorr) {
-      bestCorr = corr;
-      bestLag = lag;
-    }
-  }
+    return count;
+  };
   
-  if (bestLag === 0) return 140;
+  const base = countIntervalsAt(bestBpm);
+  const half = bestBpm >= 120 ? countIntervalsAt(bestBpm / 2) : 0;
+  const doubled = bestBpm <= 120 ? countIntervalsAt(bestBpm * 2) : 0;
   
-  const bpm = Math.round(60 / (bestLag * resolution));
+  if (half > base * 1.3) return Math.round(bestBpm / 2);
+  if (doubled >= base * 1.3) return Math.round(bestBpm * 2);
   
-  // Handle common octave errors
-  if (bpm < 70) return bpm * 2;
-  if (bpm > 180) {
-    // Check if half tempo makes more sense
-    const halfBpm = bpm / 2;
-    if (halfBpm > 70 && halfBpm < 150) return Math.round(halfBpm);
-  }
-  
-  return bpm;
+  return bestBpm;
 }
 
 function findFirstStrongBeat(beats, bpm) {
@@ -1180,7 +1170,10 @@ function generateChart(beats, difficulty, duration) {
       }
       
       if (noteType === 'hold') {
-        const holdLength = beatInterval * (0.8 + Math.random() * 0.5);
+        const maxHold = { easy: 2, normal: 2.5, hard: 3, insane: 4 };
+        const minHold = { easy: 1, normal: 1, hard: 1.5, insane: 2 };
+        const holdBeats = minHold[difficulty] + Math.random() * (maxHold[difficulty] - minHold[difficulty]);
+        const holdLength = beatInterval * holdBeats;
         notes.push({ time: beatTime, lane, type: 'hold', endTime: beatTime + holdLength });
         holdRanges.push({ start: beatTime, end: beatTime + holdLength });
         occupyLane(beatTime, lane);
@@ -1925,6 +1918,7 @@ function drawBackground() {
 function drawReceptors() {
   const hitY = getHitY(); const size = gameState.noteSize;
   const currentTime = getCurrentTime() + gameState.audioOffset / 1000;
+  const now = performance.now();
   const laneColors = getLaneColors(); const laneKeys = getLaneKeys();
   const holdState = new Array(currentLaneCount).fill(0);
   for (const note of gameState.chart) {
@@ -1945,8 +1939,12 @@ function drawReceptors() {
     ctx.fillStyle = isActive ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.08)';
     ctx.strokeStyle = isHolding ? '#ffffff' : holdApproaching ? '#ffdd44' : laneColors[i];
     ctx.lineWidth = isHolding ? 4 : holdApproaching ? 3 : isActive ? 3 : 2;
+    if (holdApproaching) {
+      ctx.shadowColor = '#ffdd44'; ctx.shadowBlur = 12 + Math.sin(now * 0.008) * 4;
+    }
     const radius = 8;
     ctx.beginPath(); ctx.roundRect(x, hitY - size/2, size, size, radius); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
     if (flash > 0) {
       ctx.fillStyle = `${laneColors[i]}${Math.floor(flash * 40).toString(16).padStart(2, '0')}`;
       ctx.beginPath(); ctx.roundRect(x, hitY - size/2, size, size, radius); ctx.fill();
@@ -2027,11 +2025,28 @@ function drawNotes() {
       }
       ctx.globalAlpha = isBroken ? alpha * 0.5 : alpha;
       const bodyColor = isBroken ? '#ff4d4d' : laneColors[note.lane];
+      ctx.shadowColor = bodyColor; ctx.shadowBlur = isHolding ? 15 : 5;
       const bodyGradient = ctx.createLinearGradient(x, bodyTop, x, bodyBottom);
-      bodyGradient.addColorStop(0, bodyColor); bodyGradient.addColorStop(1, bodyColor + '50');
-      ctx.fillStyle = bodyGradient; ctx.fillRect(x + 6, bodyTop, size - 12, holdHeight);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.fillRect(x + size * 0.35, bodyTop + 2, size * 0.3, Math.max(1, holdHeight - 4));
+      bodyGradient.addColorStop(0, bodyColor); bodyGradient.addColorStop(1, bodyColor + '40');
+      ctx.fillStyle = bodyGradient; ctx.fillRect(x + 4, bodyTop, size - 8, holdHeight);
+      ctx.shadowBlur = 0;
+      if (isHolding && note.holdStartTime) {
+        const hProgress = note.holdStartTime ? Math.min(1, (currentTime - note.holdStartTime) / (note.endTime - note.holdStartTime)) : 0;
+        const progressY = bodyTop + holdHeight * (1 - hProgress);
+        ctx.fillStyle = '#ffffff22';
+        ctx.fillRect(x + 4, progressY, size - 8, Math.max(4, holdHeight * hProgress));
+      }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(x + size * 0.4, bodyTop + 3, size * 0.2, Math.max(1, holdHeight - 6));
+      const tickInterval = gameState.noteSize * 1.5;
+      if (tickInterval > 0) {
+        const ticks = Math.floor(holdHeight / tickInterval);
+        for (let t = 1; t <= ticks; t++) {
+          const tickY = bodyTop + t * (holdHeight / (ticks + 1));
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.fillRect(x + 8, tickY - 1, size - 16, 2);
+        }
+      }
       ctx.shadowColor = bodyColor; ctx.shadowBlur = isHolding ? 20 : 10;
       ctx.fillStyle = isHolding ? '#ffffff' : bodyColor;
       ctx.beginPath(); ctx.roundRect(x, headY - size/2, size, size, 8); ctx.fill(); ctx.shadowBlur = 0;
@@ -2039,6 +2054,15 @@ function drawNotes() {
       ctx.beginPath(); ctx.roundRect(x + 6, headY - size/2 + 6, size - 12, size * 0.35, 4); ctx.fill();
       ctx.fillStyle = bodyColor + 'AA';
       ctx.beginPath(); ctx.roundRect(x + 4, tailY - size/4, size - 8, size/2, 6); ctx.fill();
+      if (isHolding && note.holdStartTime) {
+        const hProgress = Math.min(1, (currentTime - note.holdStartTime) / (note.endTime - note.holdStartTime));
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const pct = Math.floor(hProgress * 100);
+        ctx.fillText(pct + '%', x + size / 2, headY);
+      }
     } else {
       drawNoteShape(x, y, size, laneColors[note.lane], currentNoteStyle, false);
     }
@@ -2371,6 +2395,8 @@ function updateHoldingNotes() {
   const currentTime = getCurrentTime() + gameState.audioOffset / 1000;
   const now = performance.now();
   const holdGracePeriod = 200;
+  const tw = getCurrentTimingWindows();
+  const activationWindow = Math.max(tw.miss / 1000, 0.15);
   
   for (const note of gameState.chart) {
     if (note.type !== 'hold' || note.missed || note.completed || note.broken) continue;
@@ -2378,20 +2404,23 @@ function updateHoldingNotes() {
     if (!note.activated) {
       const timeDiff = currentTime - note.time;
       
-      if (timeDiff >= -0.15 && timeDiff <= 0.15 && gameState.activeKeys[note.lane]) {
+      if (timeDiff >= -activationWindow && timeDiff <= activationWindow && gameState.activeKeys[note.lane]) {
         note.activated = true;
         note.holding = true;
         note.graceExpiry = 0;
+        note.holdStartTime = currentTime;
+        note.lastTickTime = currentTime;
         gameState.combo++;
         if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
         gameState.score += 100;
         comboPopScale = 1; scorePopScale = 1;
         gameState.laneFlash[note.lane] = 1;
+        gameState.laneGlow[note.lane] = 1;
         playHitSound('great');
         continue;
       }
       
-      if (currentTime > note.time + 0.2) {
+      if (currentTime > note.time + activationWindow) {
         note.missed = true;
         gameState.combo = 0;
         gameState.judgments.miss++;
@@ -2403,6 +2432,15 @@ function updateHoldingNotes() {
     }
     
     if (note.activated && note.holding) {
+      // Tick scoring every 100ms
+      if (currentTime - note.lastTickTime >= 0.1) {
+        note.lastTickTime += 0.1;
+        gameState.score += 5;
+        gameState.laneGlow[note.lane] = Math.min(1, gameState.laneGlow[note.lane] + 0.3);
+      }
+      
+      const nearEnd = note.endTime - currentTime <= 0.05;
+      
       if (currentTime >= note.endTime) {
         note.holding = false;
         note.completed = true;
@@ -2419,16 +2457,30 @@ function updateHoldingNotes() {
       if (!gameState.activeKeys[note.lane]) {
         if (!note.graceExpiry) note.graceExpiry = now + holdGracePeriod;
         if (now >= note.graceExpiry) {
-          note.holding = false;
-          note.broken = true;
-          gameState.combo = 0;
-          gameState.health = Math.max(0, gameState.health - 5);
-          gameState.judgments.miss++;
-          playHitSound('miss');
-          gameState.hitEffects.push({ lane: note.lane, label: 'BREAK', color: '#ff4d4d', startTime: now, duration: 600, particles: [] });
+          // Allow early release if very close to end
+          if (nearEnd) {
+            note.holding = false;
+            note.completed = true;
+            gameState.score += 200;
+            comboPopScale = 1; scorePopScale = 1;
+            gameState.judgments.marvelous++;
+            gameState.combo++;
+            if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+            playHitSound('perfect');
+            gameState.hitEffects.push({ lane: note.lane, label: 'HOLD CLEAR', color: '#ffd700', startTime: now, duration: 600, particles: [] });
+          } else {
+            note.holding = false;
+            note.broken = true;
+            gameState.combo = 0;
+            gameState.health = Math.max(0, gameState.health - 5);
+            gameState.judgments.miss++;
+            playHitSound('miss');
+            gameState.hitEffects.push({ lane: note.lane, label: 'BREAK', color: '#ff4d4d', startTime: now, duration: 600, particles: [] });
+          }
         }
       } else {
         note.graceExpiry = 0;
+        note.holdStartTime = note.holdStartTime || currentTime;
       }
     }
   }
