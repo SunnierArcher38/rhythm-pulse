@@ -268,9 +268,17 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .mini-player .player-btn:hover { background: var(--accent-dim); border-color: var(--pink); color: var(--pink); }
 .mini-player .player-btn.play-btn { background: var(--pink); border: none; color: #fff; }
 .mini-player .player-btn.play-btn:hover { background: #ff4d9a; }
-.mini-player .player-btn.active-loop { color: var(--pink); }
-.mini-player .progress-container { width: 100%; height: 4px; background: var(--bg-panel); border-radius: 2px; cursor: pointer; overflow: hidden; }
+.mini-player .player-btn.active-loop { color: var(--pink); background: var(--accent-dim); border-color: var(--pink); box-shadow: 0 0 8px rgba(255,102,170,0.3); }
+.mini-player .player-index { font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; margin-left: 0.3rem; }
+.mini-player .player-extras { display: flex; align-items: center; gap: 0.3rem; }
+.mini-player .speed-btn { font-size: 0.7rem !important; font-weight: 700; width: 36px; }
+.mini-player .mute-btn { font-size: 0.85rem; }
+.mini-player .progress-wrapper { position: relative; width: 100%; }
+.mini-player .progress-container { width: 100%; height: 4px; background: var(--bg-panel); border-radius: 2px; cursor: pointer; position: relative; }
 .mini-player .progress-bar { height: 100%; background: var(--pink); border-radius: 2px; width: 0%; transition: width 0.1s; }
+.mini-player .progress-tooltip { position: absolute; bottom: 10px; transform: translateX(-50%); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 6px; font-size: 0.7rem; color: var(--text); display: none; pointer-events: none; white-space: nowrap; z-index: 10; }
+.mini-player .progress-container:hover .progress-tooltip,
+.mini-player .progress-container.dragging .progress-tooltip { display: block; }
 .mini-player .volume-slider { width: 50px; accent-color: var(--pink); }
 .mod-btn { padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text-dimmer); font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
 .mod-btn:hover { border-color: var(--pink); color: var(--pink); }
@@ -779,24 +787,34 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   <div class="metronome-indicator" id="metronomeIndicator"><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div><div class="metronome-dot"></div></div>
   <div class="mini-player" id="miniPlayer">
     <div class="player-controls">
-      <button class="player-btn" id="playerPrevBtn">⏮</button>
-      <button class="player-btn play-btn" id="playerPlayBtn">▶</button>
-      <button class="player-btn" id="playerNextBtn">⏭</button>
-      <button class="player-btn" id="playerStopBtn">⏹</button>
-      <button class="player-btn" id="playerLoopBtn">🔁</button>
-      <button class="player-btn" id="playerShuffleBtn">🔀</button>
+      <button class="player-btn" id="playerPrevBtn" title="Previous">⏮</button>
+      <button class="player-btn play-btn" id="playerPlayBtn" title="Play/Pause">▶</button>
+      <button class="player-btn" id="playerNextBtn" title="Next">⏭</button>
+      <button class="player-btn" id="playerStopBtn" title="Stop">⏹</button>
+      <button class="player-btn" id="playerRestartBtn" title="Restart">⏪</button>
+      <button class="player-btn" id="playerLoopBtn" title="Loop">🔁</button>
+      <button class="player-btn" id="playerShuffleBtn" title="Shuffle">🔀</button>
+      <span class="player-index" id="playerIndex"></span>
     </div>
     <div class="player-info">
       <div class="player-title" id="playerTitle"><span class="player-title-inner">No song selected</span></div>
       <div class="player-meta">
         <span id="playerTime">0:00 / 0:00</span>
         <span id="playerBPM"></span>
+        <span id="playerSpeedDisplay" style="color:var(--pink);font-weight:700;"></span>
       </div>
-      <div class="progress-container" id="playerProgressContainer">
-        <div class="progress-bar" id="playerProgressBar"></div>
+      <div class="progress-wrapper">
+        <div class="progress-container" id="playerProgressContainer">
+          <div class="progress-bar" id="playerProgressBar"></div>
+          <div class="progress-tooltip" id="progressTooltip"></div>
+        </div>
       </div>
     </div>
-    <input type="range" class="volume-slider" id="playerVolume" min="0" max="100" value="80">
+    <div class="player-extras">
+      <button class="player-btn mute-btn" id="playerMuteBtn" title="Mute">🔊</button>
+      <input type="range" class="volume-slider" id="playerVolume" min="0" max="100" value="80">
+      <button class="player-btn speed-btn" id="playerSpeedBtn" title="Playback speed">1x</button>
+    </div>
   </div>
   <div class="health-mode-indicator" id="healthModeIndicator"></div>
 </div>
@@ -1418,7 +1436,7 @@ updateTouchLanes();
 let hitSoundEnabled = false;
 let soundCtx = null;
 let practiceMode = false, practiceSpeed = 1.0, practiceLoopStart = 0, practiceLoopEnd = 0, practiceLoopActive = false;
-let previewSource = null, previewPlaying = false, previewSong = null, previewStartTime = 0, previewPausedAt = 0, previewGainNode = null, previewLoop = false, previewShuffle = false;
+let previewSource = null, previewPlaying = false, previewSong = null, previewStartTime = 0, previewPausedAt = 0, previewGainNode = null, previewLoop = false, previewShuffle = false, previewSpeed = 1, previewMuted = false, previousVolume = 80;
 let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true;
 let beatZoomValue = 0, beatZoomTarget = 0, lastBeatZoomTime = 0;
 let comboZoomValue = 0, comboZoomTarget = 0, lastComboZoomTime = 0, lastComboMilestone = 0;
@@ -4511,12 +4529,14 @@ async function previewPlay(song) {
   menuCachedVisualizerData = null;
   previewSource = audioCtx.createBufferSource();
   previewSource.buffer = song.audioBuffer;
+  previewSource.playbackRate.value = previewSpeed;
   if (!analyser) setupVisualizerForPreview();
   previewSource.connect(analyser);
   analyser.connect(previewGainNode);
   previewSource.start(0, previewPausedAt);
   previewStartTime = audioCtx.currentTime - previewPausedAt;
   previewPlaying = true;
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
   document.getElementById('playerPlayBtn').textContent = '⏸';
   const titleEl = document.getElementById('playerTitle');
   const inner = titleEl.querySelector('.player-title-inner');
@@ -4530,7 +4550,12 @@ async function previewPlay(song) {
     }
   });
   document.getElementById('playerBPM').textContent = song.bpm ? `${Math.round(song.bpm)} BPM` : '';
+  // Track index
+  const idx = songs.indexOf(song);
+  document.getElementById('playerIndex').textContent = idx >= 0 ? `${idx + 1} / ${songs.length}` : '';
+  document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
   document.getElementById('miniPlayer').classList.add('active');
+  updateMediaSession();
   updateSongList();
   updatePreviewProgress();
 }
@@ -4625,6 +4650,7 @@ function previewPause() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
   previewPlaying = false;
   document.getElementById('playerPlayBtn').textContent = '▶';
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
 }
 
 function previewStop() {
@@ -4643,6 +4669,10 @@ function previewStop() {
   titleEl.classList.remove('scrolling');
   document.getElementById('playerProgressBar').style.width = '0%';
   document.getElementById('playerTime').textContent = '0:00 / 0:00';
+  document.getElementById('playerIndex').textContent = '';
+  document.getElementById('playerSpeedDisplay').textContent = '';
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
+  if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
   document.querySelectorAll('.track-btn.preview').forEach(btn => {
     if (btn.textContent === '⏹ Stop') {
       btn.textContent = '▶ Preview';
@@ -4754,6 +4784,116 @@ document.getElementById('playerProgressContainer').addEventListener('mousedown',
 
 document.getElementById('playerVolume').addEventListener('input', (e) => {
   if (previewGainNode) previewGainNode.gain.value = (parseInt(e.target.value) / 100) * 0.8;
+  previousVolume = parseInt(e.target.value);
+});
+
+document.getElementById('playerRestartBtn').addEventListener('click', () => {
+  if (!previewSong) return;
+  previewPausedAt = 0;
+  previewPlay(previewSong);
+});
+
+document.getElementById('playerMuteBtn').addEventListener('click', () => {
+  previewMuted = !previewMuted;
+  const volSlider = document.getElementById('playerVolume');
+  if (previewMuted) {
+    volSlider.value = 0;
+    if (previewGainNode) previewGainNode.gain.value = 0;
+    document.getElementById('playerMuteBtn').textContent = '🔇';
+  } else {
+    volSlider.value = previousVolume;
+    if (previewGainNode) previewGainNode.gain.value = (previousVolume / 100) * 0.8;
+    document.getElementById('playerMuteBtn').textContent = '🔊';
+  }
+});
+
+document.getElementById('playerSpeedBtn').addEventListener('click', () => {
+  const speeds = [1, 1.25, 1.5, 2, 0.5, 0.75];
+  const idx = speeds.indexOf(previewSpeed);
+  previewSpeed = speeds[(idx + 1) % speeds.length];
+  document.getElementById('playerSpeedBtn').textContent = previewSpeed + 'x';
+  document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
+  if (previewSource && previewSource.playbackRate !== undefined) {
+    previewSource.playbackRate.value = previewSpeed;
+  }
+});
+
+// Seek tooltip on progress bar
+document.getElementById('playerProgressContainer').addEventListener('mousemove', (e) => {
+  const container = document.getElementById('playerProgressContainer');
+  const rect = container.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const tooltip = document.getElementById('progressTooltip');
+  const dur = previewSong?.audioBuffer?.duration || previewSong?.duration || 0;
+  tooltip.textContent = formatTime(ratio * dur);
+  tooltip.style.left = (ratio * 100) + '%';
+});
+document.getElementById('playerProgressContainer').addEventListener('mouseleave', () => {
+  document.getElementById('progressTooltip').style.display = 'none';
+});
+document.getElementById('playerProgressContainer').addEventListener('mouseenter', () => {
+  if (previewSong) document.getElementById('progressTooltip').style.display = 'block';
+});
+
+// Media Session API
+function updateMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  if (previewSong) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: previewSong.name,
+      artist: 'Rhythm Pulse',
+      album: 'Local Library'
+    });
+  } else {
+    navigator.mediaSession.metadata = null;
+  }
+  navigator.mediaSession.setActionHandler('play', () => {
+    if (previewSong && !previewPlaying) previewPlay(previewSong);
+  });
+  navigator.mediaSession.setActionHandler('pause', () => {
+    if (previewPlaying) previewPause();
+  });
+  navigator.mediaSession.setActionHandler('previoustrack', () => {
+    document.getElementById('playerPrevBtn').click();
+  });
+  navigator.mediaSession.setActionHandler('nexttrack', () => {
+    document.getElementById('playerNextBtn').click();
+  });
+  navigator.mediaSession.setActionHandler('stop', () => {
+    previewStop();
+  });
+  navigator.mediaSession.setActionHandler('seekto', (details) => {
+    if (details.seekTime != null) previewSeek(details.seekTime / (previewSong?.audioBuffer?.duration || previewSong?.duration || 1));
+  });
+}
+
+// Keyboard shortcuts for player
+document.addEventListener('keydown', (e) => {
+  if (!previewSong || gameState.mode === 'playing') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (previewPlaying) previewPause();
+    else previewPlay(previewSong);
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const dur = previewSong?.audioBuffer?.duration || previewSong?.duration || 0;
+    const current = previewPlaying ? audioCtx.currentTime - previewStartTime : previewPausedAt;
+    previewSeek(Math.max(0, current - 5) / dur);
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    const dur = previewSong?.audioBuffer?.duration || previewSong?.duration || 0;
+    const current = previewPlaying ? audioCtx.currentTime - previewStartTime : previewPausedAt;
+    previewSeek(Math.min(dur, current + 5) / dur);
+  } else if (e.key === '=' || e.key === '+') {
+    const vol = document.getElementById('playerVolume');
+    vol.value = Math.min(100, parseInt(vol.value) + 5);
+    vol.dispatchEvent(new Event('input'));
+  } else if (e.key === '-') {
+    const vol = document.getElementById('playerVolume');
+    vol.value = Math.max(0, parseInt(vol.value) - 5);
+    vol.dispatchEvent(new Event('input'));
+  }
 });
 
 function gameLoop() {
