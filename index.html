@@ -4917,19 +4917,25 @@ function submitToLeaderboard(data) {
     .insert([entry])
     .then(({ error }) => {
       if (error) console.error('Leaderboard submit failed:', error);
-      else {
-        console.log('Score submitted to leaderboard!');
-        uploadSongAudio(data.songName);
-      }
+      else console.log('Score submitted to leaderboard!');
     })
     .catch(err => console.error('Leaderboard submit error:', err));
+  uploadSongAudio(data.songName);
 }
 
 async function uploadSongAudio(songName) {
   const song = songs.find(s => s.name === songName);
   if (!song || !song.rawData) { console.warn('[Storage] No song data for:', songName); return; }
   if (song.size > 30 * 1024 * 1024) { console.warn('[Storage] Song too large, skipping upload'); return; }
+  if (!supabaseClient && !initSupabase()) return;
   const key = encodeURIComponent(songName);
+  try {
+    const { data: existing } = await supabaseClient.storage.from('song-files').list(undefined, { search: key });
+    if (existing && existing.some(f => f.name === key)) {
+      console.log('[Storage] Song already uploaded:', songName);
+      return;
+    }
+  } catch {}
   try {
     const mimeType = song.file?.type || 'audio/mpeg';
     const blob = new Blob([song.rawData], { type: mimeType });
