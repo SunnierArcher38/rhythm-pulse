@@ -5123,7 +5123,7 @@ async function uploadSongAudio(songName) {
   if (!supabaseClient && !initSupabase()) return;
   const key = encodeURIComponent(songName);
   try {
-    const { data: existing } = await supabaseClient.storage.from('song-files').list(undefined, { search: key });
+    const { data: existing } = await supabaseClient.storage.from('song-files').list('', { search: key, limit: 200 });
     if (existing && existing.some(f => f.name === key)) {
       console.log('[Storage] Song already uploaded:', songName);
       return;
@@ -5492,7 +5492,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       list.innerHTML = '<div class="lb-error">Storage not available</div>';
       return;
     }
-    supabaseClient.storage.from('song-files').list().then(({ data, error }) => {
+    supabaseClient.storage.from('song-files').list('', { limit: 200 }).then(({ data, error }) => {
       if (error) { list.innerHTML = `<div class="lb-error">${error.message}</div>`; return; }
       if (!data || data.length === 0) {
         list.innerHTML = '<div class="lb-empty">No songs shared yet. Upload yours by submitting a score!</div>';
