@@ -4740,7 +4740,7 @@ async function cloudSave() {
     const json = JSON.stringify(data);
     const blob = new Blob([json], { type: 'application/json' });
     const key = `saves/${encodeURIComponent(playerName)}.json`;
-    const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'application/json' });
+    const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'text/plain' });
     if (error) throw error;
     statusEl.textContent = '✅ Cloud save complete!';
     statusEl.style.color = '#4ade80';
