@@ -1440,6 +1440,7 @@ let hitSoundEnabled = false;
 let soundCtx = null;
 let practiceMode = false, practiceSpeed = 1.0, practiceLoopStart = 0, practiceLoopEnd = 0, practiceLoopActive = false;
 let previewSource = null, previewPlaying = false, previewSong = null, previewStartTime = 0, previewPausedAt = 0, previewGainNode = null, previewLoop = false, previewShuffle = false, previewSpeed = 1, previewMuted = false, previousVolume = 80;
+let previewVirtualTime = 0, lastPreviewFrameTime = 0;
 let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true;
 let beatZoomValue = 0, beatZoomTarget = 0, lastBeatZoomTime = 0;
 let comboZoomValue = 0, comboZoomTarget = 0, lastComboZoomTime = 0, lastComboMilestone = 0;
@@ -4530,6 +4531,8 @@ async function previewPlay(song) {
   previewSong = song;
   menuLastBeatIdx = -1;
   menuCachedVisualizerData = null;
+  previewVirtualTime = previewPausedAt;
+  lastPreviewFrameTime = performance.now();
   previewSource = audioCtx.createBufferSource();
   previewSource.buffer = song.audioBuffer;
   previewSource.playbackRate.value = previewSpeed;
@@ -4677,7 +4680,8 @@ function drawMenuVisualizer() {
 
 function previewPause() {
   if (!previewPlaying) return;
-  previewPausedAt = audioCtx.currentTime - previewStartTime;
+  previewPausedAt = previewVirtualTime;
+  lastPreviewFrameTime = performance.now();
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
   previewPlaying = false;
   document.getElementById('playerPlayBtn').textContent = '▶';
@@ -4688,6 +4692,7 @@ function previewStop() {
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
   previewPlaying = false;
   previewPausedAt = 0;
+  previewVirtualTime = 0;
   previewSong = null;
   menuLastBeatIdx = -1;
   menuBeatZoomValue = 0;
@@ -4723,6 +4728,8 @@ function previewSeek(ratio) {
   if (!duration) return;
   const seekTime = ratio * duration;
   previewPausedAt = seekTime;
+  previewVirtualTime = seekTime;
+  lastPreviewFrameTime = performance.now();
   menuLastBeatIdx = -1;
   if (previewSource) { try { previewSource.stop(); } catch(e) {} }
   previewPlaying = false;
@@ -4730,10 +4737,16 @@ function previewSeek(ratio) {
 }
 
 function updatePreviewProgress() {
-  if (!previewPlaying || !previewSong) return;
-  const current = audioCtx.currentTime - previewStartTime;
+  if (!previewSong) return;
   const duration = previewSong.audioBuffer?.duration || previewSong.duration;
   if (!duration) return;
+  if (previewPlaying) {
+    const now = performance.now();
+    const dt = (now - lastPreviewFrameTime) / 1000;
+    lastPreviewFrameTime = now;
+    previewVirtualTime += dt * previewSpeed;
+  }
+  const current = previewVirtualTime;
   const progress = Math.min(current / duration, 1);
   document.getElementById('playerProgressBar').style.width = (progress * 100) + '%';
   document.getElementById('playerTime').textContent = `${formatTime(current)} / ${formatTime(duration)}`;
