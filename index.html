@@ -526,6 +526,8 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .saveload-btn.purple:hover { background: rgba(196,77,255,0.3); border-color: #c44dff; }
 .saveload-btn.blue { background: rgba(107,157,255,0.15); border-color: rgba(107,157,255,0.3); }
 .saveload-btn.blue:hover { background: rgba(107,157,255,0.3); border-color: #6b9dff; }
+.saveload-btn.cyan { background: rgba(0,200,255,0.15); border-color: rgba(0,200,255,0.3); }
+.saveload-btn.cyan:hover { background: rgba(0,200,255,0.3); border-color: #00ccff; }
 .saveload-btn .label { font-weight: 600; display: block; margin-bottom: 0.15rem; }
 .saveload-btn .hint { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
 #closeSaveLoad { display: block; width: 100%; margin-top: 0.5rem; padding: 0.6rem; border: none; border-radius: 10px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
@@ -650,6 +652,14 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
             <div class="saveload-grid">
               <button class="saveload-btn gold" id="slSaveAll"><span class="label">📦 Save All</span><span class="hint">Songs + settings + achievements</span></button>
               <button class="saveload-btn gold" id="slLoadAll"><span class="label">📂 Load All</span><span class="hint">Restore full backup from .rpbackup</span></button>
+            </div>
+          </div>
+          <div class="saveload-section">
+            <div class="saveload-section-title">☁️ Cloud Save</div>
+            <div class="saveload-status" id="cloudSaveStatus"></div>
+            <div class="saveload-grid">
+              <button class="saveload-btn cyan" id="slCloudSave"><span class="label">☁️ Save to Cloud</span><span class="hint">Upload settings + achievements + scores</span></button>
+              <button class="saveload-btn cyan" id="slCloudLoad"><span class="label">☁️ Load from Cloud</span><span class="hint">Download and restore from cloud</span></button>
             </div>
           </div>
           <button id="closeSaveLoad">Close</button>
@@ -3503,6 +3513,7 @@ document.getElementById('saveLoadBtn').addEventListener('click', () => {
   status.textContent = `📊 ${songCount} song${songCount !== 1 ? 's' : ''}  •  🏆 ${achCount} achievement${achCount !== 1 ? 's' : ''}  •  ⭐ ${scoreKeys} high score${scoreKeys !== 1 ? 's' : ''}`;
   if (songCount === 0 && achCount === 0 && scoreKeys === 0)
     status.textContent = '📭 No saved data yet. Play some songs to get started!';
+  document.getElementById('cloudSaveStatus').textContent = '';
   modal.classList.add('active');
 });
 document.getElementById('discordBtn').addEventListener('click', () => { addStat('discord_click', 1); checkProgressiveAchievements('discord_click', getStat('discord_click')); window.open('https://discord.gg/aa83vhpC4v', '_blank'); });
@@ -3873,6 +3884,7 @@ function migrateSaveData(data) {
   if (!d.s) d.s = {};
   if (!d.a) d.a = {};
   if (!d.f) d.f = [];
+  if (!d.h) d.h = {};
   d.v = SAVE_VERSION;
   return d;
 }
@@ -4692,6 +4704,92 @@ async function uploadSongAudio(songName) {
   }
 }
 
+async function cloudSave() {
+  if (!supabaseClient && !initSupabase()) { return { error: 'Supabase not configured' }; }
+  const playerName = getPlayerName();
+  if (playerName === 'Anonymous') { return { error: 'Set a player name in settings first' }; }
+  const statusEl = document.getElementById('cloudSaveStatus');
+  statusEl.textContent = '⏳ Uploading...';
+  statusEl.style.color = 'rgba(255,255,255,0.5)';
+  try {
+    const data = {
+      v: SAVE_VERSION,
+      a: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
+      f: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
+      h: JSON.parse(localStorage.getItem('rhythmPulseScores') || '{}'),
+      s: {
+        ao: localStorage.getItem('rhythmPulseAudioOffset'),
+        ss: localStorage.getItem('rhythmPulseScrollSpeed'),
+        ns: localStorage.getItem('rhythmPulseNoteSize'),
+        vol: localStorage.getItem('rhythmPulseVolume'),
+        lc: localStorage.getItem('rhythmPulseLaneCount'),
+        hs: localStorage.getItem('rhythmPulseHitSound'),
+        fps: localStorage.getItem('rhythmPulseShowFPS'),
+        vis: localStorage.getItem('rhythmPulseVisualizer'),
+        bz: localStorage.getItem('rhythmPulseBeatZoom'),
+        nst: localStorage.getItem('rhythmPulseNoteStyle'),
+        cs: localStorage.getItem('rhythmPulseColorScheme'),
+        tw: localStorage.getItem('rhythmPulseTimingWindow'),
+        sd: localStorage.getItem('rhythmPulseScrollDirection'),
+        hm: localStorage.getItem('rhythmPulseHealthMode'),
+        sp: localStorage.getItem('rhythmPulseSpeedPreset'),
+        ck: localStorage.getItem('rhythmPulseCustomKeys'),
+        nm: localStorage.getItem('rhythmPulsePlayerName')
+      }
+    };
+    const json = JSON.stringify(data);
+    const blob = new Blob([json], { type: 'application/json' });
+    const key = `saves/${encodeURIComponent(playerName)}.json`;
+    const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'application/json' });
+    if (error) throw error;
+    statusEl.textContent = '✅ Cloud save complete!';
+    statusEl.style.color = '#4ade80';
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    return { success: true };
+  } catch (e) {
+    statusEl.textContent = '❌ Cloud save failed: ' + e.message;
+    statusEl.style.color = '#ff4d4d';
+    return { error: e.message };
+  }
+}
+
+async function cloudLoad() {
+  if (!supabaseClient && !initSupabase()) { return { error: 'Supabase not configured' }; }
+  const playerName = getPlayerName();
+  if (playerName === 'Anonymous') { return { error: 'Set a player name in settings first' }; }
+  const statusEl = document.getElementById('cloudSaveStatus');
+  statusEl.textContent = '⏳ Downloading...';
+  statusEl.style.color = 'rgba(255,255,255,0.5)';
+  try {
+    const key = `saves/${encodeURIComponent(playerName)}.json`;
+    const { data, error } = await supabaseClient.storage.from('song-files').download(key);
+    if (error) throw error;
+    if (!data) throw new Error('No cloud save found for this player');
+    const json = await data.text();
+    const parsed = JSON.parse(json);
+    const migrated = migrateSaveData(parsed);
+    if (migrated.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a));
+    if (migrated.f) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(migrated.f));
+    if (migrated.h) localStorage.setItem('rhythmPulseScores', JSON.stringify(migrated.h));
+    if (migrated.s) {
+      const s = migrated.s;
+      const map = { ao: 'rhythmPulseAudioOffset', ss: 'rhythmPulseScrollSpeed', ns: 'rhythmPulseNoteSize', vol: 'rhythmPulseVolume', lc: 'rhythmPulseLaneCount', hs: 'rhythmPulseHitSound', fps: 'rhythmPulseShowFPS', vis: 'rhythmPulseVisualizer', bz: 'rhythmPulseBeatZoom', nst: 'rhythmPulseNoteStyle', cs: 'rhythmPulseColorScheme', tw: 'rhythmPulseTimingWindow', sd: 'rhythmPulseScrollDirection', hm: 'rhythmPulseHealthMode', sp: 'rhythmPulseSpeedPreset', ck: 'rhythmPulseCustomKeys', nm: 'rhythmPulsePlayerName' };
+      Object.entries(s).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && map[k]) localStorage.setItem(map[k], v);
+      });
+    }
+    statusEl.textContent = '✅ Cloud load complete! Page will reload.';
+    statusEl.style.color = '#4ade80';
+    setTimeout(() => { location.reload(); }, 1500);
+    return { success: true };
+  } catch (e) {
+    statusEl.textContent = '❌ Cloud load failed: ' + e.message;
+    statusEl.style.color = '#ff4d4d';
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    return { error: e.message };
+  }
+}
+
 function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', limit = 50) {
   if (!supabaseClient) {
     if (!initSupabase()) {
@@ -5142,6 +5240,9 @@ document.getElementById('slLoadAll').addEventListener('click', () => {
   document.getElementById('saveLoadModal').classList.remove('active');
   document.getElementById('loadEverythingInput').click();
 });
+
+document.getElementById('slCloudSave').addEventListener('click', () => { cloudSave(); });
+document.getElementById('slCloudLoad').addEventListener('click', () => { cloudLoad(); });
 
 const BLOCKED_WORDS = [
   'fuck','shit','ass','bitch','damn','dick','pussy','cock','cunt','nigger','nigga',
