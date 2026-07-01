@@ -4787,9 +4787,24 @@ async function cloudSave() {
     };
     const json = JSON.stringify(data);
     const encrypted = await encryptSaveData(json, password);
-    const blob = new Blob([encrypted], { type: 'audio/mpeg' });
-    const key = `save_${encodeURIComponent(playerName)}.mp3`;
-    const { error } = await supabaseClient.storage.from('song-files').upload(key, blob, { upsert: true, contentType: 'audio/mpeg' });
+    const { error } = await supabaseClient
+      .from('scores')
+      .insert({
+        player_name: playerName,
+        song_name: '__CLOUD_SAVE__',
+        difficulty: SAVE_VERSION.toString(),
+        score: 0,
+        accuracy: 0,
+        max_combo: 0,
+        grade: 'N',
+        judgments: encrypted,
+        modifiers: '',
+        timing_window: 'normal',
+        lane_count: 0,
+        scroll_speed: 0,
+        health_mode: 'normal',
+        created_at: new Date().toISOString()
+      });
     if (error) throw error;
     statusEl.textContent = '✅ Cloud save complete!';
     statusEl.style.color = '#4ade80';
@@ -4812,11 +4827,16 @@ async function cloudLoad() {
   statusEl.textContent = '⏳ Downloading...';
   statusEl.style.color = 'rgba(255,255,255,0.5)';
   try {
-    const key = `save_${encodeURIComponent(playerName)}.mp3`;
-    const { data, error } = await supabaseClient.storage.from('song-files').download(key);
+    const { data, error } = await supabaseClient
+      .from('scores')
+      .select('judgments')
+      .eq('player_name', playerName)
+      .eq('song_name', '__CLOUD_SAVE__')
+      .order('created_at', { ascending: false })
+      .limit(1);
     if (error) throw error;
-    if (!data) throw new Error('No cloud save found for this player');
-    const text = await data.text();
+    if (!data || data.length === 0) throw new Error('No cloud save found for this player');
+    const text = data[0].judgments;
     statusEl.textContent = '⏳ Decrypting...';
     const json = await decryptSaveData(text, password);
     const parsed = JSON.parse(json);
