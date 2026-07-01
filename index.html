@@ -690,8 +690,8 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
           <div class="leaderboard-filters" id="lbFilters">
             <button class="lb-filter-btn active" data-scope="overall">Overall</button>
             <button class="lb-filter-btn" data-scope="per-song">Per Song</button>
-            <button class="lb-filter-btn" data-scope="players">Players</button>
-          </div>
+            <button class="lb-filter-btn" data-scope="browse">Browse</button>
+           </div>
          <div class="leaderboard-filters" id="lbSongSelector" style="display:none;">
             <select id="lbSongSelect" style="padding:0.3rem 0.8rem;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.85rem;outline:none;max-width:300px;"></select>
          </div>
@@ -5255,31 +5255,43 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
     return;
   }
   
-  if (scope === 'players') {
-    supabaseClient
-      .from('scores')
-      .select('player_name')
-      .then(({ data, error }) => {
-        if (error) { list.innerHTML = `<div class="lb-error">${error.message}</div>`; return; }
-        const names = [...new Set((data || []).map(e => e.player_name))].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        if (names.length === 0) { list.innerHTML = '<div class="lb-empty">No players yet</div>'; return; }
-        const playerName = getPlayerName().toLowerCase();
-        let html = '';
-        names.forEach((name, i) => {
-          const isYou = name.toLowerCase() === playerName;
-          html += `<div class="lb-entry${isYou ? ' you' : ''}">
-            <div class="lb-rank">#${i + 1}</div>
-            <div class="lb-info">
-              <div class="lb-player">${escapeHtml(name)}${isYou ? ' (You)' : ''}</div>
-            </div>
-          </div>`;
-        });
-        list.innerHTML = html;
-      }).catch(err => {
-        list.innerHTML = `<div class="lb-error">Error: ${err.message}</div>`;
+  if (scope === 'browse') {
+    const list = document.getElementById('leaderboardList');
+    list.innerHTML = '<div class="lb-loading">Loading shared songs...</div>';
+    if (!supabaseClient && !initSupabase()) {
+      list.innerHTML = '<div class="lb-error">Storage not available</div>';
+      return;
+    }
+    supabaseClient.storage.from('song-files').list().then(({ data, error }) => {
+      if (error) { list.innerHTML = `<div class="lb-error">${error.message}</div>`; return; }
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="lb-empty">No songs shared yet. Upload yours by submitting a score!</div>';
+        return;
+      }
+      const playerName = getPlayerName().toLowerCase();
+      let html = '';
+      data.filter(f => f.name).sort((a, b) => a.name.localeCompare(b.name)).forEach((f, i) => {
+        const name = decodeURIComponent(f.name);
+        const owned = songs.some(s => s.name === name);
+        const isYours = false;
+        html += `<div class="lb-entry">
+          <div class="lb-rank">#${i + 1}</div>
+          <div class="lb-info">
+            <div class="lb-player" style="font-size:0.9rem;">${escapeHtml(name)}</div>
+          </div>
+          <div class="lb-stats">
+            <button class="lb-play-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(name)}" onclick="addLeaderboardSong(this)">▶</button>
+            <button class="lb-download-btn${owned ? ' owned' : ''}" data-song="${escapeHtml(name)}" data-url="" onclick="downloadLeaderboardSong(this)" title="${owned ? 'Already in library' : 'Download this song'}">📥</button>
+          </div>
+        </div>`;
       });
+      list.innerHTML = html;
+    }).catch(err => {
+      list.innerHTML = `<div class="lb-error">${err.message}</div>`;
+    });
     return;
   }
+  
 }
 
 function addLeaderboardSong(btn) {
@@ -5421,8 +5433,8 @@ function showLeaderboard(scope = 'overall', song = 'all', difficulty = 'all') {
   
   if (scope === 'overall') {
     document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
-  } else if (scope === 'players') {
-    document.getElementById('lbSubtitle').textContent = 'Players';
+  } else if (scope === 'browse') {
+    document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
   } else {
     document.getElementById('lbSubtitle').textContent = song === 'all' ? 'Per Song - All Songs' : `Per Song - ${song}`;
   }
@@ -5454,8 +5466,8 @@ document.querySelectorAll('#lbFilters .lb-filter-btn').forEach(btn => {
     
     if (leaderboardScope === 'overall') {
       document.getElementById('lbSubtitle').textContent = 'Overall - All Songs Combined';
-    } else if (leaderboardScope === 'players') {
-      document.getElementById('lbSubtitle').textContent = 'Players';
+    } else if (leaderboardScope === 'browse') {
+      document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
     } else {
       leaderboardSong = document.getElementById('lbSongSelect').value;
       document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? 'Per Song - All Songs' : `Per Song - ${leaderboardSong}`;
@@ -5473,8 +5485,8 @@ document.querySelectorAll('#lbDiffFilters .lb-filter-btn').forEach(btn => {
     
     if (leaderboardScope === 'overall') {
       document.getElementById('lbSubtitle').textContent = `Overall - ${leaderboardDifficulty === 'all' ? 'All Difficulties' : leaderboardDifficulty.charAt(0).toUpperCase() + leaderboardDifficulty.slice(1)}`;
-    } else if (leaderboardScope === 'players') {
-      document.getElementById('lbSubtitle').textContent = 'Players';
+    } else if (leaderboardScope === 'browse') {
+      document.getElementById('lbSubtitle').textContent = 'Browse - Songs shared by players';
     } else {
       document.getElementById('lbSubtitle').textContent = leaderboardSong === 'all' ? `Per Song - All Songs - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}` : `Per Song - ${leaderboardSong} - ${leaderboardDifficulty === 'all' ? 'All' : leaderboardDifficulty}`;
     }
