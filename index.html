@@ -112,6 +112,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 /* Mobile responsive */
 @media (max-width: 768px) {
   body { font-size: 14px; }
+  #touch-lanes { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
   .select-title { font-size: 1.6rem; margin-top: 0.5rem; }
   .select-subtitle { font-size: 0.65rem; }
   .settings-panel { top: 0.4rem; right: 0.4rem; gap: 0.25rem; flex-wrap: wrap; max-width: calc(100vw - 0.8rem); justify-content: flex-end; }
@@ -128,8 +129,8 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   .song-meta { font-size: 0.65rem; margin-top: 0.15rem; }
   .song-diffs { font-size: 0.65rem; }
   .difficulty-select { gap: 0.25rem; margin-top: 0.4rem; flex-wrap: wrap; }
-  .diff-btn { padding: 0.25rem 0.5rem; font-size: 0.65rem; border-radius: 6px; }
-  .song-delete-btn, .song-export-btn, .song-regen-btn, .song-download-btn { width: 28px; height: 28px; font-size: 0.75rem; margin-left: 0.2rem; }
+  .diff-btn { padding: 0.35rem 0.6rem; font-size: 0.7rem; border-radius: 6px; min-height: 38px; }
+  .song-delete-btn, .song-export-btn, .song-regen-btn, .song-download-btn { width: 32px; height: 32px; font-size: 0.8rem; margin-left: 0.2rem; }
   .results-stats { grid-template-columns: 1fr 1fr; gap: 0.3rem 0.8rem; padding: 0.75rem; margin: 0.75rem 0; }
   .results-title { font-size: 1.8rem; }
   .results-grade { font-size: 3.5rem; margin: 0.5rem 0; }
@@ -141,11 +142,13 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   .stat-item { font-size: 0.75rem; }
   .stat-value { font-size: 1rem; }
   .key-hints, .key-hint { display: none !important; }
-  .file-drop-zone { padding: 0.8rem; margin: 0.5rem auto; }
-  .file-drop-zone .icon { font-size: 1.8rem; }
-  .file-drop-zone .text { font-size: 0.85rem; }
-  .file-drop-zone .hint { font-size: 0.65rem; }
-  #touch-lanes { display: flex !important; }
+  .file-drop-zone { padding: 0.5rem; margin: 0.3rem auto; height: auto; min-height: unset; }
+  .file-drop-zone .icon { font-size: 1.5rem; margin-bottom: 0.2rem; }
+  .file-drop-zone .text { font-size: 0.8rem; }
+  .file-drop-zone .hint { font-size: 0.6rem; }
+  #touch-lanes { display: flex; }
+  .settings-panel { top: 0.3rem; right: 0.3rem; gap: 0.2rem; max-width: calc(100vw - 0.5rem); }
+  .settings-btn { width: 34px; height: 34px; font-size: 0.85rem; border-radius: 8px; }
   .song-organizer { top: 0.4rem; left: 0.4rem; gap: 0.2rem; }
   .organizer-btn { padding: 0.2rem 0.4rem; font-size: 0.65rem; border-radius: 6px; }
   .music-browser-panel { width: 96%; padding: 0.75rem; }
@@ -206,6 +209,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   .select-title { font-size: 1.1rem; margin-top: 0.3rem; }
   .select-subtitle { font-size: 0.55rem; margin-bottom: 0.8rem; }
   .settings-btn { width: 30px; height: 30px; font-size: 0.75rem; border-radius: 6px; }
+  .settings-panel { gap: 0.15rem; max-width: calc(100vw - 0.5rem); }
   .results-stats { gap: 0.2rem 0.4rem; padding: 0.4rem; }
   .results-title { font-size: 1.2rem; }
   .results-grade { font-size: 2.2rem; }
@@ -216,19 +220,18 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   .song-list { max-height: 30vh; padding: 0.3rem; }
   .song-item { padding: 0.25rem; margin: 0.2rem 0; }
   .song-item .song-icon { width: 24px; height: 24px; font-size: 0.75rem; margin-right: 0.2rem; }
-  .diff-btn { padding: 0.15rem 0.3rem; font-size: 0.55rem; }
-  .song-delete-btn, .song-export-btn, .song-regen-btn, .song-download-btn { width: 20px; height: 20px; font-size: 0.55rem; }
+  .diff-btn { padding: 0.3rem 0.4rem; font-size: 0.6rem; min-height: 36px; }
+  .song-delete-btn, .song-export-btn, .song-regen-btn, .song-download-btn { width: 26px; height: 26px; font-size: 0.65rem; }
   .ach-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 0.3rem; }
   .welcome-title { font-size: 1.2rem; }
   .welcome-subtitle { font-size: 0.6rem; }
-  .file-drop-zone { height: 100px; padding: 0.5rem; margin-bottom: 0.8rem; }
-  .file-drop-zone .icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
-  .file-drop-zone .text { font-size: 0.75rem; }
-  .file-drop-zone .hint { font-size: 0.55rem; }
+  .file-drop-zone { padding: 0.4rem; margin-bottom: 0.4rem; }
+  .file-drop-zone .icon { font-size: 1.2rem; margin-bottom: 0.15rem; }
+  .file-drop-zone .text { font-size: 0.7rem; }
+  .file-drop-zone .hint { font-size: 0.5rem; }
   .mini-player { min-width: unset; width: 96%; padding: 0.5rem; }
   .keybind-panel { min-width: unset; width: 96%; padding: 1rem; }
   .achievements-dropdown { min-width: unset; width: 96%; right: 2%; }
-  .settings-panel { gap: 0.15rem; max-width: calc(100vw - 0.5rem); }
   .organizer-btn { padding: 0.15rem 0.3rem; font-size: 0.6rem; }
   .setting-label { font-size: 0.7rem; min-width: 60px; }
   .setting-slider { width: 60px !important; }
@@ -2817,6 +2820,7 @@ function hidePause() { document.getElementById('pause-overlay').classList.remove
 
 function startCountdown() {
   gameState.mode = 'countdown'; gameState.countdownValue = 3; gameState.countdownTimer = performance.now();
+  updateTouchLanes();
   const countdownEl = document.getElementById('countdown');
   countdownEl.classList.add('active');
   countdownEl.querySelector('.count-text').textContent = '3';
@@ -2829,7 +2833,7 @@ function startCountdown() {
       lastShown = 0;
       countdownEl.querySelector('.count-text').textContent = 'GO!';
       countdownEl.querySelector('.count-text').style.animation = 'countPop 0.5s ease-out';
-      setTimeout(() => { countdownEl.classList.remove('active'); gameState.mode = 'playing'; gameState.songStartTime = getCurrentTime(); playAudio(0); }, 400);
+      setTimeout(() => { countdownEl.classList.remove('active'); gameState.mode = 'playing'; updateTouchLanes(); gameState.songStartTime = getCurrentTime(); playAudio(0); }, 400);
       return;
     }
     if (value > 0 && value !== lastShown) {
@@ -3435,7 +3439,7 @@ function updateTouchLanes() {
   const container = document.getElementById('touch-lanes');
   const isMobile = window.innerWidth <= 768;
   container.style.display = (isMobile && (gameState.mode === 'playing' || gameState.mode === 'countdown')) ? 'flex' : 'none';
-  if (!isMobile || (gameState.mode !== 'playing' && gameState.mode !== 'countdown')) return;
+  if (!isMobile || (gameState.mode !== 'playing' && gameState.mode !== 'countdown')) { container.innerHTML = ''; return; }
   const keys = getLaneKeys();
   container.innerHTML = '';
   for (let i = 0; i < currentLaneCount; i++) {
@@ -3448,6 +3452,7 @@ function updateTouchLanes() {
     div.appendChild(label);
     const startTouch = (e) => {
       e.preventDefault();
+      if (gameState.mode !== 'playing') return;
       const lane = parseInt(div.dataset.lane);
       if (!gameState.activeKeys[lane]) {
         handleKeyPress(lane);
