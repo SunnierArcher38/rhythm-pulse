@@ -39,6 +39,8 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 @keyframes floatUp { 0% { transform: translateY(100vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
 .floating-note { position: fixed; font-size: 1.5rem; opacity: 0; pointer-events: none; z-index: 0; animation: floatUp linear infinite; }
 #song-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; display: flex; flex-direction: column; align-items: center; z-index: 100; overflow: hidden; }
+.ui-toggle-btn { position: fixed; top: 1rem; right: 1rem; z-index: 99999; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-dim); font-size: 1.4rem; cursor: pointer; transition: all 0.2s var(--ease); display: flex; align-items: center; justify-content: center; }
+.ui-toggle-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); border-color: var(--pink); transform: scale(1.1); }
 #song-select.hidden { display: none; }
 #main-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 90; }
 #main-menu.hidden { display: none; }
@@ -577,6 +579,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   <canvas id="gameCanvas"></canvas>
   <div id="touch-lanes"></div>
   <div id="countdown"><span class="count-text"></span></div>
+  <button class="ui-toggle-btn" id="uiToggle" title="Toggle UI">👁</button>
   <div id="main-menu" class="hidden">
     <div class="menu-logo">RHYTHM PULSE</div>
     <div class="menu-subtitle">Drop your music. Play instantly.</div>
@@ -3809,6 +3812,11 @@ document.getElementById('quitBtn').addEventListener('click', () => { hidePause()
 document.getElementById('retryBtn').addEventListener('click', () => { addStat('retry_song', 1); checkProgressiveAchievements('retry_song', getStat('retry_song')); hideResults(); if (gameState.song) startGame(gameState.song, gameState.difficulty); });
 document.getElementById('copyScoreBtn').addEventListener('click', () => { addStat('score_copied', 1); checkProgressiveAchievements('score_copied', getStat('score_copied')); copyScoreToClipboard(); });
 document.getElementById('backBtn').addEventListener('click', () => { addStat('quit_to_menu', 1); checkProgressiveAchievements('quit_to_menu', getStat('quit_to_menu')); localStorage.setItem('rhythmPulseSessionSongs', '0'); hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; updateTouchLanes(); });
+
+document.getElementById('uiToggle').addEventListener('click', () => {
+  document.getElementById('song-select').classList.toggle('ui-hidden');
+  document.getElementById('main-menu').classList.toggle('ui-hidden');
+});
 
 
 function closeAllModals() {
