@@ -1627,7 +1627,6 @@ const ACHIEVEMENT_CATEGORIES = [
   { id: 'songs_medium', name: 'Medium Song', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Medium','5 Medium','10 Medium','25 Medium','50 Medium','100 Medium'] },
   { id: 'songs_long', name: 'Long Song', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Long','5 Long','10 Long','25 Long','50 Long','100 Long'] },
   { id: 'songs_epic', name: 'Epic Song', icon: '⏱️', thresholds: [1,5,10,25,50,100], names: ['First Epic','5 Epic','10 Epic','25 Epic','50 Epic','100 Epic'] },
-  { id: 'favorite_added', name: 'Favorites Added', icon: '⭐', thresholds: [1,5,10,25,50,100], names: ['First Favorite','5 Favorites','10 Favorites','25 Favorites','50 Favorites','100 Favorites'] },
   { id: 'song_deleted', name: 'Songs Deleted', icon: '🗑️', thresholds: [1,5,10,25,50,100], names: ['First Deletion','5 Deletions','10 Deletions','25 Deletions','50 Deletions','100 Deletions'] },
   { id: 'export_song', name: 'Songs Exported', icon: '📤', thresholds: [1,5,10,25,50], names: ['First Export','5 Exports','10 Exports','25 Exports','50 Exports'] },
   { id: 'pause_used', name: 'Times Paused', icon: '⏸️', thresholds: [1,10,50,100,500], names: ['First Pause','10 Pauses','50 Pauses','100 Pauses','500 Pauses'] },
@@ -3326,24 +3325,14 @@ function updateSongList() {
   for (const song of sortedSongs) {
     const originalIndex = songs.indexOf(song);
     const item = document.createElement('div'); item.className = 'song-item';
-    const favStar = song.isFavorite ? '★' : '☆';
     const charts = song.charts || {};
     const diffStatus = ['easy', 'normal', 'hard', 'insane'].map(d => {
       const ready = charts[d];
       return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
     }).join('');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#ffd700;cursor:pointer;" class="fav-toggle" data-idx="${originalIndex}">${favStar}</span> <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
-  document.querySelectorAll('.fav-toggle').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = parseInt(el.dataset.idx);
-      songs[idx].isFavorite = !songs[idx].isFavorite;
-      const key = songs[idx].file.name + songs[idx].file.size;
-      if (songs[idx].isFavorite) { if (!favorites.includes(key)) favorites.push(key); addStat('favorite_added', 1); checkProgressiveAchievements('favorite_added', getStat('favorite_added')); }
-      else { favorites = favorites.filter(f => f !== key); }
-      localStorage.setItem('rhythmPulseFavorites', JSON.stringify(favorites));
       updateSongList();
     });
   });
