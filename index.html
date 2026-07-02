@@ -4946,19 +4946,10 @@ initIndexedDB().then(() => {
     localStorage.setItem('rhythmPulseFirstLaunch', 'true');
     checkAchievement('first_login_1');
   }
-  loadSongsFromDB().then(savedSongs => {
+  loadSongsFromDB().then(async (savedSongs) => {
     for (const saved of savedSongs) {
       if (!songs.find(s => s.id === saved.id)) {
         const file = new File([saved.rawData], saved.fileName || saved.name + '.mp3', { type: 'audio/mpeg' });
-        let charts = saved.charts || {};
-        if (saved.beats && charts && !['easy', 'normal', 'hard', 'insane'].every(d => charts[d])) {
-          charts = {};
-          for (const diff of ['easy', 'normal', 'hard', 'insane']) {
-            charts[diff] = generateChart(saved.beats, diff, saved.duration || 0);
-          }
-          const tx = songDB.transaction('songs', 'readwrite');
-          tx.objectStore('songs').put({ ...saved, charts });
-        }
         songs.push({
           id: saved.id,
           name: saved.name,
@@ -4966,7 +4957,7 @@ initIndexedDB().then(() => {
           duration: saved.duration,
           bpm: saved.bpm,
           beats: saved.beats,
-          charts,
+          charts: saved.charts || {},
           rawData: saved.rawData,
           file: file,
           isFavorite: saved.isFavorite || false
@@ -4974,6 +4965,25 @@ initIndexedDB().then(() => {
       }
     }
     if (songs.length > 0) updateSongList();
+    const toRegen = songs.filter(s => !['easy', 'normal', 'hard', 'insane'].every(d => (s.charts || {})[d]));
+    for (const song of toRegen) {
+      try {
+        if (!song.beats) {
+          const buf = await decodeSong(song);
+          song.beats = detectBeats(buf, 0.5);
+          song.bpm = estimateBPM(song.beats);
+        }
+        song.charts = {};
+        for (const diff of ['easy', 'normal', 'hard', 'insane']) {
+          song.charts[diff] = generateChart(song.beats, diff, song.duration);
+        }
+        const dbData = { id: song.id, name: song.name, size: song.size, duration: song.duration, bpm: song.bpm, beats: song.beats, charts: song.charts, rawData: song.rawData, isFavorite: song.isFavorite, fileName: song.file?.name || song.name + '.mp3' };
+        saveSongToDB(dbData);
+      } catch (err) {
+        console.error('Auto-regen failed for', song.name, err);
+      }
+    }
+    if (toRegen.length > 0) updateSongList();
   });
 });
 gameLoop();
