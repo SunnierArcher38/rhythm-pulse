@@ -1188,10 +1188,10 @@ function generateChart(beats, difficulty, duration) {
   const beatInterval = 60 / bpm;
   
   const settings = {
-    easy: { skipChance: 0.55, holdChance: 0.04, doubleChance: 0, subChance: 0.1, minLaneGap: 0.5 },
-    normal: { skipChance: 0.4, holdChance: 0.06, doubleChance: 0.03, subChance: 0.2, minLaneGap: 0.35 },
-    hard: { skipChance: 0.25, holdChance: 0.1, doubleChance: 0.08, subChance: 0.3, minLaneGap: 0.25 },
-    insane: { skipChance: 0.1, holdChance: 0.12, doubleChance: 0.12, subChance: 0.4, minLaneGap: 0.2 }
+    easy: { skipChance: 0.4, holdChance: 0.04, doubleChance: 0, subChance: 0.15, minLaneGap: 0.5 },
+    normal: { skipChance: 0.25, holdChance: 0.06, doubleChance: 0.05, subChance: 0.25, minLaneGap: 0.35 },
+    hard: { skipChance: 0.15, holdChance: 0.1, doubleChance: 0.1, subChance: 0.35, minLaneGap: 0.25 },
+    insane: { skipChance: 0.05, holdChance: 0.12, doubleChance: 0.15, subChance: 0.45, minLaneGap: 0.2 }
   };
   
   const s = settings[difficulty];
