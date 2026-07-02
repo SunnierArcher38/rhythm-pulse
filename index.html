@@ -5077,14 +5077,13 @@ function submitToLeaderboard(data) {
     accuracy: data.accuracy,
     max_combo: data.maxCombo,
     grade: data.grade,
-    judgments: JSON.stringify(judgmentsWithUrl),
+    judgments: judgmentsWithUrl,
     modifiers: data.modifiers.join(','),
     timing_window: data.timingWindow,
     lane_count: data.laneCount,
     scroll_speed: data.scrollSpeed,
     health_mode: data.healthMode,
     total_notes: data.totalNotes,
-    score_version: 2,
     created_at: new Date().toISOString()
   };
   
@@ -5092,7 +5091,7 @@ function submitToLeaderboard(data) {
     .from('scores')
     .insert([entry])
     .then(({ error }) => {
-      if (error) console.error('Leaderboard submit failed:', error);
+      if (error) console.error('Leaderboard submit failed:', error.message || error);
       else console.log('Score submitted to leaderboard!');
     })
     .catch(err => console.error('Leaderboard submit error:', err));
