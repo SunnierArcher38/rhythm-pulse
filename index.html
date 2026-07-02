@@ -5183,6 +5183,12 @@ async function cloudSave() {
     };
     const json = JSON.stringify(data);
     const encrypted = await encryptSaveData(json, password);
+    const { error: delError } = await supabaseClient
+      .from('scores')
+      .delete()
+      .eq('player_name', playerName)
+      .eq('song_name', '__CLOUD_SAVE__');
+    if (delError) console.warn('[Cloud] Delete previous saves:', delError.message);
     const { error } = await supabaseClient
       .from('scores')
       .insert({
