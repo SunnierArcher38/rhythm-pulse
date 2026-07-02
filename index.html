@@ -3274,10 +3274,16 @@ async function addSong(file, extraProps) {
     const bpm = estimateBPM(beats);
     const duration = decodedBuffer.duration;
     
+    setLoadingProgress(85, 'Generating charts...');
+    const charts = {};
+    for (const diff of ['easy', 'normal', 'hard', 'insane']) {
+      charts[diff] = generateChart(beats, diff, duration);
+    }
+    
     const song = { 
       id: `${file.name}_${file.size}`,
       file, name: file.name.replace(/\.[^/.]+$/, ''), size: file.size, 
-      charts: {}, beats, duration, bpm,
+      charts, beats, duration, bpm,
       rawData: arrayBuffer,
       isFavorite: favorites.includes(file.name + file.size),
       ...extraProps
