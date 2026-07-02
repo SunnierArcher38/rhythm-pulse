@@ -170,7 +170,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .settings-section-header { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; margin: 0.5rem 0; padding: 0.25rem 0; }
 .setting-value { font-size: 0.75rem; color: var(--pink); font-weight: 600; min-width: 35px; text-align: right; font-family: monospace; }
-.achievements-dropdown { position: absolute; top: 52px; right: 50px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; min-width: 320px; max-width: 400px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.achievements-dropdown { position: fixed; top: 52px; right: 50px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; min-width: 320px; max-width: 400px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 100000; }
 .achievements-dropdown.active { display: block; animation: slideDown 0.25s ease-out; }
 .ach-header { font-size: 1.1rem; font-weight: 700; color: #ffd700; margin-bottom: 0.75rem; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
 .ach-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
@@ -4253,6 +4253,8 @@ document.getElementById('songSelectModal').addEventListener('click', (e) => {
 });
 
 document.getElementById('confirmSongExport').addEventListener('click', async () => {
+  if (songExportMode === 'songs') { addStat('export_song', 1); checkProgressiveAchievements('export_song', getStat('export_song')); }
+  else { addStat('backup_created', 1); checkProgressiveAchievements('backup_created', getStat('backup_created')); }
   const selected = [];
   document.querySelectorAll('#songSelectList input[type="checkbox"]').forEach(cb => {
     if (cb.checked) selected.push(parseInt(cb.dataset.idx));
@@ -5091,7 +5093,7 @@ async function uploadSongAudio(songName) {
   if (!song || !song.rawData) { console.warn('[Storage] No song data for:', songName); return; }
   if (song.size > 30 * 1024 * 1024) { console.warn('[Storage] Song too large, skipping upload'); return; }
   if (!supabaseClient && !initSupabase()) return;
-  const key = encodeURIComponent(songName);
+  const key = encodeURIComponent(songName) + '.mp3';
   try {
     const res = await fetch('https://xpzovtwbjeapkovzcizp.supabase.co/storage/v1/object/list/song-files', {
       method: 'POST',
@@ -5099,7 +5101,7 @@ async function uploadSongAudio(songName) {
       body: JSON.stringify({ prefix: '', limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } })
     });
     const existing = await res.json().catch(() => null);
-    if (existing && Array.isArray(existing) && existing.some(f => f.name === key)) {
+    if (existing && Array.isArray(existing) && existing.some(f => f.name === key || f.name === encodeURIComponent(songName))) {
       console.log('[Storage] Song already uploaded:', songName);
       return;
     }
@@ -5825,6 +5827,7 @@ document.getElementById('slLoadSongs').addEventListener('click', () => {
 });
 document.getElementById('slExportMP3s').addEventListener('click', async () => {
   document.getElementById('saveLoadModal').classList.remove('active');
+  addStat('export_song', 1); checkProgressiveAchievements('export_song', getStat('export_song'));
   const hasData = songs.some(s => s.rawData);
   if (!hasData) { showToast('No songs with audio data to export', 'error'); return; }
   const zip = new JSZip();
