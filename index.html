@@ -1188,10 +1188,10 @@ function generateChart(beats, difficulty, duration) {
   const beatInterval = 60 / bpm;
   
   const settings = {
-    easy: { skipChance: 0.35, holdChance: 0.04, doubleChance: 0, subChance: 0.15, minLaneGap: 0.5 },
-    normal: { skipChance: 0.25, holdChance: 0.08, doubleChance: 0.05, subChance: 0.25, minLaneGap: 0.35 },
-    hard: { skipChance: 0.15, holdChance: 0.12, doubleChance: 0.1, subChance: 0.35, minLaneGap: 0.25 },
-    insane: { skipChance: 0.05, holdChance: 0.15, doubleChance: 0.15, subChance: 0.45, minLaneGap: 0.2 }
+    easy: { skipChance: 0.55, holdChance: 0.04, doubleChance: 0, subChance: 0.15, minLaneGap: 0.5 },
+    normal: { skipChance: 0.4, holdChance: 0.08, doubleChance: 0.05, subChance: 0.25, minLaneGap: 0.35 },
+    hard: { skipChance: 0.25, holdChance: 0.12, doubleChance: 0.1, subChance: 0.35, minLaneGap: 0.25 },
+    insane: { skipChance: 0.1, holdChance: 0.15, doubleChance: 0.15, subChance: 0.45, minLaneGap: 0.2 }
   };
   
   const s = settings[difficulty];
@@ -3176,7 +3176,7 @@ async function startGame(song, difficulty) {
   }
   
   if (!song.charts[difficulty]) {
-    const beats = song.beats || detectBeats(audioBuffer, difficulty === 'easy' ? 0.45 : difficulty === 'normal' ? 0.35 : difficulty === 'hard' ? 0.25 : 0.2);
+    const beats = song.beats || detectBeats(audioBuffer, difficulty === 'easy' ? 0.7 : difficulty === 'normal' ? 0.55 : difficulty === 'hard' ? 0.45 : 0.35);
     song.charts[difficulty] = generateChart(beats, difficulty, getAudioDuration());
   }
   
@@ -3267,7 +3267,7 @@ async function addSong(file, extraProps) {
     const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
     
     setLoadingProgress(50, 'Detecting beats...');
-    const beats = detectBeats(decodedBuffer, 0.35);
+    const beats = detectBeats(decodedBuffer, 0.5);
     setLoadingProgress(80, 'Estimating BPM...');
     const bpm = estimateBPM(beats);
     const duration = decodedBuffer.duration;
@@ -3350,7 +3350,7 @@ function updateSongList() {
       try {
         audioBuffer = await decodeSong(song);
         if (!song.charts[diff]) {
-          const beats = song.beats || detectBeats(audioBuffer, diff === 'easy' ? 0.45 : diff === 'normal' ? 0.35 : diff === 'hard' ? 0.25 : 0.2);
+          const beats = song.beats || detectBeats(audioBuffer, diff === 'easy' ? 0.7 : diff === 'normal' ? 0.55 : diff === 'hard' ? 0.45 : 0.35);
           song.charts[diff] = generateChart(beats, diff, getAudioDuration());
           song.beats = beats;
         }
@@ -3420,7 +3420,7 @@ async function regenerateCharts(idx, btn) {
   btn.disabled = true;
   try {
     const audioBuffer = await decodeSong(song);
-    song.beats = detectBeats(audioBuffer, 0.35);
+    song.beats = detectBeats(audioBuffer, 0.5);
     song.bpm = estimateBPM(song.beats);
     song.charts = {};
     for (const diff of ['easy', 'normal', 'hard', 'insane']) {
@@ -4478,7 +4478,7 @@ async function previewPlay(song) {
     const wasDecoded = !!song.audioBuffer;
     song.audioBuffer = await decodeSong(song);
     if (!wasDecoded) {
-      song.beats = detectBeats(song.audioBuffer, 0.35);
+      song.beats = detectBeats(song.audioBuffer, 0.5);
       song.bpm = estimateBPM(song.beats);
     }
   } catch (err) {
