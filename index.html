@@ -2859,8 +2859,12 @@ function endGame() { gameState.mode = 'results'; stopAudio(); showResults(); upd
 function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); updateTouchLanes(); }
 
 function showResults() {
+  console.log('showResults: raw score =', gameState.score, 'maxPossible =', gameState.maxPossibleScore, 'chart.length =', gameState.chart.length);
   if (gameState.maxPossibleScore > 0) {
     gameState.score = Math.round((gameState.score / gameState.maxPossibleScore) * 1000000);
+    console.log('showResults: normalized score =', gameState.score);
+  } else {
+    console.warn('showResults: maxPossibleScore is 0 or falsy, skipping normalization');
   }
   const results = document.getElementById('results'); results.classList.add('active');
   const totalNotes = gameState.chart.length;
