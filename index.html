@@ -155,6 +155,9 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 #song-select.ui-hidden .song-list,
 #song-select.ui-hidden .key-hints,
 #song-select.ui-hidden .song-organizer { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+#main-menu.ui-hidden .menu-logo,
+#main-menu.ui-hidden .menu-subtitle,
+#main-menu.ui-hidden .menu-buttons { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .settings-dropdown { position: absolute; top: 55px; right: 0; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; min-width: 280px; max-width: 320px; display: none; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
 .settings-dropdown.active { display: block; animation: slideDown 0.25s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
@@ -848,21 +851,13 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
           <div class="setting-row"><span class="setting-label">📤 Auto-Submit Scores</span><button class="toggle-btn" id="autoSubmitToggle">ON</button></div>
           <div class="setting-row"><button class="pause-btn" id="viewLeaderboardBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#c44dff,#6b9dff);">🏆 View Leaderboard</button></div>
         </div>
-        <div class="settings-section">
-          <div class="settings-section-header">💾 Data</div>
-          <div class="setting-row"><span class="setting-label" style="color:#c44dff;font-weight:600;">Save Codes</span></div>
-          <div class="setting-row"><textarea id="saveCodeArea" placeholder="Paste save code here..." style="width:100%;height:50px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:0.75rem;resize:none;padding:0.5rem;font-family:monospace;"></textarea></div>
-          <div class="setting-row"><button class="pause-btn" id="generateCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">📋 Copy</button><button class="pause-btn" id="loadCodeBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;">💾 Load</button><button class="pause-btn" id="importSongBtn" style="width:32%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">🎵 Import</button></div>
-          <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
-          <div class="setting-row" style="margin-top:0.5rem;"><button class="pause-btn" id="saveAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">💾 Save Songs</button><button class="pause-btn" id="loadAllSongsBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#1e8449,#27ae60);border:none;">📂 Load Songs</button></div>
-          <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
-          <div class="setting-row" style="margin-top:0.5rem;"><button class="pause-btn" id="saveEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#b8860b,#daa520);border:none;">📦 Save All</button><button class="pause-btn" id="loadEverythingBtn" style="width:48%;padding:0.4rem;font-size:0.75rem;background:linear-gradient(135deg,#b8860b,#daa520);border:none;">📂 Load All</button></div>
-          <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
-        </div>
       </div>
     </div>
   </div>
-<div id="floatingNotes"></div>
+  <input type="file" id="importSongInput" accept=".rpsong" style="display:none;">
+  <input type="file" id="loadAllSongsInput" accept=".rpsongs" style="display:none;">
+  <input type="file" id="loadEverythingInput" accept=".rpbackup" style="display:none;">
+  <div id="floatingNotes"></div>
 <div id="loadingOverlay">
     <div class="loading-title">Loading Song...</div>
     <div class="loading-bar-container"><div class="loading-bar" id="loadingBar"></div></div>
@@ -3814,8 +3809,9 @@ document.getElementById('copyScoreBtn').addEventListener('click', () => { addSta
 document.getElementById('backBtn').addEventListener('click', () => { addStat('quit_to_menu', 1); checkProgressiveAchievements('quit_to_menu', getStat('quit_to_menu')); localStorage.setItem('rhythmPulseSessionSongs', '0'); hideResults(); if (gameState.song) releaseSong(gameState.song); gameState.mode = 'menu'; resetDifficultyButtons(); document.getElementById('song-select').classList.remove('hidden'); document.getElementById('songOrganizer').style.display = 'flex'; document.getElementById('accuracyDisplay').style.display = 'none'; document.getElementById('judgmentCounter').style.display = 'none'; document.getElementById('densityPreview').style.display = 'none'; document.getElementById('timingGraph').classList.remove('active'); document.getElementById('modifierIndicator').style.display = 'none'; updateTouchLanes(); });
 
 document.getElementById('uiToggle').addEventListener('click', () => {
-  document.getElementById('song-select').classList.toggle('ui-hidden');
-  document.getElementById('main-menu').classList.toggle('ui-hidden');
+  document.querySelectorAll('#main-menu:not(.hidden), #song-select:not(.hidden)').forEach(el => {
+    el.classList.toggle('ui-hidden');
+  });
 });
 
 
@@ -4215,89 +4211,13 @@ function migrateSaveData(data) {
   return d;
 }
 
-// Save Codes
-document.getElementById('generateCodeBtn').addEventListener('click', () => {
-  addStat('save_code_generated', 1); checkProgressiveAchievements('save_code_generated', getStat('save_code_generated'));
-  const data = {
-    v: SAVE_VERSION,
-    a: JSON.parse(localStorage.getItem('rhythmPulseAchievements') || '{}'),
-    f: JSON.parse(localStorage.getItem('rhythmPulseFavorites') || '[]'),
-    s: {
-      ao: localStorage.getItem('rhythmPulseAudioOffset'),
-      ss: localStorage.getItem('rhythmPulseScrollSpeed'),
-      ns: localStorage.getItem('rhythmPulseNoteSize'),
-      vol: localStorage.getItem('rhythmPulseVolume'),
-      lc: localStorage.getItem('rhythmPulseLaneCount'),
-      hs: localStorage.getItem('rhythmPulseHitSound'),
-      fps: localStorage.getItem('rhythmPulseShowFPS'),
-      vis: localStorage.getItem('rhythmPulseVisualizer'),
-      bz: localStorage.getItem('rhythmPulseBeatZoom'),
-      nst: localStorage.getItem('rhythmPulseNoteStyle'),
-      cs: localStorage.getItem('rhythmPulseColorScheme'),
-      tw: localStorage.getItem('rhythmPulseTimingWindow'),
-      sd: localStorage.getItem('rhythmPulseScrollDirection'),
-      hm: localStorage.getItem('rhythmPulseHealthMode'),
-      sp: localStorage.getItem('rhythmPulseSpeedPreset'),
-      ck: localStorage.getItem('rhythmPulseCustomKeys')
-    }
-  };
-  try {
-    const json = JSON.stringify(data);
-    const code = btoa(unescape(encodeURIComponent(json)));
-    const area = document.getElementById('saveCodeArea');
-    area.value = code;
-    area.select();
-    document.execCommand('copy');
-    document.getElementById('generateCodeBtn').textContent = '✅ Copied!';
-    setTimeout(() => { document.getElementById('generateCodeBtn').textContent = '📋 Copy Code'; }, 2000);
-  } catch (err) {
-    alert('Failed to generate code: ' + err.message);
-  }
-});
+let songExportMode = 'songs';
 
-document.getElementById('loadCodeBtn').addEventListener('click', () => {
-  addStat('save_code_loaded', 1); checkProgressiveAchievements('save_code_loaded', getStat('save_code_loaded'));
-  const code = document.getElementById('saveCodeArea').value.trim();
-  if (!code) { alert('Paste a save code first!'); return; }
-  try {
-    const json = decodeURIComponent(escape(atob(code)));
-    const data = JSON.parse(json);
-    const migrated = migrateSaveData(data);
-    if (migrated.a) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(migrated.a));
-    if (migrated.f) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(migrated.f));
-    if (migrated.s) {
-      const s = migrated.s;
-      if (s.ao !== undefined) localStorage.setItem('rhythmPulseAudioOffset', s.ao);
-      if (s.ss !== undefined) localStorage.setItem('rhythmPulseScrollSpeed', s.ss);
-      if (s.ns !== undefined) localStorage.setItem('rhythmPulseNoteSize', s.ns);
-      if (s.vol !== undefined) localStorage.setItem('rhythmPulseVolume', s.vol);
-      if (s.lc !== undefined) localStorage.setItem('rhythmPulseLaneCount', s.lc);
-      if (s.hs !== undefined) localStorage.setItem('rhythmPulseHitSound', s.hs);
-      if (s.fps !== undefined) localStorage.setItem('rhythmPulseShowFPS', s.fps);
-      if (s.vis !== undefined) localStorage.setItem('rhythmPulseVisualizer', s.vis);
-      if (s.bz !== undefined) localStorage.setItem('rhythmPulseBeatZoom', s.bz);
-      if (s.nst !== undefined) localStorage.setItem('rhythmPulseNoteStyle', s.nst);
-      if (s.cs !== undefined) localStorage.setItem('rhythmPulseColorScheme', s.cs);
-      if (s.tw !== undefined) localStorage.setItem('rhythmPulseTimingWindow', s.tw);
-      if (s.sd !== undefined) localStorage.setItem('rhythmPulseScrollDirection', s.sd);
-      if (s.hm !== undefined) localStorage.setItem('rhythmPulseHealthMode', s.hm);
-      if (s.sp !== undefined) localStorage.setItem('rhythmPulseSpeedPreset', s.sp);
-      if (s.ck !== undefined) localStorage.setItem('rhythmPulseCustomKeys', s.ck);
-    }
-    location.reload();
-  } catch (err) {
-    alert('Invalid save code!');
-  }
-});
-
-document.getElementById('importSongBtn').addEventListener('click', () => { document.getElementById('importSongInput').click(); });
 document.getElementById('importSongInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) importSongFile(file);
   e.target.value = '';
 });
-
-let songExportMode = 'songs';
 
 function showSongSelectModal(mode) {
   songExportMode = mode || 'songs';
@@ -4369,8 +4289,7 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
   }
   
   if (songExportMode === 'backup') {
-    const btn = document.getElementById('saveEverythingBtn');
-    btn.textContent = '⏳ Saving...';
+    const btn = document.getElementById('slSaveAll');
     btn.disabled = true;
     try {
       const metadata = {
@@ -4400,28 +4319,23 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
       };
       const compressed = await compressWithSongs(metadata, songData);
       const count = await downloadFile(compressed, `rhythm-pulse-backup-${Date.now()}`, 'rpbackup');
-      btn.textContent = '✅ Saved!';
-      setTimeout(() => { btn.textContent = '📦 Save Everything'; btn.disabled = false; }, 2000);
+      btn.disabled = false;
     } catch (err) {
       console.error('Save everything failed:', err);
       alert('Save failed: ' + err.message);
-      btn.textContent = '📦 Save Everything';
       btn.disabled = false;
     }
   } else {
-    const btn = document.getElementById('saveAllSongsBtn');
-    btn.textContent = '⏳ Saving...';
+    const btn = document.getElementById('slSaveSongs');
     btn.disabled = true;
     try {
       const metadata = { type: 'rpsongs', v: 1, songs: songData.map(s => s.meta) };
       const compressed = await compressWithSongs(metadata, songData);
       const count = await downloadFile(compressed, `rhythm-pulse-songs-${Date.now()}`, 'rpsongs');
-      btn.textContent = '✅ Saved!';
-      setTimeout(() => { btn.textContent = '💾 Save Songs'; btn.disabled = false; }, 2000);
+      btn.disabled = false;
     } catch (err) {
       console.error('Save songs failed:', err);
       alert('Save failed: ' + err.message);
-      btn.textContent = '💾 Save Songs';
       btn.disabled = false;
     }
   }
