@@ -5077,7 +5077,7 @@ function submitToLeaderboard(data) {
     accuracy: data.accuracy,
     max_combo: data.maxCombo,
     grade: data.grade,
-    judgments: judgmentsWithUrl,
+    judgments: JSON.stringify(judgmentsWithUrl),
     modifiers: data.modifiers.join(','),
     timing_window: data.timingWindow,
     lane_count: data.laneCount,
