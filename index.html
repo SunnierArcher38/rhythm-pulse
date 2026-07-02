@@ -4950,6 +4950,15 @@ initIndexedDB().then(() => {
     for (const saved of savedSongs) {
       if (!songs.find(s => s.id === saved.id)) {
         const file = new File([saved.rawData], saved.fileName || saved.name + '.mp3', { type: 'audio/mpeg' });
+        let charts = saved.charts || {};
+        if (saved.beats && charts && !['easy', 'normal', 'hard', 'insane'].every(d => charts[d])) {
+          charts = {};
+          for (const diff of ['easy', 'normal', 'hard', 'insane']) {
+            charts[diff] = generateChart(saved.beats, diff, saved.duration || 0);
+          }
+          const tx = songDB.transaction('songs', 'readwrite');
+          tx.objectStore('songs').put({ ...saved, charts });
+        }
         songs.push({
           id: saved.id,
           name: saved.name,
@@ -4957,7 +4966,7 @@ initIndexedDB().then(() => {
           duration: saved.duration,
           bpm: saved.bpm,
           beats: saved.beats,
-          charts: saved.charts || {},
+          charts,
           rawData: saved.rawData,
           file: file,
           isFavorite: saved.isFavorite || false
