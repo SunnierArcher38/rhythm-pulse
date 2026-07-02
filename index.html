@@ -5016,15 +5016,6 @@ function setPlayerName(name) {
   localStorage.setItem('rhythmPulsePlayerName', name.trim().substring(0, 20));
 }
 
-function getPlayerId() {
-  let id = localStorage.getItem('rhythmPulsePlayerId');
-  if (!id) {
-    id = Array.from({length:8}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    localStorage.setItem('rhythmPulsePlayerId', id);
-  }
-  return id;
-}
-
 let leaderboardScope = 'overall';
 let leaderboardSong = 'all';
 let leaderboardDifficulty = 'all';
@@ -5192,18 +5183,17 @@ async function cloudSave() {
     };
     const json = JSON.stringify(data);
     const encrypted = await encryptSaveData(json, password);
-    const cloudKey = '__CLOUD_SAVE__' + getPlayerId();
     const { error: delError } = await supabaseClient
       .from('scores')
       .delete()
       .eq('player_name', playerName)
-      .eq('song_name', cloudKey);
+      .eq('song_name', '__CLOUD_SAVE__');
     if (delError) console.warn('[Cloud] Delete previous saves:', delError.message);
     const { error } = await supabaseClient
       .from('scores')
       .insert({
         player_name: playerName,
-        song_name: cloudKey,
+        song_name: '__CLOUD_SAVE__',
         difficulty: SAVE_VERSION.toString(),
         score: 0,
         accuracy: 0,
@@ -6072,7 +6062,7 @@ welcomeStartBtn.addEventListener('click', async () => {
     return;
   }
   if (supabaseClient || initSupabase()) {
-    const { data } = await supabaseClient.from('scores').select('player_name').eq('player_name', name).neq('song_name', '__CLOUD_SAVE__').neq('song_name', '__CLOUD_SAVE__' + getPlayerId()).limit(1);
+    const { data } = await supabaseClient.from('scores').select('player_name').eq('player_name', name).neq('song_name', '__CLOUD_SAVE__').limit(1);
     if (data && data.length > 0) {
       welcomeError.textContent = 'This name is already taken on the leaderboard. Choose another.';
       return;
