@@ -3179,10 +3179,8 @@ async function startGame(song, difficulty) {
     return;
   }
   
-  if (!song.charts[difficulty]) {
-    const beats = song.beats || detectBeats(audioBuffer, difficulty === 'easy' ? 0.7 : difficulty === 'normal' ? 0.55 : difficulty === 'hard' ? 0.45 : 0.35);
-    song.charts[difficulty] = generateChart(beats, difficulty, getAudioDuration());
-  }
+  const beats = song.beats || detectBeats(audioBuffer, difficulty === 'easy' ? 0.7 : difficulty === 'normal' ? 0.55 : difficulty === 'hard' ? 0.45 : 0.35);
+  song.charts[difficulty] = generateChart(beats, difficulty, getAudioDuration());
   
   gameState.chart = song.charts[difficulty].map(n => ({...n}));
   
@@ -3353,11 +3351,9 @@ function updateSongList() {
       btn.textContent = 'Loading...';
       try {
         audioBuffer = await decodeSong(song);
-        if (!song.charts[diff]) {
-          const beats = song.beats || detectBeats(audioBuffer, diff === 'easy' ? 0.7 : diff === 'normal' ? 0.55 : diff === 'hard' ? 0.45 : 0.35);
-          song.charts[diff] = generateChart(beats, diff, getAudioDuration());
-          song.beats = beats;
-        }
+        const beats = song.beats || detectBeats(audioBuffer, diff === 'easy' ? 0.7 : diff === 'normal' ? 0.55 : diff === 'hard' ? 0.45 : 0.35);
+        song.charts[diff] = generateChart(beats, diff, getAudioDuration());
+        song.beats = beats;
         await startGame(song, diff);
       } catch (err) {
         console.error('Failed to start game:', err);
