@@ -961,7 +961,7 @@ function stopAudio() { if (audioSource) { try { audioSource.stop(); } catch(e) {
 function getCurrentTime() { if (!isPlaying) return audioPausedAt; return audioCtx.currentTime - audioStartTime; }
 function getAudioDuration() { return audioBuffer ? audioBuffer.duration : 0; }
 
-function detectBeats(buffer, threshold = 0.4) {
+function detectBeats(buffer, threshold = 0.5) {
   const sr = buffer.sampleRate;
   const len = buffer.length;
   
