@@ -4236,18 +4236,6 @@ function showSongSelectModal(mode) {
   document.getElementById('songSelectModal').classList.add('active');
 }
 
-document.getElementById('saveAllSongsBtn').addEventListener('click', () => {
-  addStat('export_song', 1); checkProgressiveAchievements('export_song', getStat('export_song'));
-  if (songs.length === 0) { alert('No songs to export!'); return; }
-  showSongSelectModal('songs');
-});
-
-document.getElementById('saveEverythingBtn').addEventListener('click', () => {
-  addStat('backup_created', 1); checkProgressiveAchievements('backup_created', getStat('backup_created'));
-  if (songs.length === 0) { alert('No songs to backup!'); return; }
-  showSongSelectModal('backup');
-});
-
 document.getElementById('selectAllSongsBtn').addEventListener('click', () => {
   document.querySelectorAll('#songSelectList input[type="checkbox"]').forEach(cb => cb.checked = true);
 });
@@ -4341,18 +4329,15 @@ document.getElementById('confirmSongExport').addEventListener('click', async () 
   }
 });
 
-document.getElementById('loadAllSongsBtn').addEventListener('click', () => { document.getElementById('loadAllSongsInput').click(); });
 document.getElementById('loadAllSongsInput').addEventListener('change', async (e) => {
   addStat('import_song', 1); checkProgressiveAchievements('import_song', getStat('import_song'));
   const file = e.target.files[0];
   if (!file) return;
-  const btn = document.getElementById('loadAllSongsBtn');
-  btn.textContent = '⏳ Loading...';
-  btn.disabled = true;
+  showToast('Loading songs...');
   try {
     const buffer = await file.arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
-    if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); btn.textContent = '📂 Load Songs'; btn.disabled = false; return; }
+    if (metadata.type !== 'rpsongs') { alert('Not a valid song library file!'); e.target.value = ''; return; }
     let loaded = 0;
     for (let i = 0; i < songFiles.length; i++) {
       const sf = songFiles[i];
@@ -4378,29 +4363,23 @@ document.getElementById('loadAllSongsInput').addEventListener('change', async (e
       loaded++;
     }
     updateSongList();
-    btn.textContent = `✅ Loaded ${loaded} songs!`;
-    setTimeout(() => { btn.textContent = '📂 Load Songs'; btn.disabled = false; }, 2000);
+    showToast(`Loaded ${loaded} songs!`);
   } catch (err) {
     console.error('Load songs failed:', err);
     alert('Load failed: ' + err.message);
-    btn.textContent = '📂 Load Songs';
-    btn.disabled = false;
   }
   e.target.value = '';
 });
 
-document.getElementById('loadEverythingBtn').addEventListener('click', () => { document.getElementById('loadEverythingInput').click(); });
 document.getElementById('loadEverythingInput').addEventListener('change', async (e) => {
   addStat('backup_loaded', 1); checkProgressiveAchievements('backup_loaded', getStat('backup_loaded'));
   const file = e.target.files[0];
   if (!file) return;
-  const btn = document.getElementById('loadEverythingBtn');
-  btn.textContent = '⏳ Loading...';
-  btn.disabled = true;
+  showToast('Loading backup...');
   try {
     const buffer = await file.arrayBuffer();
     const { metadata, songs: songFiles } = await decompressWithSongs(buffer);
-    if (metadata.type !== 'rpbackup') { alert('Not a valid backup file!'); btn.textContent = '📂 Load Everything'; btn.disabled = false; return; }
+    if (metadata.type !== 'rpbackup') { alert('Not a valid backup file!'); e.target.value = ''; return; }
     if (metadata.achievements) localStorage.setItem('rhythmPulseAchievements', JSON.stringify(metadata.achievements));
     if (metadata.favorites) localStorage.setItem('rhythmPulseFavorites', JSON.stringify(metadata.favorites));
     if (metadata.settings) {
@@ -4446,13 +4425,11 @@ document.getElementById('loadEverythingInput').addEventListener('change', async 
       saveSongToDB(dbData);
       loadedSongs++;
     }
-    btn.textContent = `✅ Loaded! ${loadedSongs} songs restored`;
+    showToast(`Loaded! ${loadedSongs} songs restored`);
     setTimeout(() => { location.reload(); }, 2000);
   } catch (err) {
     console.error('Load everything failed:', err);
     alert('Load failed: ' + err.message);
-    btn.textContent = '📂 Load Everything';
-    btn.disabled = false;
   }
   e.target.value = '';
 });
