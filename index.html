@@ -153,6 +153,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 #song-select.ui-hidden .select-subtitle,
 #song-select.ui-hidden .file-drop-zone,
 #song-select.ui-hidden .song-list,
+#song-select.ui-hidden .regen-notice,
 #song-select.ui-hidden .key-hints,
 #song-select.ui-hidden .song-organizer { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 #main-menu.ui-hidden .menu-logo,
@@ -199,6 +200,8 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .style-select { padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text); font-size: 0.8rem; cursor: pointer; outline: none; transition: all 0.2s; }
 .style-select:hover { border-color: var(--pink); }
 .style-select option, #lbSongSelect option { background: var(--bg-primary); color: var(--text); }
+.regen-notice { font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 0.5rem; max-width: 500px; line-height: 1.4; }
+.regen-notice strong { color: var(--accent); }
 .key-hints { position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 105; }
 .key-hint { padding: 0.4rem 0.8rem; background: var(--bg-panel); border-radius: var(--radius); font-size: 0.8rem; color: var(--text-dim); border: 1px solid var(--border); }
 .key-hint kbd { background: var(--bg-hover); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace; color: var(--text); border: 1px solid var(--border-light); }
@@ -612,6 +615,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
       <button class="organizer-btn" data-sort="length">Length</button>
     </div>
     <div class="song-list" id="songList">    </div>
+    <div class="regen-notice" id="regenNotice">Old songs may show incorrect BPM. Click <strong>🔄</strong> to regenerate with latest detection.</div>
     <div class="key-hints">
       <div class="key-hint"><kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> or <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd></div>
       <div class="key-hint"><kbd>ESC</kbd> Pause</div>
@@ -1010,12 +1014,11 @@ function detectBeats(buffer, threshold = 0.5) {
   if (onsetStrength.length === 0) return [];
   
   // Adaptive threshold using local mean
-  const windowFrames = Math.floor(sampleRate * 0.5 / (hopSize)); // 0.5s window
+  const windowFrames = Math.floor(sampleRate * 0.5 / (hopSize));
   const beats = [];
-  const minBeatFrames = Math.floor(sampleRate * 0.15 / (hopSize)); // 150ms min
+  const minBeatFrames = Math.floor(sampleRate * 0.25 / (hopSize)); // 250ms minimum spacing
   
   for (let i = 0; i < onsetStrength.length; i++) {
-    // Local mean
     const start = Math.max(0, i - windowFrames);
     const end = Math.min(onsetStrength.length, i + windowFrames);
     let localSum = 0;
@@ -1025,9 +1028,7 @@ function detectBeats(buffer, threshold = 0.5) {
     const adaptiveThreshold = localMean * (1 + threshold);
     
     if (onsetStrength[i] > adaptiveThreshold && onsetStrength[i] > 0.001) {
-      // Check minimum distance
       if (beats.length === 0 || (i - beats[beats.length - 1].frame) >= minBeatFrames) {
-        // Check local peak
         let isPeak = true;
         const peakRange = Math.max(1, Math.floor(minBeatFrames / 2));
         for (let j = Math.max(0, i - peakRange); j <= Math.min(onsetStrength.length - 1, i + peakRange); j++) {
@@ -1046,40 +1047,29 @@ function detectBeats(buffer, threshold = 0.5) {
 function estimateBPM(beats) {
   if (beats.length < 4) return 140;
   
-  // Collect inter-beat intervals
+  // Find the most common inter-beat interval (mode)
   const intervals = [];
   for (let i = 1; i < beats.length; i++) {
     const diff = beats[i] - beats[i - 1];
-    if (diff > 0.15 && diff < 2.0) intervals.push(diff);
+    if (diff > 0.2 && diff < 2.0) intervals.push(Math.round(diff * 100) / 100);
   }
   if (intervals.length < 3) return 140;
   
-  // Use median interval for robustness against outliers
-  intervals.sort((a, b) => a - b);
-  const median = intervals[Math.floor(intervals.length / 2)];
-  let bpm = Math.round(60 / median);
-  
-  // Octave correction: prefer 80-180 BPM range for dance music
-  if (bpm < 80) {
-    while (bpm < 80) bpm *= 2;
-  }
-  if (bpm > 180) {
-    // Check if half tempo actually fits more intervals
-    const half = Math.round(bpm / 2);
-    const halfPeriod = 60 / half;
-    let halfCount = 0, origCount = 0;
-    for (const iv of intervals) {
-      const r = iv / (60 / bpm);
-      const near = Math.round(r);
-      if (Math.abs(r - near) < 0.2 && near >= 1) origCount++;
-      const hr = iv / halfPeriod;
-      const hNear = Math.round(hr);
-      if (Math.abs(hr - hNear) < 0.2 && hNear >= 1) halfCount++;
-    }
-    if (halfCount > origCount) return half;
+  // Count interval frequencies
+  const freq = {};
+  let mode = 0.5, maxCount = 0;
+  for (const iv of intervals) {
+    freq[iv] = (freq[iv] || 0) + 1;
+    if (freq[iv] > maxCount) { maxCount = freq[iv]; mode = iv; }
   }
   
-  return Math.max(55, Math.min(240, bpm));
+  let bpm = Math.round(60 / mode);
+  
+  // Correct to 60-200 range
+  while (bpm < 55) bpm *= 2;
+  while (bpm > 200) bpm = Math.round(bpm / 2);
+  
+  return bpm;
 }
 
 function findFirstStrongBeat(beats, bpm) {
