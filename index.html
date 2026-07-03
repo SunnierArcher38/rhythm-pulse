@@ -1039,123 +1039,51 @@ function detectBeats(buffer, threshold = 0.5) {
 function estimateBPM(beats) {
   if (beats.length < 4) return 140;
   
-  // Build autocorrelation of beat times
-  const resolution = 0.005;
-  const maxTime = beats[beats.length - 1];
-  const envLength = Math.min(Math.floor(maxTime / resolution), 20000);
-  const envelope = new Float32Array(envLength);
-  
-  for (const beat of beats) {
-    const idx = Math.floor(beat / resolution);
-    if (idx < envLength) envelope[idx] = 1;
+  // Build inter-onset interval histogram
+  const intervals = [];
+  for (let i = 1; i < beats.length; i++) {
+    const diff = beats[i] - beats[i - 1];
+    if (diff > 0.2 && diff < 2.0) intervals.push(diff);
   }
   
-  // Apply Gaussian smoothing to envelope
-  const sigma = 2;
-  const smoothed = new Float32Array(envLength);
-  for (let i = 0; i < envLength; i++) {
-    if (envelope[i] === 0) continue;
-    for (let j = -sigma * 3; j <= sigma * 3; j++) {
-      const idx = i + j;
-      if (idx >= 0 && idx < envLength) {
-        smoothed[idx] += envelope[i] * Math.exp(-(j * j) / (2 * sigma * sigma));
+  if (intervals.length < 3) return 140;
+  
+  // Score each BPM candidate by how many intervals it explains
+  const score = {};
+  for (const interval of intervals) {
+    const bpm = Math.round(60 / interval);
+    for (const candidate of [bpm, bpm * 2, Math.round(bpm / 2)]) {
+      if (candidate >= 60 && candidate <= 250) {
+        score[candidate] = (score[candidate] || 0) + 1;
       }
     }
   }
   
-  // Autocorrelation with multiple candidates
-  const minLag = Math.floor(60 / 240 / resolution);
-  const maxLag = Math.floor(60 / 55 / resolution);
-  const candidates = [];
-  
-  for (let lag = minLag; lag <= maxLag && lag < envLength / 2; lag++) {
-    let corr = 0, count = 0;
-    for (let i = 0; i < envLength - lag; i++) {
-      corr += smoothed[i] * smoothed[i + lag];
-      count++;
-    }
-    corr = count > 0 ? corr / count : 0;
-    candidates.push({ lag, corr });
+  let bestBpm = 140, bestScore = 0;
+  for (const [bpm, s] of Object.entries(score)) {
+    if (s > bestScore) { bestScore = s; bestBpm = parseInt(bpm); }
   }
   
-  if (candidates.length === 0) return 140;
-  
-  // Find peaks in autocorrelation
-  const peaks = [];
-  for (let i = 2; i < candidates.length - 2; i++) {
-    if (candidates[i].corr > candidates[i-1].corr &&
-        candidates[i].corr > candidates[i-2].corr &&
-        candidates[i].corr > candidates[i+1].corr &&
-        candidates[i].corr > candidates[i+2].corr &&
-        candidates[i].corr > 0.01) {
-      peaks.push(candidates[i]);
-    }
-  }
-  
-  if (peaks.length === 0) {
-    const best = candidates.reduce((a, b) => a.corr > b.corr ? a : b);
-    const bpm = Math.round(60 / (best.lag * resolution));
-    return Math.max(55, Math.min(240, bpm));
-  }
-  
-  // Sort peaks by correlation
-  peaks.sort((a, b) => b.corr - a.corr);
-  
-  // Score each peak by how many beats it explains
-  const scorePeak = (lag) => {
-    const period = lag * resolution;
-    let score = 0;
-    for (let i = 1; i < beats.length; i++) {
-      const diff = beats[i] - beats[i - 1];
-      const ratio = diff / period;
+  // Refine: check if half/double explains more beats
+  const countIntervalsAt = (bpm) => {
+    const period = 60 / bpm;
+    let count = 0;
+    for (const interval of intervals) {
+      const ratio = interval / period;
       const nearest = Math.round(ratio);
-      if (Math.abs(ratio - nearest) < 0.2 && nearest >= 1 && nearest <= 8) {
-        score += 1 + 1 / (1 + Math.abs(ratio - nearest) * 10);
-      }
+      if (Math.abs(ratio - nearest) < 0.15 && nearest >= 1 && nearest <= 4) count++;
     }
-    return score / Math.max(1, beats.length);
+    return count;
   };
   
-  // Score top candidates
-  const topN = Math.min(5, peaks.length);
-  const scored = [];
-  for (let i = 0; i < topN; i++) {
-    const bpm = 60 / (peaks[i].lag * resolution);
-    const beatScore = scorePeak(peaks[i].lag);
-    const combinedScore = peaks[i].corr * 0.3 + beatScore * 0.7;
-    scored.push({ bpm, score: combinedScore, corr: peaks[i].corr, lag: peaks[i].lag });
-  }
+  const base = countIntervalsAt(bestBpm);
+  const half = bestBpm >= 120 ? countIntervalsAt(bestBpm / 2) : 0;
+  const doubled = bestBpm <= 120 ? countIntervalsAt(bestBpm * 2) : 0;
   
-  scored.sort((a, b) => b.score - a.score);
-  let bestBpm = Math.round(scored[0].bpm);
+  if (half > base * 1.3) return Math.round(bestBpm / 2);
+  if (doubled >= base * 1.3) return Math.round(bestBpm * 2);
   
-  // Clamp and refine
-  bestBpm = Math.max(55, Math.min(240, bestBpm));
-  
-  // Check octave errors: prefer BPM in 100-180 range for dance music
-  const candidates_octave = [bestBpm];
-  if (bestBpm < 100) candidates_octave.push(bestBpm * 2);
-  if (bestBpm > 80 && bestBpm < 120) candidates_octave.push(bestBpm * 2);
-  if (bestBpm > 140) candidates_octave.push(Math.round(bestBpm / 2));
-  if (bestBpm > 200) candidates_octave.push(Math.round(bestBpm / 2));
-  
-  let finalBpm = bestBpm;
-  let finalScore = -1;
-  for (const bpm of candidates_octave) {
-    if (bpm < 55 || bpm > 240) continue;
-    const period = 60 / bpm;
-    let s = 0;
-    for (let i = 1; i < beats.length; i++) {
-      const ratio = (beats[i] - beats[i-1]) / period;
-      const nearest = Math.round(ratio);
-      if (Math.abs(ratio - nearest) < 0.2 && nearest >= 1 && nearest <= 8) {
-        s++;
-      }
-    }
-    if (s > finalScore) { finalScore = s; finalBpm = bpm; }
-  }
-  
-  return finalBpm;
+  return bestBpm;
 }
 
 function estimateBPMFromAudio(buffer) {
