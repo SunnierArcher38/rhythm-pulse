@@ -1267,8 +1267,16 @@ let currentLaneCount = 4;
 function generateChart(beats, difficulty, duration) {
   const notes = [];
   const laneCount = currentLaneCount || 4;
-  const bpm = estimateBPM(beats);
-  const beatInterval = 60 / bpm;
+  
+  // Use actual beat gaps instead of BPM estimation
+  let avgBeatGap = 0.5;
+  if (beats.length > 4) {
+    let totalGap = 0;
+    for (let i = 1; i < Math.min(beats.length, 100); i++) {
+      totalGap += beats[i] - beats[i - 1];
+    }
+    avgBeatGap = totalGap / Math.min(beats.length - 1, 99);
+  }
   
   const settings = {
     easy: { skipChance: 0.35, holdChance: 0.05, doubleChance: 0, subChance: 0.2, minLaneGap: 0.5 },
@@ -1377,7 +1385,7 @@ function generateChart(beats, difficulty, duration) {
         const maxHold = { easy: 2, normal: 2.5, hard: 3, insane: 4 };
         const minHold = { easy: 1, normal: 1, hard: 1.5, insane: 2 };
         const holdBeats = minHold[difficulty] + Math.random() * (maxHold[difficulty] - minHold[difficulty]);
-        const holdLength = beatInterval * holdBeats;
+        const holdLength = avgBeatGap * holdBeats;
         notes.push({ time: beatTime, lane, type: 'hold', endTime: beatTime + holdLength });
         holdRanges.push({ start: beatTime, end: beatTime + holdLength });
         occupyLane(beatTime, lane);
@@ -1388,7 +1396,7 @@ function generateChart(beats, difficulty, duration) {
       
       lastLane = lane;
       
-      const nextBeat = measure[b + 1] || (beatTime + beatInterval);
+      const nextBeat = measure[b + 1] || (beatTime + avgBeatGap);
       const halfBeat = beatTime + (nextBeat - beatTime) / 2;
       const quarterBeat = beatTime + (nextBeat - beatTime) / 4;
       const threeQuarterBeat = beatTime + 3 * (nextBeat - beatTime) / 4;
@@ -3388,7 +3396,7 @@ async function addSong(file, extraProps) {
     setLoadingProgress(50, 'Detecting beats...');
     const beats = detectBeats(decodedBuffer, 0.5);
     setLoadingProgress(80, 'Estimating BPM...');
-    const bpm = estimateBPMFromAudio(decodedBuffer);
+    const bpm = estimateBPM(beats);
     const duration = decodedBuffer.duration;
     
     setLoadingProgress(85, 'Generating charts...');
