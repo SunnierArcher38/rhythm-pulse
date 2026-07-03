@@ -5328,6 +5328,24 @@ async function cloudLoad() {
   }
 }
 
+async function cleanupInvalidScores() {
+  if (!supabaseClient && !initSupabase()) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('scores')
+      .select('id, score')
+      .gt('score', 1000000);
+    if (error) return;
+    if (!data || data.length === 0) return;
+    for (const row of data) {
+      await supabaseClient.from('scores').delete().eq('id', row.id);
+    }
+    console.log('[Cleanup] Deleted', data.length, 'invalid score(s) > 1,000,000');
+  } catch (e) {
+    console.warn('[Cleanup] Failed:', e.message);
+  }
+}
+
 function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', limit = 50) {
   if (!supabaseClient) {
     if (!initSupabase()) {
@@ -5340,6 +5358,8 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
     }
   }
   if (!supabaseClient) return;
+  
+  cleanupInvalidScores();
   
   const list = document.getElementById('leaderboardList');
   list.innerHTML = '<div class="lb-loading">Loading scores...</div>';
