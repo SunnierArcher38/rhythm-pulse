@@ -1188,10 +1188,10 @@ function generateChart(beats, difficulty, duration) {
   const beatInterval = 60 / bpm;
   
   const settings = {
-    easy: { skipChance: 0.4, holdChance: 0.04, doubleChance: 0, subChance: 0.15, minLaneGap: 0.5 },
-    normal: { skipChance: 0.2, holdChance: 0.08, doubleChance: 0.08, subChance: 0.35, minLaneGap: 0.3 },
-    hard: { skipChance: 0.05, holdChance: 0.12, doubleChance: 0.15, subChance: 0.55, minLaneGap: 0.2 },
-    insane: { skipChance: 0, holdChance: 0.15, doubleChance: 0.25, subChance: 0.7, minLaneGap: 0.15 }
+    easy: { skipChance: 0.35, holdChance: 0.05, doubleChance: 0, subChance: 0.2, minLaneGap: 0.5 },
+    normal: { skipChance: 0.12, holdChance: 0.1, doubleChance: 0.12, subChance: 0.5, minLaneGap: 0.3 },
+    hard: { skipChance: 0.02, holdChance: 0.14, doubleChance: 0.3, subChance: 0.8, minLaneGap: 0.18 },
+    insane: { skipChance: 0, holdChance: 0.18, doubleChance: 0.5, subChance: 1, minLaneGap: 0.12 }
   };
   
   const s = settings[difficulty];
@@ -2786,23 +2786,35 @@ function updateMetronome() {
 }
 
 let lastBeatZoomIdx = -1;
+let lastNoteZoomTime = 0;
 function updateBeatZoom() {
   if (!beatZoomEnabled || gameState.mode !== 'playing' || !isPlaying || !gameState.song) return;
   const currentTime = getCurrentTime();
   const beats = gameState.song.beats || [];
-  if (beats.length === 0) return;
   
+  // Trigger zoom on detected beats
   for (let i = lastBeatZoomIdx + 1; i < beats.length; i++) {
     if (beats[i] > currentTime) break;
     if (i > lastBeatZoomIdx && currentTime >= beats[i] - 0.05) {
-      beatZoomTarget = 0.06;
+      beatZoomTarget = 0.12;
       lastBeatZoomIdx = i;
     }
   }
   
-  const lerp = 0.15;
+  // Also trigger zoom on chart note timestamps for denser feel
+  if (gameState.chart) {
+    for (const note of gameState.chart) {
+      if (note.time > currentTime) break;
+      if (note.time > currentTime - 0.05 && note.time > lastNoteZoomTime) {
+        beatZoomTarget = 0.08;
+        lastNoteZoomTime = note.time;
+      }
+    }
+  }
+  
+  const lerp = 0.2;
   beatZoomValue += (beatZoomTarget - beatZoomValue) * lerp;
-  beatZoomTarget *= 0.94;
+  beatZoomTarget *= 0.92;
   if (beatZoomTarget < 0.0005) beatZoomTarget = 0;
   if (beatZoomValue < 0.0005) beatZoomValue = 0;
 }
@@ -3233,7 +3245,7 @@ async function startGame(song, difficulty) {
   gameState.keyHits = new Array(currentLaneCount).fill(0); gameState.keyReleaseTimes = new Array(currentLaneCount).fill(0); gameState.keyLastPressTimes = new Array(currentLaneCount).fill(0); gameState.countdownValue = 3;
   gameState.hitTimings = []; gameState.screenShake = 0; gameState.keyPressEffects = [];
   gameState.currentAccuracy = 100; lastBeatZoomTime = -1; beatZoomValue = 0; beatZoomTarget = 0; comboZoomValue = 0; comboZoomTarget = 0; lastComboMilestone = 0;
-  lastBeatZoomIdx = -1; metronomeDots = null; lastTrailSpawn = 0;
+  lastBeatZoomIdx = -1; lastNoteZoomTime = 0; metronomeDots = null; lastTrailSpawn = 0;
   for (const note of gameState.chart) {
     note.hit = false; note.missed = false; note.holding = false;
     note.released = false; note.activated = false; note.completed = false; note.broken = false; note.tickFlash = 0;
