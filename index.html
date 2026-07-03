@@ -2352,6 +2352,12 @@ function drawComboTrails() {
 }
 
 let scorePopScale = 0;
+function getNormalizedScore() {
+  if (gameState.maxPossibleScore > 0) {
+    return Math.round((gameState.score / gameState.maxPossibleScore) * 1000000);
+  }
+  return 0;
+}
 function drawScore() {
   ctx.save();
   const scoreScale = 1 + scorePopScale * 0.1;
@@ -2359,7 +2365,7 @@ function drawScore() {
   ctx.translate(canvas.width - 30, 0);
   ctx.scale(scoreScale, scoreScale);
   ctx.font = 'bold 28px Arial'; ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
-  ctx.fillText(gameState.score.toLocaleString(), 0, 50);
+  ctx.fillText(getNormalizedScore().toLocaleString(), 0, 50);
   ctx.font = '14px Arial'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.fillText('SCORE', 0, 70);
   ctx.restore();
@@ -3801,6 +3807,9 @@ document.getElementById('backBtn').addEventListener('click', () => { addStat('qu
 
 document.getElementById('uiToggle').addEventListener('click', () => {
   document.querySelectorAll('#main-menu:not(.hidden), #song-select:not(.hidden)').forEach(el => {
+    el.classList.toggle('ui-hidden');
+  });
+  document.querySelectorAll('#gameplay-ui, .gameplay-hud').forEach(el => {
     el.classList.toggle('ui-hidden');
   });
 });
@@ -5433,15 +5442,8 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
           </div>`;
         });
       } else {
-        const perPlayer = {};
-        data.forEach(entry => {
-          const key = entry.player_name.toLowerCase();
-          if (!perPlayer[key] || entry.score > perPlayer[key].score) {
-            perPlayer[key] = entry;
-          }
-        });
-        const sorted = Object.values(perPlayer).sort((a, b) => b.score - a.score).slice(0, limit);
-        sorted.forEach((entry, i) => {
+        const allScores = data.slice(0, 50);
+        allScores.forEach((entry, i) => {
           const rank = i + 1;
           let rankClass = '';
           if (rank === 1) rankClass = 'gold';
@@ -5456,7 +5458,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
             <div class="lb-rank ${rankClass}">#${rank}</div>
             <div class="lb-info">
               <div class="lb-player">${escapeHtml(entry.player_name)}${isYou ? ' (You)' : ''}</div>
-              <div class="lb-song">${escapeHtml(entry.song_name)} - ${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
+              <div class="lb-song">${entry.difficulty}${entry.modifiers ? ' [' + entry.modifiers + ']' : ''}</div>
             </div>
             <div class="lb-stats">
               <div class="lb-grade ${gradeClass}">${entry.grade}</div>
