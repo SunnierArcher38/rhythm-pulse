@@ -3827,11 +3827,7 @@ document.getElementById('uiToggle').addEventListener('click', () => {
   });
   const mp = document.getElementById('miniPlayer');
   if (mp.classList.contains('active')) {
-    mp.classList.remove('active');
-    mp.dataset.wasActive = 'true';
-  } else if (mp.dataset.wasActive === 'true') {
-    mp.classList.add('active');
-    mp.dataset.wasActive = '';
+    mp.style.display = mp.style.display === 'none' ? '' : 'none';
   }
   gameState.uiHidden = !gameState.uiHidden;
 });
