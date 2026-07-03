@@ -1466,7 +1466,8 @@ let gameState = {
   particles: [], bgPulse: 0, comboFire: 0,
   hitTimings: [], screenShake: 0, laneGlow: [0, 0, 0, 0],
   keyPressEffects: [], currentAccuracy: 100,
-  marvelousStreak: 0
+  marvelousStreak: 0,
+  uiHidden: false
 };
 
 updateTouchLanes();
@@ -2287,6 +2288,7 @@ let comboTrailParticles = [];
 
 let lastTrailSpawn = 0;
 function drawCombo() {
+  if (gameState.uiHidden) return;
   if (gameState.combo < 2) return;
   const x = canvas.width / 2;
   const y = scrollDirection === 'upscroll' ? getHitY() + gameState.noteSize + 60 : getHitY() - gameState.noteSize - 60;
@@ -2359,6 +2361,7 @@ function getNormalizedScore() {
   return 0;
 }
 function drawScore() {
+  if (gameState.uiHidden) return;
   ctx.save();
   const scoreScale = 1 + scorePopScale * 0.1;
   scorePopScale *= 0.88;
@@ -2380,6 +2383,7 @@ function drawScore() {
 }
 
 function drawHealthBar() {
+  if (gameState.uiHidden) return;
   const barWidth = 200, barHeight = 12, x = 30, y = 40;
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.beginPath(); ctx.roundRect(x, y, barWidth, barHeight, 6); ctx.fill();
   const healthWidth = (gameState.health / 100) * barWidth;
@@ -2390,6 +2394,7 @@ function drawHealthBar() {
 }
 
 function drawProgressBar() {
+  if (gameState.uiHidden) return;
   if (!audioBuffer) return;
   const duration = getAudioDuration(), current = getCurrentTime(), progress = current / duration;
   const barWidth = 300, barHeight = 4, x = (canvas.width - barWidth) / 2, y = 20;
@@ -2398,6 +2403,7 @@ function drawProgressBar() {
 }
 
 function drawSongInfo() {
+  if (gameState.uiHidden) return;
   if (!gameState.song) return;
   ctx.font = 'bold 16px Arial'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.fillText(gameState.song.name, 30, canvas.height - 30);
@@ -2406,6 +2412,7 @@ function drawSongInfo() {
 }
 
 function drawTouchLaneLabels() {
+  if (gameState.uiHidden) return;
   const laneKeys = getLaneKeys();
   const laneColors = getLaneColors();
   const hitY = getHitY();
@@ -3209,7 +3216,7 @@ async function startGame(song, difficulty) {
     }
   }
   
-  gameState.score = 0; gameState.combo = 0; gameState.maxCombo = 0; gameState.health = 100;
+  gameState.score = 0; gameState.combo = 0; gameState.maxCombo = 0; gameState.health = 100; gameState.uiHidden = false;
   gameState.maxPossibleScore = calculateMaxPossible(gameState.chart);
   gameState.judgments = { marvelous: 0, perfect: 0, great: 0, good: 0, miss: 0 };
   gameState.hitEffects = []; gameState.laneFlash = new Array(currentLaneCount).fill(0);
@@ -3809,9 +3816,7 @@ document.getElementById('uiToggle').addEventListener('click', () => {
   document.querySelectorAll('#main-menu:not(.hidden), #song-select:not(.hidden)').forEach(el => {
     el.classList.toggle('ui-hidden');
   });
-  document.querySelectorAll('#gameplay-ui, .gameplay-hud').forEach(el => {
-    el.classList.toggle('ui-hidden');
-  });
+  gameState.uiHidden = !gameState.uiHidden;
 });
 
 
