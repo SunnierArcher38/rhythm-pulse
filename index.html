@@ -1268,14 +1268,26 @@ function generateChart(beats, difficulty, duration) {
   const notes = [];
   const laneCount = currentLaneCount || 4;
   
-  // Use actual beat gaps instead of BPM estimation
-  let avgBeatGap = 0.5;
-  if (beats.length > 4) {
-    let totalGap = 0;
-    for (let i = 1; i < Math.min(beats.length, 100); i++) {
-      totalGap += beats[i] - beats[i - 1];
+  function getLocalGap(time) {
+    for (let i = 0; i < beats.length - 1; i++) {
+      if (time >= beats[i] && time < beats[i + 1]) return beats[i + 1] - beats[i];
     }
-    avgBeatGap = totalGap / Math.min(beats.length - 1, 99);
+    return 0.5;
+  }
+  
+  // If the first detected beat is far in (quiet intro), synthesize beats from time 0
+  if (beats.length > 2 && beats[0] > 1.5) {
+    let gap = 0.5;
+    for (let i = 1; i < Math.min(beats.length, 8); i++) {
+      gap += beats[i] - beats[i - 1];
+    }
+    gap /= Math.min(beats.length - 1, 7);
+    gap = Math.min(gap, 1.5); // cap at 1.5s to avoid sparse fills
+    const syntheticBeats = [];
+    for (let t = gap; t < beats[0]; t += gap) {
+      syntheticBeats.push(Math.round(t * 100) / 100);
+    }
+    beats.splice(0, 0, ...syntheticBeats);
   }
   
   const settings = {
@@ -1286,7 +1298,7 @@ function generateChart(beats, difficulty, duration) {
   };
   
   const s = settings[difficulty];
-  const introSkip = 0.5;
+  const introSkip = { easy: 0.5, normal: 0.3, hard: 0.15, insane: 0 }[difficulty] || 0.3;
   const outroSkip = 2;
   
   const laneLastTime = new Array(laneCount).fill(-999);
@@ -1385,7 +1397,7 @@ function generateChart(beats, difficulty, duration) {
         const maxHold = { easy: 2, normal: 2.5, hard: 3, insane: 4 };
         const minHold = { easy: 1, normal: 1, hard: 1.5, insane: 2 };
         const holdBeats = minHold[difficulty] + Math.random() * (maxHold[difficulty] - minHold[difficulty]);
-        const holdLength = avgBeatGap * holdBeats;
+        const holdLength = getLocalGap(beatTime) * holdBeats;
         notes.push({ time: beatTime, lane, type: 'hold', endTime: beatTime + holdLength });
         holdRanges.push({ start: beatTime, end: beatTime + holdLength });
         occupyLane(beatTime, lane);
@@ -1396,7 +1408,7 @@ function generateChart(beats, difficulty, duration) {
       
       lastLane = lane;
       
-      const nextBeat = measure[b + 1] || (beatTime + avgBeatGap);
+      const nextBeat = measure[b + 1] || (beatTime + getLocalGap(beatTime));
       const halfBeat = beatTime + (nextBeat - beatTime) / 2;
       const quarterBeat = beatTime + (nextBeat - beatTime) / 4;
       const threeQuarterBeat = beatTime + 3 * (nextBeat - beatTime) / 4;
