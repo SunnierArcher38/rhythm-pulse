@@ -2277,7 +2277,7 @@ function drawComboTrails() {
 let scorePopScale = 0;
 function getNormalizedScore() {
   if (gameState.maxPossibleScore > 0) {
-    return Math.round((gameState.score / gameState.maxPossibleScore) * 1000000);
+    return Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
   }
   return 0;
 }
@@ -2807,7 +2807,7 @@ function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); 
 function showResults() {
   console.log('showResults: raw score =', gameState.score, 'maxPossible =', gameState.maxPossibleScore, 'chart.length =', gameState.chart.length);
   if (gameState.maxPossibleScore > 0) {
-    gameState.score = Math.round((gameState.score / gameState.maxPossibleScore) * 1000000);
+    gameState.score = Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
     console.log('showResults: normalized score =', gameState.score);
   } else {
     console.warn('showResults: maxPossibleScore is 0 or falsy, skipping normalization');
@@ -3093,20 +3093,14 @@ function startCountdown() {
 
 function calculateMaxPossible(chart) {
   const sorted = [...chart].sort((a, b) => a.time - b.time);
-  let combo = 0;
   let total = 0;
   const modMult = activeModifiers.length > 0 ? 1 + activeModifiers.length * 0.1 : 1;
   for (const note of sorted) {
     if (note.type === 'tap') {
-      combo++;
-      const cm = 1 + Math.floor(combo / 10) * 0.1;
-      total += Math.floor(350 * cm * modMult);
+      total += Math.floor(350 * modMult);
     } else if (note.type === 'hold') {
-      combo++;
-      total += 100;
       const ticks = Math.max(0, Math.floor((note.endTime - note.time) / 0.1));
       total += ticks * 5;
-      combo++;
       total += 200;
     }
   }
