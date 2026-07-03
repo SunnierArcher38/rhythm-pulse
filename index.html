@@ -3817,6 +3817,14 @@ document.getElementById('uiToggle').addEventListener('click', () => {
   document.querySelectorAll('#main-menu:not(.hidden), #song-select:not(.hidden)').forEach(el => {
     el.classList.toggle('ui-hidden');
   });
+  const mp = document.getElementById('miniPlayer');
+  if (mp.classList.contains('active')) {
+    mp.classList.remove('active');
+    mp.dataset.wasActive = 'true';
+  } else if (mp.dataset.wasActive === 'true') {
+    mp.classList.add('active');
+    mp.dataset.wasActive = '';
+  }
   gameState.uiHidden = !gameState.uiHidden;
 });
 
