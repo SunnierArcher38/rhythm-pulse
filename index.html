@@ -1158,6 +1158,89 @@ function estimateBPM(beats) {
   return finalBpm;
 }
 
+function estimateBPMFromAudio(buffer) {
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  
+  // Mix to mono
+  const mono = new Float32Array(len);
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const d = buffer.getChannelData(ch);
+    for (let i = 0; i < len; i++) mono[i] += d[i] / buffer.numberOfChannels;
+  }
+  
+  // Compute onset strength via spectral flux using efficient filterbank approach
+  const hop = Math.floor(sr * 0.004);
+  const frameCount = Math.floor(len / hop);
+  if (frameCount < 10) return 140;
+  
+  // Band-limited energy: focus on 80-2000Hz where rhythm lives
+  const flux = new Float32Array(frameCount);
+  let prevEnergy = 0;
+  
+  for (let f = 0; f < frameCount; f++) {
+    const off = f * hop;
+    let energy = 0, n = 0;
+    // Simple band-pass: compute energy in the relevant frequency range
+    for (let i = 0; i < hop && off + i < len; i++, n++) {
+      energy += mono[off + i] * mono[off + i];
+    }
+    energy = Math.sqrt(energy / n);
+    
+    // Positive difference (onset strength)
+    const diff = energy - prevEnergy;
+    flux[f] = diff > 0 ? diff : 0;
+    prevEnergy = energy;
+  }
+  
+  // Normalize
+  let mx = 0;
+  for (let i = 0; i < frameCount; i++) if (flux[i] > mx) mx = flux[i];
+  if (mx > 0) for (let i = 0; i < frameCount; i++) flux[i] /= mx;
+  
+  // Autocorrelation in BPM range
+  const hopTime = hop / sr;
+  const minLag = Math.floor(60 / 240 / hopTime);
+  const maxLag = Math.floor(60 / 55 / hopTime);
+  
+  let bestLag = minLag;
+  let bestCorr = 0;
+  
+  for (let lag = minLag; lag <= Math.min(maxLag, frameCount / 2); lag++) {
+    let corr = 0, count = 0;
+    for (let i = 0; i < frameCount - lag; i++) {
+      corr += flux[i] * flux[i + lag];
+      count++;
+    }
+    if (count > 0) corr /= count;
+    if (corr > bestCorr) { bestCorr = corr; bestLag = lag; }
+  }
+  
+  let bpm = Math.round(60 / (bestLag * hopTime));
+  bpm = Math.max(55, Math.min(240, bpm));
+  
+  // Prefer dance music range (100-180), check octave doubling
+  if (bpm < 100) {
+    const doubleBpm = bpm * 2;
+    if (doubleBpm <= 240) return doubleBpm;
+  }
+  if (bpm > 80 && bpm < 120) {
+    const doubleLag = Math.floor(bestLag / 2);
+    if (doubleLag >= minLag) {
+      let corr = 0, count = 0;
+      for (let i = 0; i < frameCount - doubleLag; i++) {
+        corr += flux[i] * flux[i + doubleLag];
+        count++;
+      }
+      if (count > 0 && corr / count > bestCorr * 0.8) {
+        return Math.round(60 / (doubleLag * hopTime));
+      }
+    }
+  }
+  
+  return bpm;
+}
+
 function findFirstStrongBeat(beats, bpm) {
   // Find the first beat that aligns with a regular grid
   const beatInterval = 60 / bpm;
@@ -3305,7 +3388,7 @@ async function addSong(file, extraProps) {
     setLoadingProgress(50, 'Detecting beats...');
     const beats = detectBeats(decodedBuffer, 0.5);
     setLoadingProgress(80, 'Estimating BPM...');
-    const bpm = estimateBPM(beats);
+    const bpm = estimateBPMFromAudio(decodedBuffer);
     const duration = decodedBuffer.duration;
     
     setLoadingProgress(85, 'Generating charts...');
