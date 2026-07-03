@@ -2277,7 +2277,11 @@ function drawComboTrails() {
 let scorePopScale = 0;
 function getNormalizedScore() {
   if (gameState.maxPossibleScore > 0) {
-    return Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
+    const normalized = Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
+    if (normalized >= 1000000 && gameState.mode === 'playing') {
+      console.log('normalized hit 1M: score=' + gameState.score + ' maxPossible=' + gameState.maxPossibleScore + ' chartLen=' + gameState.chart.length + ' remaining=' + gameState.chart.filter(function(n) { return !n.hit && !n.missed && !n.completed && !n.broken; }).length);
+    }
+    return normalized;
   }
   return 0;
 }
