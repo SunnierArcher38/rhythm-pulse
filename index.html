@@ -1046,61 +1046,40 @@ function detectBeats(buffer, threshold = 0.5) {
 function estimateBPM(beats) {
   if (beats.length < 4) return 140;
   
-  // Build inter-onset interval histogram
+  // Collect inter-beat intervals
   const intervals = [];
-  for (let i = 1; i < Math.min(beats.length, 200); i++) {
+  for (let i = 1; i < beats.length; i++) {
     const diff = beats[i] - beats[i - 1];
     if (diff > 0.15 && diff < 2.0) intervals.push(diff);
   }
-  
   if (intervals.length < 3) return 140;
   
-  // Use autocorrelation for more robust BPM detection
-  // Build onset strength envelope at 10ms resolution
-  const resolution = 0.01; // 10ms
-  const maxTime = beats[beats.length - 1];
-  const envLength = Math.floor(maxTime / resolution);
-  const envelope = new Float32Array(envLength);
+  // Use median interval for robustness against outliers
+  intervals.sort((a, b) => a - b);
+  const median = intervals[Math.floor(intervals.length / 2)];
+  let bpm = Math.round(60 / median);
   
-  // Place beats into envelope
-  for (const beat of beats) {
-    const idx = Math.floor(beat / resolution);
-    if (idx < envLength) envelope[idx] = 1;
+  // Octave correction: prefer 80-180 BPM range for dance music
+  if (bpm < 80) {
+    while (bpm < 80) bpm *= 2;
   }
-  
-  // Autocorrelation
-  let bestLag = 0;
-  let bestCorr = -1;
-  const minLag = Math.floor(60 / 200 / resolution); // 200 BPM max
-  const maxLag = Math.floor(60 / 60 / resolution);  // 60 BPM min
-  
-  for (let lag = minLag; lag <= maxLag && lag < envLength; lag++) {
-    let corr = 0;
-    let count = 0;
-    for (let i = 0; i < envLength - lag; i++) {
-      corr += envelope[i] * envelope[i + lag];
-      count++;
-    }
-    corr /= count;
-    if (corr > bestCorr) {
-      bestCorr = corr;
-      bestLag = lag;
-    }
-  }
-  
-  if (bestLag === 0) return 140;
-  
-  const bpm = Math.round(60 / (bestLag * resolution));
-  
-  // Handle common octave errors
-  if (bpm < 70) return bpm * 2;
   if (bpm > 180) {
-    // Check if half tempo makes more sense
-    const halfBpm = bpm / 2;
-    if (halfBpm > 70 && halfBpm < 150) return Math.round(halfBpm);
+    // Check if half tempo actually fits more intervals
+    const half = Math.round(bpm / 2);
+    const halfPeriod = 60 / half;
+    let halfCount = 0, origCount = 0;
+    for (const iv of intervals) {
+      const r = iv / (60 / bpm);
+      const near = Math.round(r);
+      if (Math.abs(r - near) < 0.2 && near >= 1) origCount++;
+      const hr = iv / halfPeriod;
+      const hNear = Math.round(hr);
+      if (Math.abs(hr - hNear) < 0.2 && hNear >= 1) halfCount++;
+    }
+    if (halfCount > origCount) return half;
   }
   
-  return bpm;
+  return Math.max(55, Math.min(240, bpm));
 }
 
 function findFirstStrongBeat(beats, bpm) {
