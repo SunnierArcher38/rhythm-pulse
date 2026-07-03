@@ -5472,8 +5472,15 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
           </div>`;
         });
       } else {
-        const allScores = data.slice(0, 50);
-        allScores.forEach((entry, i) => {
+        const perPlayer = {};
+        data.forEach(entry => {
+          const key = entry.player_name.toLowerCase();
+          if (!perPlayer[key] || entry.score > perPlayer[key].score) {
+            perPlayer[key] = entry;
+          }
+        });
+        const sorted = Object.values(perPlayer).sort((a, b) => b.score - a.score).slice(0, limit);
+        sorted.forEach((entry, i) => {
           const rank = i + 1;
           let rankClass = '';
           if (rank === 1) rankClass = 'gold';
