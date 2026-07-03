@@ -1189,9 +1189,9 @@ function generateChart(beats, difficulty, duration) {
   
   const settings = {
     easy: { skipChance: 0.4, holdChance: 0.04, doubleChance: 0, subChance: 0.15, minLaneGap: 0.5 },
-    normal: { skipChance: 0.25, holdChance: 0.06, doubleChance: 0.05, subChance: 0.25, minLaneGap: 0.35 },
-    hard: { skipChance: 0.15, holdChance: 0.1, doubleChance: 0.1, subChance: 0.35, minLaneGap: 0.25 },
-    insane: { skipChance: 0.05, holdChance: 0.12, doubleChance: 0.15, subChance: 0.45, minLaneGap: 0.2 }
+    normal: { skipChance: 0.2, holdChance: 0.08, doubleChance: 0.08, subChance: 0.35, minLaneGap: 0.3 },
+    hard: { skipChance: 0.05, holdChance: 0.12, doubleChance: 0.15, subChance: 0.55, minLaneGap: 0.2 },
+    insane: { skipChance: 0, holdChance: 0.15, doubleChance: 0.25, subChance: 0.7, minLaneGap: 0.15 }
   };
   
   const s = settings[difficulty];
@@ -1319,7 +1319,7 @@ function generateChart(beats, difficulty, duration) {
         }
       }
       
-      if (difficulty === 'hard' && Math.random() < 0.08 && !isTimeInsideHold(quarterBeat)) {
+      if (difficulty === 'hard' && Math.random() < 0.15 && !isTimeInsideHold(quarterBeat)) {
         const qLane = pickLane(quarterBeat, -1, m);
         if (qLane !== -1) {
           notes.push({ time: quarterBeat, lane: qLane, type: 'tap' });
@@ -1327,7 +1327,15 @@ function generateChart(beats, difficulty, duration) {
         }
       }
       
-      if (difficulty === 'insane' && Math.random() < 0.12) {
+      if (difficulty === 'hard' && Math.random() < 0.1 && !isTimeInsideHold(threeQuarterBeat)) {
+        const tqLane = pickLane(threeQuarterBeat, -1, m);
+        if (tqLane !== -1) {
+          notes.push({ time: threeQuarterBeat, lane: tqLane, type: 'tap' });
+          occupyLane(threeQuarterBeat, tqLane);
+        }
+      }
+      
+      if (difficulty === 'insane' && Math.random() < 0.25) {
         if (!isTimeInsideHold(quarterBeat)) {
           const qLane = pickLane(quarterBeat, -1, m);
           if (qLane !== -1) {
