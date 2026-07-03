@@ -2265,9 +2265,15 @@ function drawComboTrails() {
 }
 
 let scorePopScale = 0;
+let debugLogTimer = 0;
 function getNormalizedScore() {
   if (gameState.maxPossibleScore > 0) {
-    return Math.min(1000000, Math.round((gameState.baseScore / gameState.maxPossibleScore) * 1000000));
+    const val = Math.min(1000000, Math.round((gameState.baseScore / gameState.maxPossibleScore) * 1000000));
+    debugLogTimer++;
+    if (debugLogTimer % 120 === 0) {
+      console.log('baseScore:', gameState.baseScore, 'maxPossible:', gameState.maxPossibleScore, 'normalized:', val);
+    }
+    return val;
   }
   return 0;
 }
