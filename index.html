@@ -2267,7 +2267,7 @@ function drawComboTrails() {
 let scorePopScale = 0;
 function getNormalizedScore() {
   if (gameState.maxPossibleScore > 0) {
-    return Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
+    return Math.min(1000000, Math.round((gameState.baseScore / gameState.maxPossibleScore) * 1000000));
   }
   return 0;
 }
@@ -2448,6 +2448,7 @@ function handleKeyPress(lane) {
     const comboMultiplier = 1 + Math.floor(gameState.combo / 10) * 0.1;
     const modifierMultiplier = activeModifiers.length > 0 ? 1 + (activeModifiers.length * 0.1) : 1;
     gameState.score += Math.floor(score * comboMultiplier * modifierMultiplier);
+    gameState.baseScore += Math.floor(score * modifierMultiplier);
     scorePopScale = 1;
     if (healthMode === 'nofail') { gameState.health = Math.min(100, gameState.health + (judgment === 'marvelous' ? 2 : 1)); }
     else if (healthMode === 'drain') { gameState.health = Math.min(100, gameState.health + 0.5); }
@@ -2512,6 +2513,7 @@ function updateHoldingNotes() {
         gameState.combo++;
         if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
         gameState.score += 100;
+        gameState.baseScore += 100;
         comboPopScale = 1; scorePopScale = 1;
         gameState.laneFlash[note.lane] = 1;
         gameState.laneGlow[note.lane] = 1;
@@ -2536,6 +2538,7 @@ function updateHoldingNotes() {
         note.lastTickTime += 0.1;
         note.tickFlash = 1;
         gameState.score += 5;
+        gameState.baseScore += 5;
         gameState.laneGlow[note.lane] = Math.min(1, gameState.laneGlow[note.lane] + 0.3);
       }
       if (note.tickFlash) note.tickFlash *= 0.9;
@@ -2546,6 +2549,7 @@ function updateHoldingNotes() {
         note.holding = false;
         note.completed = true;
         gameState.score += 200;
+        gameState.baseScore += 200;
         comboPopScale = 1; scorePopScale = 1;
         gameState.judgments.marvelous++;
         gameState.combo++;
@@ -2563,6 +2567,7 @@ function updateHoldingNotes() {
             note.holding = false;
             note.completed = true;
             gameState.score += 200;
+            gameState.baseScore += 200;
             comboPopScale = 1; scorePopScale = 1;
             gameState.judgments.marvelous++;
             gameState.combo++;
@@ -2795,9 +2800,9 @@ function endGame() { gameState.mode = 'results'; stopAudio(); showResults(); upd
 function finishSong() { gameState.mode = 'results'; stopAudio(); showResults(); updateTouchLanes(); }
 
 function showResults() {
-  console.log('showResults: raw score =', gameState.score, 'maxPossible =', gameState.maxPossibleScore, 'chart.length =', gameState.chart.length);
+  console.log('showResults: raw score =', gameState.score, 'baseScore =', gameState.baseScore, 'maxPossible =', gameState.maxPossibleScore, 'chart.length =', gameState.chart.length);
   if (gameState.maxPossibleScore > 0) {
-    gameState.score = Math.min(1000000, Math.round((gameState.score / gameState.maxPossibleScore) * 1000000));
+    gameState.score = Math.min(1000000, Math.round((gameState.baseScore / gameState.maxPossibleScore) * 1000000));
     console.log('showResults: normalized score =', gameState.score);
   } else {
     console.warn('showResults: maxPossibleScore is 0 or falsy, skipping normalization');
@@ -3132,7 +3137,7 @@ async function startGame(song, difficulty) {
     }
   }
   
-  gameState.score = 0; gameState.combo = 0; gameState.maxCombo = 0; gameState.health = 100; gameState.uiHidden = false;
+  gameState.score = 0; gameState.baseScore = 0; gameState.combo = 0; gameState.maxCombo = 0; gameState.health = 100; gameState.uiHidden = false;
   gameState.maxPossibleScore = calculateMaxPossible(gameState.chart);
   gameState.judgments = { marvelous: 0, perfect: 0, great: 0, good: 0, miss: 0 };
   gameState.hitEffects = []; gameState.laneFlash = new Array(currentLaneCount).fill(0);
