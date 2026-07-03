@@ -3093,15 +3093,18 @@ function startCountdown() {
 
 function calculateMaxPossible(chart) {
   const sorted = [...chart].sort((a, b) => a.time - b.time);
+  let combo = 0;
   let total = 0;
   const modMult = activeModifiers.length > 0 ? 1 + activeModifiers.length * 0.1 : 1;
   for (const note of sorted) {
     if (note.type === 'tap') {
-      total += Math.floor(350 * modMult);
+      combo++;
+      const cm = 1 + Math.floor(combo / 10) * 0.1;
+      total += Math.floor(350 * cm * modMult);
     } else if (note.type === 'hold') {
       const ticks = Math.max(0, Math.floor((note.endTime - note.time) / 0.1));
-      total += ticks * 5;
-      total += 200;
+      total += ticks * 5 + 200;
+      combo++;
     }
   }
   return total;
