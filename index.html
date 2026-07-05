@@ -4992,6 +4992,7 @@ function showToast(msg, type) {
 }
 
 function submitToLeaderboard(data) {
+  if (autoplayEnabled) return;
   if (!autoSubmitScores) return;
   if (!supabaseClient) {
     if (!initSupabase()) return;
