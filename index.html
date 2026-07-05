@@ -59,13 +59,32 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 #song-select.showing-menu { padding-top: 0; }
 #settingsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
 #settingsModal.active { display: flex !important; }
-.settings-panel-global { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 520px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-.settings-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--border); }
+.settings-panel-global { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 540px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+.settings-panel-global::-webkit-scrollbar { width: 5px; }
+.settings-panel-global::-webkit-scrollbar-track { background: transparent; }
+.settings-panel-global::-webkit-scrollbar-thumb { background: var(--text-dimmer); border-radius: 3px; }
+.settings-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; font-size: 1.15rem; font-weight: 700; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(196,77,255,0.08), rgba(109,180,255,0.08)); }
 .settings-modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s; }
 .settings-modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-.settings-modal-body { padding: 0.75rem 1.25rem 1.25rem; }
-#settingsModal .settings-section { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.settings-modal-body { padding: 0.75rem 1.5rem 1.25rem; }
+#settingsModal .settings-section { margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
 #settingsModal .settings-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+#settingsModal .settings-section-header { font-size: 0.7rem; font-weight: 700; color: var(--pink); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.6rem; }
+#settingsModal .setting-row { display: flex; align-items: center; justify-content: space-between; margin: 0.4rem 0; padding: 0.3rem 0; }
+#settingsModal .setting-label { font-size: 0.85rem; color: var(--text); }
+#settingsModal .setting-value { font-size: 0.75rem; color: var(--pink); font-weight: 600; min-width: 35px; text-align: right; font-family: monospace; }
+#settingsModal .setting-slider { width: 100px; accent-color: var(--pink); cursor: pointer; }
+.toggle-btn { padding: 0.3rem 0.8rem; border: 1px solid var(--pink); border-radius: var(--radius-sm); background: transparent; color: var(--pink); font-weight: 600; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.toggle-btn:hover { background: var(--accent-dim); }
+.toggle-btn.off { border-color: var(--border); color: var(--text-dimmer); }
+.toggle-btn.off:hover { background: var(--bg-hover); }
+.style-select { padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text); font-size: 0.8rem; cursor: pointer; outline: none; transition: all 0.2s; }
+.style-select:hover { border-color: var(--pink); }
+.style-select option { background: var(--bg-primary); color: var(--text); }
+.settings-btn-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.settings-btn-row button { flex: 1; padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text); }
+.settings-btn-row button:hover { border-color: var(--pink); background: var(--bg-hover); }
+.settings-btn-row .primary { background: linear-gradient(135deg, rgba(196,77,255,0.2), rgba(109,180,255,0.2)); border-color: var(--pink); color: var(--pink); }
 .select-back { position: absolute; top: 1rem; left: 1rem; z-index: 110; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s var(--ease); display: flex; align-items: center; gap: 0.4rem; }
 .select-back:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--pink); }
 .select-title { font-size: 4rem; font-weight: 900; color: var(--text); margin-top: 2rem; letter-spacing: 2px; animation: titleFloat 3s ease-in-out infinite; }
@@ -813,46 +832,51 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   </div>
    <div class="health-mode-indicator" id="healthModeIndicator"></div>
   </div>
-  <div id="settingsModal">
+   <div id="settingsModal">
     <div class="settings-panel-global">
       <div class="settings-modal-header">⚙ Settings <button class="settings-modal-close" id="settingsModalClose">✕</button></div>
       <div class="settings-modal-body">
         <div class="settings-section">
-          <div class="settings-section-header">🎵 Audio & Visual</div>
-          <div class="setting-row"><span class="setting-label">🔊 Volume</span><input type="range" class="setting-slider" id="volume" min="0" max="100" value="80"><span class="setting-value" id="volumeVal">80</span></div>
-          <div class="setting-row"><span class="setting-label">🎚 Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"><span class="setting-value" id="audioOffsetVal">0</span></div>
-          <div class="setting-row"><span class="setting-label">🔔 Hit Sounds</span><button class="toggle-btn" id="hitSoundToggle">OFF</button></div>
-          <div class="setting-row"><span class="setting-label">📊 Visualizer</span><button class="toggle-btn" id="visualizerToggle">ON</button></div>
-          <div class="setting-row"><span class="setting-label">🎨 Color Scheme</span><select class="style-select" id="colorScheme"><option value="default">Default</option><option value="rainbow">Rainbow</option><option value="neon" selected>Neon</option><option value="pastel">Pastel</option><option value="fire">Fire</option><option value="ocean">Ocean</option><option value="monochrome">Monochrome</option></select></div>
-          <div class="setting-row"><span class="setting-label">📐 Note Style</span><select class="style-select" id="noteStyle"><option value="blocks">Blocks</option><option value="arrows">Arrows</option><option value="circles" selected>Circles</option><option value="diamonds">Diamonds</option><option value="bars">Bars</option></select></div>
-          <div class="setting-row"><span class="setting-label">🔍 Note Size</span><input type="range" class="setting-slider" id="noteSize" min="30" max="80" value="50"><span class="setting-value" id="noteSizeVal">50</span></div>
-          <div class="setting-row"><span class="setting-label">📺 Beat Zoom (FNF)</span><button class="toggle-btn" id="beatZoomToggle">ON</button></div>
-          <div class="setting-row"><span class="setting-label">📈 Show FPS</span><button class="toggle-btn off" id="fpsToggle">OFF</button></div>
-        </div>
-        <div class="settings-section">
           <div class="settings-section-header">🎮 Gameplay</div>
           <div class="setting-row"><span class="setting-label">⚡ Scroll Speed</span><input type="range" class="setting-slider" id="scrollSpeed" min="1" max="30" value="15"><span class="setting-value" id="scrollSpeedVal">15</span></div>
           <div class="setting-row"><span class="setting-label">🛤 Lanes</span><input type="range" class="setting-slider" id="laneCount" min="4" max="8" value="4" step="1"><span class="setting-value" id="laneCountVal">4</span></div>
+          <div class="setting-row"><span class="setting-label">🔍 Note Size</span><input type="range" class="setting-slider" id="noteSize" min="30" max="80" value="50"><span class="setting-value" id="noteSizeVal">50</span></div>
           <div class="setting-row"><span class="setting-label">🎯 Timing Window</span><select class="style-select" id="timingWindow"><option value="lenient">Lenient</option><option value="normal" selected>Normal</option><option value="strict">Strict</option></select></div>
           <div class="setting-row"><span class="setting-label">↕ Scroll Direction</span><select class="style-select" id="scrollDirection"><option value="downscroll" selected>Downscroll</option><option value="upscroll">Upscroll</option></select></div>
           <div class="setting-row"><span class="setting-label">❤️ Health Mode</span><select class="style-select" id="healthMode"><option value="normal" selected>Normal</option><option value="nofail">No Fail</option><option value="sudden">Sudden Death</option><option value="drain">Life Drain</option></select></div>
-          <div class="setting-row"><span class="setting-label">🏎 Speed Preset</span><select class="style-select" id="speedPreset"><option value="custom">Custom</option><option value="vslow">Very Slow</option><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option><option value="vfast">Very Fast</option><option value="insane">Insane</option><option value="extreme">Extreme</option><option value="godlike">Godlike</option></select></div>
-          <div class="setting-row"><span class="setting-label">👁 Lane Hide</span><button class="toggle-btn off" id="laneHideToggle">OFF</button></div>
-          <div class="setting-row"><span class="setting-label">✨ Key Press FX</span><button class="toggle-btn" id="keyPressToggle">ON</button></div>
         </div>
         <div class="settings-section">
-          <div class="settings-section-header">⚡ Modifiers & Practice</div>
-          <div class="setting-row"><span class="setting-label">🔄 Modifiers</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
+          <div class="settings-section-header">🎨 Visuals</div>
+          <div class="setting-row"><span class="setting-label">🎨 Color Scheme</span><select class="style-select" id="colorScheme"><option value="default">Default</option><option value="rainbow">Rainbow</option><option value="neon" selected>Neon</option><option value="pastel">Pastel</option><option value="fire">Fire</option><option value="ocean">Ocean</option><option value="monochrome">Monochrome</option></select></div>
+          <div class="setting-row"><span class="setting-label">📐 Note Style</span><select class="style-select" id="noteStyle"><option value="blocks">Blocks</option><option value="arrows">Arrows</option><option value="circles" selected>Circles</option><option value="diamonds">Diamonds</option><option value="bars">Bars</option></select></div>
+          <div class="setting-row"><span class="setting-label">📈 Show FPS</span><button class="toggle-btn off" id="fpsToggle">OFF</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">🔊 Audio</div>
+          <div class="setting-row"><span class="setting-label">🔊 Volume</span><input type="range" class="setting-slider" id="volume" min="0" max="100" value="80"><span class="setting-value" id="volumeVal">80</span></div>
+          <div class="setting-row"><span class="setting-label">🎚 Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"><span class="setting-value" id="audioOffsetVal">0</span></div>
+          <div class="setting-row"><span class="setting-label">🔔 Hit Sounds</span><button class="toggle-btn" id="hitSoundToggle">OFF</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">⚡ Modifiers</div>
+          <div class="setting-row"><span class="setting-label">🔄 Mods</span><div style="display:flex;gap:4px;flex-wrap:wrap;" id="modifierBtns"><button class="mod-btn" data-mod="mirror">Mirror</button><button class="mod-btn" data-mod="random">Random</button><button class="mod-btn" data-mod="hidden">Hidden</button><button class="mod-btn" data-mod="sudden">Sudden</button></div></div>
           <div class="setting-row"><span class="setting-label">🎓 Practice Mode</span><button class="toggle-btn off" id="practiceToggle">OFF</button></div>
           <div class="setting-row"><span class="setting-label">🤖 Auto Play</span><button class="toggle-btn off" id="autoplayToggle">OFF</button></div>
-          <div class="setting-row"><span class="setting-label">🥁 Metronome</span><button class="toggle-btn off" id="metronomeToggle">OFF</button></div>
-          <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#6c3483,#c44dff);">⌨ Customize Keys</button></div>
         </div>
         <div class="settings-section">
-          <div class="settings-section-header">🌐 Online Leaderboard</div>
-          <div class="setting-row"><span class="setting-label">👤 Player Name</span><input type="text" id="playerNameInput" placeholder="Enter your name..." style="width:140px;padding:0.3rem 0.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;" maxlength="20"></div>
+          <div class="settings-section-header">🌐 Online</div>
+          <div class="setting-row"><span class="setting-label">👤 Player Name</span><input type="text" id="playerNameInput" placeholder="Anonymous..." style="width:140px;padding:0.3rem 0.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:0.85rem;outline:none;" maxlength="20"></div>
           <div class="setting-row"><span class="setting-label">📤 Auto-Submit Scores</span><button class="toggle-btn" id="autoSubmitToggle">ON</button></div>
-          <div class="setting-row"><button class="pause-btn" id="viewLeaderboardBtn" style="width:100%;padding:0.5rem;font-size:0.9rem;background:linear-gradient(135deg,#c44dff,#6b9dff);">🏆 View Leaderboard</button></div>
+          <div class="setting-row"><button class="pause-btn" id="viewLeaderboardBtn" style="width:100%;padding:0.5rem;font-size:0.85rem;background:linear-gradient(135deg,#c44dff,#6b9dff);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;">🏆 View Leaderboard</button></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">⌨ Controls</div>
+          <div class="setting-row"><button class="pause-btn" id="keybindBtn" style="width:100%;padding:0.5rem;font-size:0.85rem;background:linear-gradient(135deg,#6c3483,#c44dff);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;">⌨ Customize Keys</button></div>
+        </div>
+        <div class="settings-section" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
+          <div class="settings-btn-row">
+            <button id="resetSettingsBtn">↺ Reset to Defaults</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3798,11 +3822,6 @@ document.getElementById('fpsToggle').addEventListener('click', (e) => {
   e.target.textContent = showFPS ? 'ON' : 'OFF';
   e.target.classList.toggle('off', !showFPS);
 });
-document.getElementById('visualizerToggle').addEventListener('click', (e) => {
-  visualizerEnabled = !visualizerEnabled; addStat('visualizer_toggle', 1); checkProgressiveAchievements('visualizer_toggle', getStat('visualizer_toggle'));
-  e.target.textContent = visualizerEnabled ? 'ON' : 'OFF';
-  e.target.classList.toggle('off', !visualizerEnabled); localStorage.setItem('rhythmPulseVisualizer', visualizerEnabled);
-});
 document.getElementById('noteStyle').addEventListener('change', (e) => {
   addStat('note_style_changed', 1); checkProgressiveAchievements('note_style_changed', getStat('note_style_changed'));
   currentNoteStyle = e.target.value; localStorage.setItem('rhythmPulseNoteStyle', currentNoteStyle);
@@ -3825,16 +3844,6 @@ document.getElementById('healthMode').addEventListener('change', (e) => {
   const indicator = document.getElementById('healthModeIndicator');
   indicator.textContent = healthMode !== 'normal' ? healthMode.toUpperCase() : '';
 });
-document.getElementById('speedPreset').addEventListener('change', (e) => {
-  addStat('speed_changed', 1); checkProgressiveAchievements('speed_changed', getStat('speed_changed'));
-  const preset = e.target.value;
-  if (preset === 'custom') return;
-  if (SPEED_PRESETS[preset]) {
-    gameState.scrollSpeed = SPEED_PRESETS[preset];
-    document.getElementById('scrollSpeed').value = SPEED_PRESETS[preset];
-    document.getElementById('scrollSpeedVal').textContent = SPEED_PRESETS[preset];
-  }
-});
 document.getElementById('practiceToggle').addEventListener('click', (e) => {
   practiceMode = !practiceMode;
   e.target.textContent = practiceMode ? 'ON' : 'OFF';
@@ -3852,28 +3861,22 @@ document.getElementById('autoplayToggle').addEventListener('click', (e) => {
   e.target.classList.toggle('off', !autoplayEnabled);
   document.getElementById('autoplayIndicator').style.display = autoplayEnabled ? 'block' : 'none';
 });
-document.getElementById('metronomeToggle').addEventListener('click', (e) => {
-  metronomeEnabled = !metronomeEnabled;
-  e.target.textContent = metronomeEnabled ? 'ON' : 'OFF';
-  e.target.classList.toggle('off', !metronomeEnabled);
-  document.getElementById('metronomeIndicator').classList.toggle('active', metronomeEnabled);
-});
-document.getElementById('laneHideToggle').addEventListener('click', (e) => {
-  laneHideEnabled = !laneHideEnabled;
-  addStat('lane_hide_used', 1); checkProgressiveAchievements('lane_hide_used', getStat('lane_hide_used'));
-  e.target.textContent = laneHideEnabled ? 'ON' : 'OFF';
-  e.target.classList.toggle('off', !laneHideEnabled);
-});
-document.getElementById('keyPressToggle').addEventListener('click', (e) => {
-  keyPressFXEnabled = !keyPressFXEnabled;
-  e.target.textContent = keyPressFXEnabled ? 'ON' : 'OFF';
-  e.target.classList.toggle('off', !keyPressFXEnabled);
-});
-document.getElementById('beatZoomToggle').addEventListener('click', (e) => {
-  beatZoomEnabled = !beatZoomEnabled; addStat('beat_zoom_toggle', 1); checkProgressiveAchievements('beat_zoom_toggle', getStat('beat_zoom_toggle'));
-  e.target.textContent = beatZoomEnabled ? 'ON' : 'OFF';
-  e.target.classList.toggle('off', !beatZoomEnabled);
-  localStorage.setItem('rhythmPulseBeatZoom', beatZoomEnabled);
+document.getElementById('resetSettingsBtn').addEventListener('click', () => {
+  if (!confirm('Reset all settings to defaults?')) return;
+  localStorage.removeItem('rhythmPulseScrollSpeed');
+  localStorage.removeItem('rhythmPulseNoteSize');
+  localStorage.removeItem('rhythmPulseVolume');
+  localStorage.removeItem('rhythmPulseLaneCount');
+  localStorage.removeItem('rhythmPulseAudioOffset');
+  localStorage.removeItem('rhythmPulseHitSound');
+  localStorage.removeItem('rhythmPulseTimingWindow');
+  localStorage.removeItem('rhythmPulseScrollDirection');
+  localStorage.removeItem('rhythmPulseHealthMode');
+  localStorage.removeItem('rhythmPulseColorScheme');
+  localStorage.removeItem('rhythmPulseNoteStyle');
+  localStorage.removeItem('rhythmPulseModifiers');
+  localStorage.removeItem('rhythmPulsePlayerName');
+  location.reload();
 });
 
 document.querySelectorAll('.mod-btn').forEach(btn => {
@@ -3933,10 +3936,6 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   document.getElementById('fpsToggle').classList.remove('off');
   const hs = localStorage.getItem('rhythmPulseHitSound');
   if (hs !== null) { hitSoundEnabled = hs === 'true'; const btn = document.getElementById('hitSoundToggle'); btn.textContent = hitSoundEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !hitSoundEnabled); }
-  const vis = localStorage.getItem('rhythmPulseVisualizer');
-  if (vis !== null) { visualizerEnabled = vis === 'true'; const btn = document.getElementById('visualizerToggle'); btn.textContent = visualizerEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !visualizerEnabled); }
-  const bz = localStorage.getItem('rhythmPulseBeatZoom');
-  if (bz !== null) { beatZoomEnabled = bz === 'true'; const btn = document.getElementById('beatZoomToggle'); btn.textContent = beatZoomEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !beatZoomEnabled); }
   const ns = localStorage.getItem('rhythmPulseNoteStyle');
   if (ns) { currentNoteStyle = ns; document.getElementById('noteStyle').value = ns; }
   const cs = localStorage.getItem('rhythmPulseColorScheme');
