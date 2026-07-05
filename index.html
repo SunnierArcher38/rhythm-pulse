@@ -976,6 +976,7 @@ function playAudio(offset = 0) {
   audioSource = audioCtx.createBufferSource();
   audioSource.buffer = audioBuffer;
   audioSource.connect(gainNode);
+  audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
   audioSource.start(0, offset);
   audioStartTime = audioCtx.currentTime - offset;
   isPlaying = true;
@@ -991,7 +992,7 @@ function pauseAudio() {
 
 function resumeAudio() { playAudio(audioPausedAt); }
 function stopAudio() { if (audioSource) { try { audioSource.stop(); } catch(e) {} } isPlaying = false; audioPausedAt = 0; }
-function getCurrentTime() { if (!isPlaying) return audioPausedAt; return audioCtx.currentTime - audioStartTime; }
+function getCurrentTime() { if (!isPlaying) return audioPausedAt; const t = audioCtx.currentTime - audioStartTime; return t * (nightcoreEnabled ? 1.3 : 1.0); }
 function getAudioDuration() { return audioBuffer ? audioBuffer.duration : 0; }
 
 function detectBeats(buffer, threshold = 0.5) {
@@ -2657,7 +2658,7 @@ function updatePracticeLoop() {
     audioSource = audioCtx.createBufferSource();
     audioSource.buffer = audioBuffer;
     audioSource.connect(gainNode);
-    audioSource.playbackRate.value = practiceSpeed;
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : practiceSpeed;
     audioSource.start(0, practiceLoopStart);
     audioStartTime = audioCtx.currentTime - practiceLoopStart;
   }
@@ -3878,6 +3879,9 @@ document.getElementById('nightcoreToggle').addEventListener('click', (e) => {
   if (previewSource && previewSource.playbackRate !== undefined) {
     previewSource.playbackRate.value = previewSpeed;
   }
+  if (audioSource) {
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
+  }
 });
 
 document.getElementById('resetSettingsBtn').addEventListener('click', () => {
@@ -3921,7 +3925,7 @@ document.querySelectorAll('.mod-btn').forEach(btn => {
 document.getElementById('practiceSpeed').addEventListener('input', (e) => {
   practiceSpeed = parseInt(e.target.value) / 100;
   document.getElementById('practiceSpeedDisplay').textContent = e.target.value + '%';
-  if (audioSource) { audioSource.playbackRate.value = practiceSpeed; }
+  if (audioSource) { audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : practiceSpeed; }
 });
 document.getElementById('practiceLoopBtn').addEventListener('click', () => {
   addStat('practice_loop', 1); checkProgressiveAchievements('practice_loop', getStat('practice_loop'));
@@ -3941,7 +3945,7 @@ document.getElementById('practiceExit').addEventListener('click', () => {
   document.getElementById('practicePanel').classList.remove('active');
   document.getElementById('practiceToggle').textContent = 'OFF';
   document.getElementById('practiceToggle').classList.add('off');
-  if (audioSource) audioSource.playbackRate.value = 1.0;
+  if (audioSource) audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
 });
 
 document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
@@ -4737,6 +4741,9 @@ document.getElementById('playerNightcoreBtn').addEventListener('click', () => {
   document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
   if (previewSource && previewSource.playbackRate !== undefined) {
     previewSource.playbackRate.value = previewSpeed;
+  }
+  if (audioSource) {
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
   }
 });
 
