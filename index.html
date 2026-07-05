@@ -4794,12 +4794,12 @@ document.getElementById('playerMuteBtn').addEventListener('click', () => {
 });
 
 document.getElementById('playerSpeedBtn').addEventListener('click', () => {
+  if (nightcoreEnabled) return;
   const speeds = [1, 1.25, 1.5, 2, 0.5, 0.75];
   const idx = speeds.indexOf(previewSpeed);
   previewSpeed = speeds[(idx + 1) % speeds.length];
   document.getElementById('playerSpeedBtn').textContent = previewSpeed + 'x';
   document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
-  if (nightcoreEnabled) return;
   if (previewSource && previewSource.playbackRate !== undefined) {
     previewSource.playbackRate.value = previewSpeed;
   }
