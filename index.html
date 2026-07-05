@@ -324,6 +324,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .mini-player .player-btn.play-btn { background: var(--pink); border: none; color: #fff; }
 .mini-player .player-btn.play-btn:hover { background: #ff4d9a; }
 .mini-player .player-btn.active-loop { color: var(--pink); background: var(--accent-dim); border-color: var(--pink); box-shadow: 0 0 8px rgba(255,102,170,0.3); }
+.mini-player .player-btn.active-nightcore { color: #ffcc00; background: rgba(255,204,0,0.12); border-color: #ffcc00; box-shadow: 0 0 8px rgba(255,204,0,0.3); }
 .mini-player .player-index { font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; margin-left: 0.3rem; }
 .mini-player .player-extras { display: flex; align-items: center; gap: 0.3rem; }
 .mini-player .speed-btn { font-size: 0.7rem !important; font-weight: 700; width: 36px; }
@@ -828,6 +829,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
       <button class="player-btn mute-btn" id="playerMuteBtn" title="Mute">🔊</button>
       <input type="range" class="volume-slider" id="playerVolume" min="0" max="100" value="80">
       <button class="player-btn speed-btn" id="playerSpeedBtn" title="Playback speed">1x</button>
+      <button class="player-btn" id="playerNightcoreBtn" title="Nightcore mode">🚀</button>
     </div>
   </div>
    <div class="health-mode-indicator" id="healthModeIndicator"></div>
@@ -856,6 +858,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
           <div class="setting-row"><span class="setting-label">🔊 Volume</span><input type="range" class="setting-slider" id="volume" min="0" max="100" value="80"><span class="setting-value" id="volumeVal">80</span></div>
           <div class="setting-row"><span class="setting-label">🎚 Audio Offset (ms)</span><input type="range" class="setting-slider" id="audioOffset" min="-200" max="200" value="0"><span class="setting-value" id="audioOffsetVal">0</span></div>
           <div class="setting-row"><span class="setting-label">🔔 Hit Sounds</span><button class="toggle-btn" id="hitSoundToggle">OFF</button></div>
+          <div class="setting-row"><span class="setting-label">🚀 Nightcore</span><button class="toggle-btn off" id="nightcoreToggle">OFF</button></div>
         </div>
         <div class="settings-section">
           <div class="settings-section-header">⚡ Modifiers</div>
@@ -971,6 +974,7 @@ function playAudio(offset = 0) {
   audioSource = audioCtx.createBufferSource();
   audioSource.buffer = audioBuffer;
   audioSource.connect(gainNode);
+  audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
   audioSource.start(0, offset);
   audioStartTime = audioCtx.currentTime - offset;
   isPlaying = true;
@@ -1412,7 +1416,7 @@ let soundCtx = null;
 let practiceMode = false, practiceSpeed = 1.0, practiceLoopStart = 0, practiceLoopEnd = 0, practiceLoopActive = false;
 let previewSource = null, previewPlaying = false, previewSong = null, previewStartTime = 0, previewPausedAt = 0, previewGainNode = null, previewLoop = false, previewShuffle = false, previewSpeed = 1, previewMuted = false, previousVolume = 80;
 let previewVirtualTime = 0, lastPreviewFrameTime = 0;
-let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true;
+let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true, nightcoreEnabled = false;
 let beatZoomValue = 0, beatZoomTarget = 0, lastBeatZoomTime = 0;
 let comboZoomValue = 0, comboZoomTarget = 0, lastComboZoomTime = 0, lastComboMilestone = 0;
 let lastComboValue = 0, comboPopScale = 0, comboTickTime = 0;
@@ -2652,7 +2656,7 @@ function updatePracticeLoop() {
     audioSource = audioCtx.createBufferSource();
     audioSource.buffer = audioBuffer;
     audioSource.connect(gainNode);
-    audioSource.playbackRate.value = practiceSpeed;
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : practiceSpeed;
     audioSource.start(0, practiceLoopStart);
     audioStartTime = audioCtx.currentTime - practiceLoopStart;
   }
@@ -3861,6 +3865,19 @@ document.getElementById('autoplayToggle').addEventListener('click', (e) => {
   e.target.classList.toggle('off', !autoplayEnabled);
   document.getElementById('autoplayIndicator').style.display = autoplayEnabled ? 'block' : 'none';
 });
+document.getElementById('nightcoreToggle').addEventListener('click', (e) => {
+  nightcoreEnabled = !nightcoreEnabled;
+  e.target.textContent = nightcoreEnabled ? 'ON' : 'OFF';
+  e.target.classList.toggle('off', !nightcoreEnabled);
+  localStorage.setItem('rhythmPulseNightcore', nightcoreEnabled ? '1' : '0');
+  document.getElementById('playerNightcoreBtn').classList.toggle('active-nightcore', nightcoreEnabled);
+  if (previewSource && previewSource.playbackRate !== undefined) {
+    previewSource.playbackRate.value = nightcoreEnabled ? 1.3 : previewSpeed;
+  }
+  if (audioSource) {
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
+  }
+});
 document.getElementById('resetSettingsBtn').addEventListener('click', () => {
   if (!confirm('Reset all settings to defaults?')) return;
   localStorage.removeItem('rhythmPulseScrollSpeed');
@@ -3869,6 +3886,7 @@ document.getElementById('resetSettingsBtn').addEventListener('click', () => {
   localStorage.removeItem('rhythmPulseLaneCount');
   localStorage.removeItem('rhythmPulseAudioOffset');
   localStorage.removeItem('rhythmPulseHitSound');
+  localStorage.removeItem('rhythmPulseNightcore');
   localStorage.removeItem('rhythmPulseTimingWindow');
   localStorage.removeItem('rhythmPulseScrollDirection');
   localStorage.removeItem('rhythmPulseHealthMode');
@@ -3901,7 +3919,7 @@ document.querySelectorAll('.mod-btn').forEach(btn => {
 document.getElementById('practiceSpeed').addEventListener('input', (e) => {
   practiceSpeed = parseInt(e.target.value) / 100;
   document.getElementById('practiceSpeedDisplay').textContent = e.target.value + '%';
-  if (audioSource) { audioSource.playbackRate.value = practiceSpeed; }
+  if (audioSource) { audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : practiceSpeed; }
 });
 document.getElementById('practiceLoopBtn').addEventListener('click', () => {
   addStat('practice_loop', 1); checkProgressiveAchievements('practice_loop', getStat('practice_loop'));
@@ -3921,7 +3939,7 @@ document.getElementById('practiceExit').addEventListener('click', () => {
   document.getElementById('practicePanel').classList.remove('active');
   document.getElementById('practiceToggle').textContent = 'OFF';
   document.getElementById('practiceToggle').classList.add('off');
-  if (audioSource) audioSource.playbackRate.value = 1.0;
+  if (audioSource) audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
 });
 
 document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
@@ -3936,6 +3954,8 @@ document.getElementById('showTimingGraphBtn').addEventListener('click', () => {
   document.getElementById('fpsToggle').classList.remove('off');
   const hs = localStorage.getItem('rhythmPulseHitSound');
   if (hs !== null) { hitSoundEnabled = hs === 'true'; const btn = document.getElementById('hitSoundToggle'); btn.textContent = hitSoundEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !hitSoundEnabled); }
+  const nc = localStorage.getItem('rhythmPulseNightcore');
+  if (nc !== null) { nightcoreEnabled = nc === '1'; const btn = document.getElementById('nightcoreToggle'); btn.textContent = nightcoreEnabled ? 'ON' : 'OFF'; btn.classList.toggle('off', !nightcoreEnabled); document.getElementById('playerNightcoreBtn').classList.toggle('active-nightcore', nightcoreEnabled); }
   const ns = localStorage.getItem('rhythmPulseNoteStyle');
   if (ns) { currentNoteStyle = ns; document.getElementById('noteStyle').value = ns; }
   const cs = localStorage.getItem('rhythmPulseColorScheme');
@@ -4431,7 +4451,7 @@ async function previewPlay(song) {
   lastPreviewFrameTime = performance.now();
   previewSource = audioCtx.createBufferSource();
   previewSource.buffer = song.audioBuffer;
-  previewSource.playbackRate.value = previewSpeed;
+  previewSource.playbackRate.value = nightcoreEnabled ? 1.3 : previewSpeed;
   if (!analyser) setupVisualizerForPreview();
   previewSource.connect(analyser);
   analyser.connect(previewGainNode);
@@ -4703,6 +4723,20 @@ document.getElementById('playerShuffleBtn').addEventListener('click', () => {
   previewShuffle = !previewShuffle;
   document.getElementById('playerShuffleBtn').classList.toggle('active-loop', previewShuffle);
 });
+document.getElementById('playerNightcoreBtn').addEventListener('click', () => {
+  nightcoreEnabled = !nightcoreEnabled;
+  document.getElementById('playerNightcoreBtn').classList.toggle('active-nightcore', nightcoreEnabled);
+  const toggle = document.getElementById('nightcoreToggle');
+  toggle.textContent = nightcoreEnabled ? 'ON' : 'OFF';
+  toggle.classList.toggle('off', !nightcoreEnabled);
+  localStorage.setItem('rhythmPulseNightcore', nightcoreEnabled ? '1' : '0');
+  if (previewSource && previewSource.playbackRate !== undefined) {
+    previewSource.playbackRate.value = nightcoreEnabled ? 1.3 : previewSpeed;
+  }
+  if (audioSource) {
+    audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
+  }
+});
 
 document.getElementById('playerProgressContainer').addEventListener('click', (e) => {
   const container = document.getElementById('playerProgressContainer');
@@ -4758,6 +4792,7 @@ document.getElementById('playerSpeedBtn').addEventListener('click', () => {
   previewSpeed = speeds[(idx + 1) % speeds.length];
   document.getElementById('playerSpeedBtn').textContent = previewSpeed + 'x';
   document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
+  if (nightcoreEnabled) return;
   if (previewSource && previewSource.playbackRate !== undefined) {
     previewSource.playbackRate.value = previewSpeed;
   }
