@@ -5368,6 +5368,7 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
       .select('*')
       .neq('song_name', '__CLOUD_SAVE__')
       .order('score', { ascending: false });
+    query = query.order('modifiers', { ascending: false });
     
     if (song !== 'all') {
       query = query.eq('song_name', song);
@@ -5397,7 +5398,11 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
             bestPerSong[s] = entry;
           }
         });
-        const sorted = Object.values(bestPerSong).sort((a, b) => b.score - a.score).slice(0, limit);
+        const sorted = Object.values(bestPerSong).sort((a, b) => {
+          const s = b.score - a.score;
+          if (s !== 0) return s;
+          return (b.modifiers ? 1 : 0) - (a.modifiers ? 1 : 0);
+        }).slice(0, limit);
         sorted.forEach((entry, i) => {
           const rank = i + 1;
           let rankClass = '';
@@ -5429,7 +5434,11 @@ function fetchLeaderboard(scope = 'overall', song = 'all', difficulty = 'all', l
             perPlayer[key] = entry;
           }
         });
-        const sorted = Object.values(perPlayer).sort((a, b) => b.score - a.score).slice(0, limit);
+        const sorted = Object.values(perPlayer).sort((a, b) => {
+          const s = b.score - a.score;
+          if (s !== 0) return s;
+          return (b.modifiers ? 1 : 0) - (a.modifiers ? 1 : 0);
+        }).slice(0, limit);
         sorted.forEach((entry, i) => {
           const rank = i + 1;
           let rankClass = '';
