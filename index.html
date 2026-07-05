@@ -208,6 +208,12 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
 .ach-card:hover { background: var(--bg-hover); }
 .ach-card .ach-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
 .ach-card .ach-title { font-size: 0.75rem; color: var(--text-dim); }
+.ach-global { border-top: 1px solid var(--border); margin-top: 0.75rem; padding-top: 0.5rem; }
+.ach-global-header { font-size: 0.8rem; font-weight: 700; color: var(--pink); text-align: center; margin-bottom: 0.5rem; }
+.ach-global-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0; font-size: 0.7rem; }
+.ach-global-item .ach-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.ach-global-item .ach-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.ach-global-item .ach-pct { min-width: 34px; text-align: right; font-weight: 600; color: var(--text-dim); font-size: 0.65rem; }
 .ach-card.unlocked { border-color: #ffd700; }
 .ach-card.locked { opacity: 0.5; }
 .setting-label { font-size: 0.85rem; color: var(--text-dim); }
@@ -703,6 +709,10 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   <div class="achievements-dropdown" id="achievementsDropdown">
     <div class="ach-header">🏆 Achievements</div>
     <div class="ach-list" id="achievementsList"></div>
+    <div class="ach-global" id="achGlobal" style="display:none;">
+      <div class="ach-global-header">🌍 Global Achievement Stats</div>
+      <div class="ach-global-list" id="achGlobalList"></div>
+    </div>
   </div>
   <div id="welcomeModal">
     <div class="welcome-panel">
@@ -1666,6 +1676,7 @@ function checkAchievement(id) {
   localStorage.setItem('rhythmPulseAchievements', JSON.stringify(achievements));
   playAchievementSound();
   showAchievementPopup(ach.name, ach.icon);
+  syncAchievements();
 }
 
 function checkProgressiveAchievements(categoryId, value) {
@@ -3789,7 +3800,7 @@ document.getElementById('backToMenu').addEventListener('click', () => {
 });
 document.getElementById('menuBrowse').addEventListener('click', () => { addStat('leaderboard_view', 1); showLeaderboard('browse', 'all', 'all'); });
 document.getElementById('menuLeaderboard').addEventListener('click', () => { addStat('leaderboard_view', 1); showLeaderboard('overall', 'all', 'all'); });
-document.getElementById('menuAchievements').addEventListener('click', () => { addStat('achievement_view', 1); checkProgressiveAchievements('achievement_view', getStat('achievement_view')); document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); });
+document.getElementById('menuAchievements').addEventListener('click', () => { addStat('achievement_view', 1); checkProgressiveAchievements('achievement_view', getStat('achievement_view')); document.getElementById('achievementsDropdown').classList.toggle('active'); renderAchievements(); if (document.getElementById('achievementsDropdown').classList.contains('active')) { syncAchievements(); fetchAchievementLeaderboard(); } });
 document.getElementById('menuSaveLoad').addEventListener('click', () => {
   const modal = document.getElementById('saveLoadModal');
   const status = document.getElementById('saveLoadStatus');
@@ -3881,6 +3892,9 @@ document.getElementById('nightcoreToggle').addEventListener('click', (e) => {
   }
   if (audioSource) {
     audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
+  }
+  if (previewSong && previewSong.bpm) {
+    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : 1)) + ' BPM';
   }
 });
 
@@ -4744,6 +4758,9 @@ document.getElementById('playerNightcoreBtn').addEventListener('click', () => {
   }
   if (audioSource) {
     audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
+  }
+  if (previewSong && previewSong.bpm) {
+    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : 1)) + ' BPM';
   }
 });
 
@@ -6152,6 +6169,66 @@ for (let i = 0; i < 15; i++) {
   note.style.animationDelay = -(Math.random() * 30) + 's';
   note.style.color = `hsl(${260 + Math.random() * 60}, 70%, ${60 + Math.random() * 20}%)`;
   floatingContainer.appendChild(note);
+}
+
+function syncAchievements() {
+  if (!supabaseClient && !initSupabase()) return;
+  if (!supabaseClient) return;
+  const unlockedIds = Object.keys(achievements).filter(k => achievements[k]);
+  if (unlockedIds.length === 0) return;
+  const entry = {
+    player_name: getPlayerName(),
+    song_name: '__ACHIEVEMENTS__',
+    difficulty: 'normal',
+    score: unlockedIds.length,
+    accuracy: 100,
+    max_combo: 0,
+    grade: 'S',
+    judgments: JSON.stringify({ ids: unlockedIds }),
+    modifiers: '',
+    timing_window: 'normal',
+    lane_count: 4,
+    scroll_speed: 15,
+    health_mode: 'normal',
+    total_notes: unlockedIds.length,
+    created_at: new Date().toISOString()
+  };
+  supabaseClient.from('scores').upsert(entry, { onConflict: 'player_name,song_name,difficulty' }).catch(() => {});
+}
+
+function fetchAchievementLeaderboard() {
+  const container = document.getElementById('achGlobal');
+  const list = document.getElementById('achGlobalList');
+  if (!supabaseClient && !initSupabase()) { container.style.display = 'none'; return; }
+  if (!supabaseClient) { container.style.display = 'none'; return; }
+  supabaseClient.from('scores').select('judgments').eq('song_name', '__ACHIEVEMENTS__').then(({ data, error }) => {
+    if (error || !data || data.length === 0) { container.style.display = 'none'; return; }
+    const total = data.length;
+    const counts = {};
+    data.forEach(row => {
+      try {
+        const j = JSON.parse(row.judgments);
+        if (j.ids) j.ids.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+      } catch(e) {}
+    });
+    let html = '';
+    for (const cat of ACHIEVEMENT_CATEGORIES) {
+      const catAchievs = Object.entries(ACHIEVEMENTS).filter(([id]) => id.startsWith(cat.id + '_'));
+      const top = catAchievs.filter(([id]) => counts[id]).sort((a, b) => (counts[b[0]] || 0) - (counts[a[0]] || 0)).slice(0, 1);
+      if (top.length === 0) continue;
+      const [id, ach] = top[0];
+      const pct = Math.round((counts[id] || 0) / total * 100);
+      const hue = Math.min(120, pct * 1.2);
+      html += `<div class="ach-global-item"><span>${ach.icon}</span><span style="min-width:12ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ach.name}</span><div class="ach-bar-bg"><div class="ach-bar-fill" style="width:${pct}%;background:hsl(${hue},70%,50%);"></div></div><span class="ach-pct">${pct}%</span></div>`;
+    }
+    if (html) {
+      html = `<div style="font-size:0.65rem;color:var(--text-dimmer);text-align:center;margin-bottom:0.3rem;">Based on ${total} player${total !== 1 ? 's' : ''}</div>` + html;
+      list.innerHTML = html;
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+  }).catch(() => { container.style.display = 'none'; });
 }
 </script>
 </body>
