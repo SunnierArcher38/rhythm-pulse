@@ -1822,7 +1822,7 @@ function setupVisualizer() {
     analyser = audioCtx.createAnalyser();
   }
   analyser.fftSize = 512;
-  analyser.smoothingTimeConstant = nightcoreEnabled ? 0.5 : 0.85;
+  analyser.smoothingTimeConstant = 0.85;
   visualizerData = new Uint8Array(analyser.frequencyBinCount);
   try { analyser.disconnect(); } catch(e) {}
   gainNode.connect(analyser);
@@ -3894,9 +3894,8 @@ document.getElementById('nightcoreToggle').addEventListener('click', (e) => {
     audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
   }
   if (previewSong && previewSong.bpm) {
-    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : 1)) + ' BPM';
+    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : previewSpeed)) + ' BPM';
   }
-  if (analyser) analyser.smoothingTimeConstant = nightcoreEnabled ? 0.5 : 0.85;
 });
 
 document.getElementById('resetSettingsBtn').addEventListener('click', () => {
@@ -4761,9 +4760,8 @@ document.getElementById('playerNightcoreBtn').addEventListener('click', () => {
     audioSource.playbackRate.value = nightcoreEnabled ? 1.3 : 1.0;
   }
   if (previewSong && previewSong.bpm) {
-    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : 1)) + ' BPM';
+    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * (nightcoreEnabled ? 1.3 : previewSpeed)) + ' BPM';
   }
-  if (analyser) analyser.smoothingTimeConstant = nightcoreEnabled ? 0.5 : 0.85;
 });
 
 document.getElementById('playerProgressContainer').addEventListener('click', (e) => {
@@ -4823,6 +4821,9 @@ document.getElementById('playerSpeedBtn').addEventListener('click', () => {
   document.getElementById('playerSpeedDisplay').textContent = previewSpeed !== 1 ? previewSpeed + 'x' : '';
   if (previewSource && previewSource.playbackRate !== undefined) {
     previewSource.playbackRate.value = previewSpeed;
+  }
+  if (previewSong && previewSong.bpm) {
+    document.getElementById('playerBPM').textContent = Math.round(previewSong.bpm * previewSpeed) + ' BPM';
   }
 });
 
