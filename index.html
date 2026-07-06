@@ -641,6 +641,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
       <button class="organizer-btn active" data-sort="name">Name</button>
       <button class="organizer-btn" data-sort="bpm">BPM</button>
       <button class="organizer-btn" data-sort="length">Length</button>
+      <button class="org-regen-all" id="regenAllBtn" style="margin-left:auto;background:transparent;border:1px solid var(--border);color:#f1fa8c;border-radius:var(--radius-sm);cursor:pointer;padding:0.25rem 0.5rem;font-size:0.75rem;transition:all 0.2s;">🔄 All</button>
     </div>
     <div class="song-list" id="songList">    </div>
     <div class="regen-notice" id="regenNotice">Old songs may show incorrect BPM. Click <strong>🔄</strong> to regenerate with latest detection.</div>
@@ -3368,6 +3369,26 @@ function updateSongList() {
       const idx = parseInt(btn.dataset.idx);
       regenerateCharts(idx, btn);
     });
+  });
+  const oldBtn = document.getElementById('regenAllBtn');
+  const newBtn = oldBtn.cloneNode(true);
+  oldBtn.replaceWith(newBtn);
+  newBtn.addEventListener('click', async () => {
+    if (!confirm('Regenerate charts for all songs?')) return;
+    const btns = document.querySelectorAll('.song-regen-btn');
+    const btn = document.getElementById('regenAllBtn');
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    for (let i = 0; i < songs.length; i++) {
+      const b = btns[i];
+      if (b && !b.disabled) {
+        b.textContent = '⏳';
+        b.disabled = true;
+        await regenerateCharts(i, b).catch(() => {});
+      }
+    }
+    btn.textContent = '✅';
+    setTimeout(() => { btn.textContent = '🔄 All'; btn.disabled = false; }, 2000);
   });
 
   updateSongListBPM();
