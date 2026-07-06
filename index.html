@@ -3312,7 +3312,7 @@ function updateSongList() {
       const ready = charts[d];
       return `<span style="color:${ready ? '#4ade80' : '#555'};font-size:0.75rem;padding:0.1rem 0.4rem;background:${ready ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.05)'};border-radius:4px;margin-right:3px;">${d.charAt(0).toUpperCase() + d.slice(1)}${ready ? ' ✓' : ''}</span>`;
     }).join('');
-    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • ${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'} • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
+    item.innerHTML = `<div class="song-icon">♪</div><div class="song-info"><div class="song-name">${song.name} <span style="color:#c44dff;cursor:pointer;font-size:0.85rem;" class="preview-btn" data-idx="${originalIndex}">▶ Preview</span></div><div class="song-meta">${(song.size / 1024 / 1024).toFixed(1)} MB • <span class="song-bpm" data-orig-bpm="${Math.round(song.bpm || 140)}">${song.bpm ? Math.round(song.bpm) + ' BPM' : '? BPM'}</span> • ${formatTime(song.duration || 0)}</div><div class="song-diffs">${diffStatus}</div><div class="difficulty-select"><button class="diff-btn easy" data-song="${originalIndex}" data-diff="easy">Easy</button><button class="diff-btn normal" data-song="${originalIndex}" data-diff="normal">Normal</button><button class="diff-btn hard" data-song="${originalIndex}" data-diff="hard">Hard</button><button class="diff-btn insane" data-song="${originalIndex}" data-diff="insane">Insane</button></div></div><button class="song-regen-btn" data-idx="${originalIndex}" title="Regenerate charts with new BPM">🔄</button><button class="song-download-btn" data-idx="${originalIndex}" title="Download audio file">⬇️</button><button class="song-export-btn" data-idx="${originalIndex}" title="Export song with charts">📤</button><button class="song-delete-btn" data-idx="${originalIndex}" title="Delete song">🗑</button>`;
     list.appendChild(item);
   }
   document.querySelectorAll('.preview-btn').forEach(el => {
@@ -3373,6 +3373,15 @@ function updateSongList() {
     });
   });
 
+  updateSongListBPM();
+}
+
+function updateSongListBPM() {
+  const mul = nightcoreEnabled ? 1.3 : previewSpeed;
+  document.querySelectorAll('.song-bpm').forEach(el => {
+    const orig = parseFloat(el.dataset.origBpm);
+    if (orig) el.textContent = Math.round(orig * mul) + ' BPM';
+  });
 }
 
 async function deleteSong(idx) {
@@ -4768,6 +4777,7 @@ document.getElementById('playerNightcoreBtn').addEventListener('click', () => {
   if (bpm) {
     document.getElementById('playerBPM').textContent = Math.round(bpm * (nightcoreEnabled ? 1.3 : previewSpeed)) + ' BPM';
   }
+  updateSongListBPM();
 });
 
 document.getElementById('playerProgressContainer').addEventListener('click', (e) => {
@@ -4830,8 +4840,9 @@ document.getElementById('playerSpeedBtn').addEventListener('click', () => {
   }
   const bpm = previewSong && (previewSong.bpm || 140);
   if (bpm) {
-    document.getElementById('playerBPM').textContent = Math.round(bpm * previewSpeed) + ' BPM';
+    document.getElementById('playerBPM').textContent = Math.round(bpm * (nightcoreEnabled ? 1.3 : previewSpeed)) + ' BPM';
   }
+  updateSongListBPM();
 });
 
 // Seek tooltip on progress bar
