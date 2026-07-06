@@ -6211,7 +6211,7 @@ function syncAchievements() {
     total_notes: unlockedIds.length,
     created_at: new Date().toISOString()
   };
-  supabaseClient.from('scores').upsert(entry, { onConflict: 'player_name,song_name,difficulty' }).catch(() => {});
+  supabaseClient.from('scores').upsert(entry, { onConflict: 'player_name,song_name,difficulty' }).then(() => {}).catch(() => {});
 }
 
 function fetchAchievementLeaderboard() {
