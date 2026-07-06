@@ -2542,11 +2542,9 @@ function updateHoldingNotes() {
     if (!note.activated) {
       const timeDiff = currentTime - note.time;
       
-      if (timeDiff >= -activationWindow && timeDiff <= activationWindow) {
-        const keyAge = performance.now() - (gameState.keyLastPressTimes[note.lane] || 0);
-        if (gameState.activeKeys[note.lane] && keyAge < 200) {
-          note.activated = true;
-          note.holding = true;
+      if (timeDiff >= -activationWindow && timeDiff <= activationWindow && gameState.activeKeys[note.lane]) {
+        note.activated = true;
+        note.holding = true;
         note.graceExpiry = 0;
         note.holdStartTime = currentTime;
         note.lastTickTime = currentTime;
