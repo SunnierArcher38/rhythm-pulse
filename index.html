@@ -3375,12 +3375,11 @@ function updateSongList() {
   oldBtn.replaceWith(newBtn);
   newBtn.addEventListener('click', async () => {
     if (!confirm('Regenerate charts for all songs?')) return;
-    const btns = document.querySelectorAll('.song-regen-btn');
     const btn = document.getElementById('regenAllBtn');
     btn.textContent = '⏳';
     btn.disabled = true;
     for (let i = 0; i < songs.length; i++) {
-      const b = btns[i];
+      const b = document.querySelector(`.song-regen-btn[data-idx="${i}"]`);
       if (b && !b.disabled) {
         b.textContent = '⏳';
         b.disabled = true;
