@@ -2730,9 +2730,13 @@ function updateMetronome() {
 
 let lastBeatZoomIdx = -1;
 let lastNoteZoomTime = 0;
+let lastZoomFrameTime = 0;
 function updateBeatZoom() {
   if (!beatZoomEnabled || gameState.mode !== 'playing' || !isPlaying || !gameState.song) return;
   const currentTime = getCurrentTime();
+  const ds = Math.min((performance.now() - (lastZoomFrameTime || 0)) / 16.667, 3);
+  lastZoomFrameTime = performance.now();
+  const speedMul = nightcoreEnabled ? 1.3 : 1;
   const beats = gameState.song.beats || [];
   
   // Trigger zoom on detected beats
@@ -2755,9 +2759,9 @@ function updateBeatZoom() {
     }
   }
   
-  const lerp = 0.2;
+  const lerp = Math.min(1, 0.2 * ds * speedMul);
   beatZoomValue += (beatZoomTarget - beatZoomValue) * lerp;
-  beatZoomTarget *= 0.92;
+  beatZoomTarget *= Math.pow(0.92, ds * speedMul);
   if (beatZoomTarget < 0.0005) beatZoomTarget = 0;
   if (beatZoomValue < 0.0005) beatZoomValue = 0;
 }
