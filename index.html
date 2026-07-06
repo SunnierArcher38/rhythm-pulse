@@ -1904,7 +1904,7 @@ function drawVisualizer() {
 let menuBeatZoomValue = 0, menuBeatZoomTarget = 0, menuLastBeatIdx = -1, menuLastZoomUpdate = performance.now();
 function updateMenuBeatZoom() {
   if (!beatZoomEnabled || !previewPlaying || !previewSong) return;
-  const elapsed = audioCtx.currentTime - previewStartTime;
+  const elapsed = previewVirtualTime;
   const bpm = previewSong.bpm || 140;
   const beatInterval = 60 / bpm;
   const currentBeatIdx = Math.floor(elapsed / beatInterval);
