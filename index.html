@@ -1681,6 +1681,7 @@ function checkAchievement(id) {
 }
 
 function checkProgressiveAchievements(categoryId, value) {
+  if (autoplayEnabled) return;
   for (const cat of ACHIEVEMENT_CATEGORIES) {
     if (cat.id !== categoryId) continue;
     for (let i = 0; i < cat.thresholds.length; i++) {
@@ -2868,6 +2869,7 @@ function showResults() {
   document.getElementById('resultMiss').textContent = gameState.judgments.miss;
   document.getElementById('resultMaxCombo').textContent = gameState.maxCombo;
   document.getElementById('highScoreIndicator').style.display = isNewHigh ? 'block' : 'none';
+  if (autoplayEnabled) return;
   
   const songsPlayed = parseInt(localStorage.getItem('rhythmPulseSongsPlayed') || '0') + 1;
   localStorage.setItem('rhythmPulseSongsPlayed', songsPlayed.toString());
