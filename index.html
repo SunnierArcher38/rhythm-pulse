@@ -1921,7 +1921,7 @@ function updateMenuBeatZoom() {
   menuLastZoomUpdate = now;
   const lerp = 1 - Math.pow(0.05, dt);
   menuBeatZoomValue += (menuBeatZoomTarget - menuBeatZoomValue) * lerp;
-  menuBeatZoomTarget *= Math.pow(0.94, dt * 60);
+  menuBeatZoomTarget *= Math.pow(0.82, dt * 60);
   if (menuBeatZoomTarget < 0.0005) menuBeatZoomTarget = 0;
   if (menuBeatZoomValue < 0.0005) menuBeatZoomValue = 0;
 }
@@ -2755,9 +2755,9 @@ function updateBeatZoom() {
     }
   }
   
-  const lerp = 0.2;
+  const lerp = 0.35;
   beatZoomValue += (beatZoomTarget - beatZoomValue) * lerp;
-  beatZoomTarget *= 0.92;
+  beatZoomTarget *= 0.82;
   if (beatZoomTarget < 0.0005) beatZoomTarget = 0;
   if (beatZoomValue < 0.0005) beatZoomValue = 0;
 }
@@ -2774,11 +2774,11 @@ function updateComboMilestones() {
   
   const elapsed = performance.now() - lastComboZoomTime;
   if (comboZoomTarget > 0 && elapsed > 80) {
-    comboZoomTarget *= 0.93;
+    comboZoomTarget *= 0.88;
     if (comboZoomTarget < 0.0005) comboZoomTarget = 0;
   }
   
-  const lerp = 0.12;
+  const lerp = 0.2;
   comboZoomValue += (comboZoomTarget - comboZoomValue) * lerp;
   if (comboZoomValue < 0.0005) comboZoomValue = 0;
 }
@@ -4940,7 +4940,7 @@ function gameLoop() {
       ctx.scale(zoom, zoom);
       ctx.translate(-canvas.width / 2, -canvas.height / 2);
     }
-    gameState.screenShake *= 0.92;
+    gameState.screenShake *= 0.85;
     if (gameState.screenShake < 0.05) gameState.screenShake = 0;
     drawBackground();
     drawNotes(); drawReceptors(); drawHitEffects(); drawCombo(); drawComboTrails(); drawScore(); drawHealthBar(); drawProgressBar(); drawSongInfo(); drawTouchLaneLabels();
