@@ -3386,8 +3386,12 @@ function updateSongList() {
         await regenerateCharts(i, b).catch(() => {});
       }
     }
-    btn.textContent = '✅';
-    setTimeout(() => { btn.textContent = '🔄 All'; btn.disabled = false; }, 2000);
+    currentSort = 'name';
+    updateSongList();
+    const newBtn = document.getElementById('regenAllBtn');
+    newBtn.textContent = '✅';
+    newBtn.disabled = true;
+    setTimeout(() => { newBtn.textContent = '🔄 All'; newBtn.disabled = false; }, 2000);
   });
 
   updateSongListBPM();
