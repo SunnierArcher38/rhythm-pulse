@@ -2486,17 +2486,7 @@ function handleKeyPress(lane) {
   if (judgment !== 'miss') {
     closestTap.hit = true;
     gameState.keyLastPressTimes[lane] = 0;
-    const tw2 = getCurrentTimingWindows();
-    const actWin = Math.max(tw2.miss / 1000, 0.15);
-    for (const hn of gameState.chart) {
-      if (hn.type !== 'hold' || hn.activated || hn.missed || hn.completed || hn.broken || hn.lane !== lane) continue;
-      if (Math.abs(hn.time - currentTime) <= actWin) {
-        hn.activated = true; hn.holding = true; hn.graceExpiry = 0; hn.holdStartTime = currentTime; hn.lastTickTime = currentTime;
-        gameState.combo++;
-        if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
-        gameState.score += 100;
-      }
-    }
+
     gameState.combo++;
     comboPopScale = 1;
     if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
@@ -2574,12 +2564,18 @@ function updateHoldingNotes() {
       }
       
       if (currentTime > note.time + activationWindow) {
-        note.missed = true;
-        gameState.combo = 0;
-        gameState.judgments.miss++;
-        gameState.health = Math.max(0, gameState.health - 8);
-        playHitSound('miss');
-        gameState.hitEffects.push({ lane: note.lane, label: 'MISS', color: '#ff4d4d', startTime: now, duration: 400, particles: [] });
+        const nearbyTap = gameState.chart.some(n => n.type === 'tap' && n.lane === note.lane && n.hit && Math.abs(n.time - note.time) <= activationWindow);
+        if (nearbyTap) {
+          note.completed = true;
+          note.activated = true;
+        } else {
+          note.missed = true;
+          gameState.combo = 0;
+          gameState.judgments.miss++;
+          gameState.health = Math.max(0, gameState.health - 8);
+          playHitSound('miss');
+          gameState.hitEffects.push({ lane: note.lane, label: 'MISS', color: '#ff4d4d', startTime: now, duration: 400, particles: [] });
+        }
       }
       continue;
     }
