@@ -1440,9 +1440,9 @@ let achievements = JSON.parse(localStorage.getItem('rhythmPulseAchievements') ||
 let songDB = null, dbReady = false;
 
 const TIMING_WINDOWS = {
-  lenient: { marvelous: 35, perfect: 65, great: 110, good: 160, miss: 200 },
-  normal: { marvelous: 22, perfect: 45, great: 90, good: 135, miss: 180 },
-  strict: { marvelous: 15, perfect: 30, great: 60, good: 90, miss: 120 }
+  lenient: { marvelous: 45, perfect: 80, great: 130, good: 175, miss: 210 },
+  normal: { marvelous: 30, perfect: 55, great: 100, good: 145, miss: 190 },
+  strict: { marvelous: 22, perfect: 40, great: 75, good: 110, miss: 140 }
 };
 
 const SPEED_PRESETS = {
@@ -2483,6 +2483,7 @@ function handleKeyPress(lane) {
   
   if (judgment !== 'miss') {
     closestTap.hit = true;
+    gameState.keyLastPressTimes[lane] = 0;
     gameState.combo++;
     comboPopScale = 1;
     if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
