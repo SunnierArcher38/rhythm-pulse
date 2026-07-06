@@ -1143,10 +1143,10 @@ function generateChart(beats, difficulty, duration) {
   const beatInterval = 60 / bpm;
   
   const settings = {
-    easy: { skipChance: 0.4, holdChance: 0.04, doubleChance: 0.02, subChance: 0.15, minLaneGap: 0.4 },
-    normal: { skipChance: 0.25, holdChance: 0.06, doubleChance: 0.05, subChance: 0.25, minLaneGap: 0.28 },
-    hard: { skipChance: 0.15, holdChance: 0.1, doubleChance: 0.1, subChance: 0.35, minLaneGap: 0.2 },
-    insane: { skipChance: 0.05, holdChance: 0.12, doubleChance: 0.15, subChance: 0.45, minLaneGap: 0.15 }
+    easy: { skipChance: 0.3, holdChance: 0.04, doubleChance: 0.03, subChance: 0.15, minLaneGap: 0.35 },
+    normal: { skipChance: 0.15, holdChance: 0.06, doubleChance: 0.06, subChance: 0.25, minLaneGap: 0.22 },
+    hard: { skipChance: 0.08, holdChance: 0.1, doubleChance: 0.12, subChance: 0.35, minLaneGap: 0.16 },
+    insane: { skipChance: 0.02, holdChance: 0.12, doubleChance: 0.18, subChance: 0.45, minLaneGap: 0.12 }
   };
   
   const s = settings[difficulty];
@@ -2486,6 +2486,17 @@ function handleKeyPress(lane) {
   if (judgment !== 'miss') {
     closestTap.hit = true;
     gameState.keyLastPressTimes[lane] = 0;
+    const tw2 = getCurrentTimingWindows();
+    const actWin = Math.max(tw2.miss / 1000, 0.15);
+    for (const hn of gameState.chart) {
+      if (hn.type !== 'hold' || hn.activated || hn.missed || hn.completed || hn.broken || hn.lane !== lane) continue;
+      if (Math.abs(hn.time - currentTime) <= actWin) {
+        hn.activated = true; hn.holding = true; hn.graceExpiry = 0; hn.holdStartTime = currentTime; hn.lastTickTime = currentTime;
+        gameState.combo++;
+        if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+        gameState.score += 100;
+      }
+    }
     gameState.combo++;
     comboPopScale = 1;
     if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
