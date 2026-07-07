@@ -604,6 +604,14 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
   .style-select { font-size: 0.65rem !important; padding: 0.15rem 0.4rem !important; }
   .welcome-panel { padding: 1rem; }
 }
+#diagnosticOverlay {
+  position: fixed; bottom: 60px; right: 10px; z-index: 9999;
+  background: rgba(0,0,0,0.85); color: #0f0; font: 12px monospace;
+  padding: 8px 12px; border-radius: 6px; border: 1px solid #333;
+  display: none; white-space: pre; pointer-events: none;
+  min-width: 280px;
+}
+#diagnosticOverlay.visible { display: block; }
 </style>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -950,6 +958,7 @@ canvas { display: block; position: relative; z-index: 1; touch-action: none; }
     </div>
   </div>
 </div>
+<div id="diagnosticOverlay"></div>
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -1429,7 +1438,7 @@ let soundCtx = null;
 let practiceMode = false, practiceSpeed = 1.0, practiceLoopStart = 0, practiceLoopEnd = 0, practiceLoopActive = false;
 let previewSource = null, previewPlaying = false, previewSong = null, previewStartTime = 0, previewPausedAt = 0, previewGainNode = null, previewLoop = false, previewShuffle = false, previewSpeed = 1, previewMuted = false, previousVolume = 80;
 let previewVirtualTime = 0, lastPreviewFrameTime = 0;
-let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true, nightcoreEnabled = false;
+let autoplayEnabled = false, metronomeEnabled = false, laneHideEnabled = false, keyPressFXEnabled = true, beatZoomEnabled = true, nightcoreEnabled = false, diagnosticEnabled = false;
 let beatZoomValue = 0, beatZoomTarget = 0, lastBeatZoomTime = 0;
 let comboZoomValue = 0, comboZoomTarget = 0, lastComboZoomTime = 0, lastComboMilestone = 0;
 let lastComboValue = 0, comboPopScale = 0, comboTickTime = 0;
@@ -1667,6 +1676,24 @@ function releaseSong(song) {
   if (song && song.audioBuffer) {
     song.audioBuffer = null;
   }
+}
+
+function updateDiagnosticOverlay(lane, noteTime, currentTime, distMs, judgment, closestDist) {
+  if (!diagnosticEnabled) return;
+  const noteStr = noteTime < 0 ? 'N/A' : noteTime.toFixed(3);
+  const distStr = closestDist === Infinity ? 'N/A' : (closestDist * 1000).toFixed(1);
+  const lines = [
+    `F3: hide | lane ${lane}`,
+    `note.time: ${noteStr}s`,
+    `currentTime: ${currentTime.toFixed(3)}s`,
+    `delta: ${noteTime < 0 ? 'N/A' : ((noteTime - currentTime) * 1000).toFixed(1)} ms`,
+    `|dist|: ${distStr} ms`,
+    `judgment: ${judgment}`,
+    `audioOffset: ${gameState.audioOffset} ms`,
+    `nightcore: ${nightcoreEnabled}`,
+    `chart notes: ${gameState.chart.length}`
+  ];
+  document.getElementById('diagnosticOverlay').textContent = lines.join('\n');
 }
 
 function checkAchievement(id) {
@@ -2473,7 +2500,10 @@ function handleKeyPress(lane) {
     if (dist < closestDist) { closestDist = dist; closestTap = note; }
   }
   
-  if (!closestTap || closestDist >= tw.miss / 1000) return;
+  if (!closestTap || closestDist >= tw.miss / 1000) {
+    updateDiagnosticOverlay(lane, -1, currentTime, -1, 'miss', closestDist);
+    return;
+  }
   
   const distMs = closestDist * 1000;
   gameState.hitTimings.push(closestTap.time - currentTime);
@@ -2483,6 +2513,8 @@ function handleKeyPress(lane) {
   else if (distMs <= tw.great) { judgment = 'great'; score = 200; color = '#6b9dff'; label = 'GREAT'; }
   else if (distMs <= tw.good) { judgment = 'good'; score = 100; color = '#6bffd7'; label = 'GOOD'; }
   else { judgment = 'miss'; score = 0; color = '#ff4d4d'; label = 'MISS'; }
+  
+  updateDiagnosticOverlay(lane, closestTap.time, currentTime, distMs, judgment, closestDist);
   
   if (judgment !== 'miss') {
     closestTap.hit = true;
@@ -3691,6 +3723,12 @@ document.addEventListener('keydown', (e) => {
   if ((e.key === 'o' || e.key === 'O') && gameState.mode === 'menu') {
     e.preventDefault();
     openFilePicker();
+    return;
+  }
+  if (e.key === 'F3') {
+    e.preventDefault();
+    diagnosticEnabled = !diagnosticEnabled;
+    document.getElementById('diagnosticOverlay').classList.toggle('visible', diagnosticEnabled);
     return;
   }
   if (gameState.mode === 'playing') {
